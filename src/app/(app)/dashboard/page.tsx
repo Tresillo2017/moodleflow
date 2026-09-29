@@ -203,7 +203,7 @@ export default function DashboardPage() {
 							<h1 className="text-4xl text-balance">
 								{greeting()}, {firstName}
 							</h1>
-							<p className="text-sm text-muted-foreground">{summary}</p>
+							<p className="text-sm text-foreground/75">{summary}</p>
 						</div>
 						<CustomizeMenu />
 					</div>

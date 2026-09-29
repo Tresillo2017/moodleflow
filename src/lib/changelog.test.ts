@@ -11,8 +11,8 @@ describe("parseChangelog", () => {
 		]);
 	});
 
-	it("has the package.json version as its newest release", () => {
-		const releases = parseChangelog(readFileSync("CHANGELOG.md", "utf8"));
+	it("has the package.json version as its newest released version", () => {
+		const releases = parseChangelog(readFileSync("CHANGELOG.md", "utf8")).filter((r) => r.version !== "Unreleased");
 		expect(releases[0].version).toBe(pkg.version);
 	});
 });

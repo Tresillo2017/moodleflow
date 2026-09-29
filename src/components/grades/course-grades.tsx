@@ -3,23 +3,11 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
+import { RichContent } from "@/components/content/rich-content";
 import { courseHue } from "@/lib/format";
+import { coursePercent, itemPercent } from "@/lib/moodle/grade-stats";
 import { cn } from "@/lib/utils";
 import type { MoodleCourseGrades, MoodleGradeItem } from "@/types/moodle";
-
-function itemPercent(item: MoodleGradeItem): number | undefined {
-	if (item.percentage !== undefined) return item.percentage;
-	if (item.grade === undefined || !item.maxGrade) return undefined;
-	return (item.grade / item.maxGrade) * 100;
-}
-
-export function coursePercent(course: MoodleCourseGrades): number | undefined {
-	if (course.courseTotal !== undefined && course.courseMaxTotal) {
-		return (course.courseTotal / course.courseMaxTotal) * 100;
-	}
-	const percents = course.items.map(itemPercent).filter((p): p is number => p !== undefined);
-	return percents.length ? percents.reduce((a, b) => a + b, 0) / percents.length : undefined;
-}
 
 function toneOf(percent: number | undefined): string {
 	if (percent === undefined) return "text-muted-foreground";
@@ -28,23 +16,36 @@ function toneOf(percent: number | undefined): string {
 	return "text-foreground";
 }
 
-function PercentBar({ percent }: { percent?: number }) {
+function PercentBar({ percent, className }: { percent?: number; className?: string }) {
 	return (
-		<div className="h-1 w-16 overflow-hidden rounded-full bg-muted" aria-hidden="true">
+		<div className={cn("h-1.5 w-16 overflow-hidden rounded-full bg-muted", className)} aria-hidden="true">
 			<div
-				className={cn("h-full rounded-full", percent !== undefined && percent < 50 ? "bg-danger" : "bg-primary")}
+				className={cn("h-full rounded-full", percent !== undefined && percent < 50 ? "bg-danger" : percent !== undefined && percent >= 80 ? "bg-success" : "bg-primary")}
 				style={{ width: `${Math.min(100, Math.max(0, percent ?? 0))}%` }}
 			/>
 		</div>
 	);
 }
 
-export function CourseGrades({ course }: { course: MoodleCourseGrades }) {
+export function CourseGrades({
+	course,
+	query = "",
+	defaultOpen = false,
+}: {
+	course: MoodleCourseGrades;
+	/** Only items whose name contains this text are listed (the whole course when the course name matches). */
+	query?: string;
+	defaultOpen?: boolean;
+}) {
 	const percent = coursePercent(course);
+	const needle = query.trim().toLowerCase();
+	const items = !needle || course.courseName.toLowerCase().includes(needle)
+		? course.items
+		: course.items.filter((i) => i.itemName.toLowerCase().includes(needle));
 	const graded = course.items.filter((i) => i.grade !== undefined).length;
 
 	return (
-		<Collapsible className="overflow-hidden rounded-xl border bg-card">
+		<Collapsible defaultOpen={defaultOpen} className="overflow-hidden rounded-xl border bg-card">
 			<CollapsibleTrigger className="group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none">
 				<span
 					className="h-9 w-1 shrink-0 rounded-full"
@@ -57,7 +58,10 @@ export function CourseGrades({ course }: { course: MoodleCourseGrades }) {
 						{graded} of {course.items.length} items graded
 					</p>
 				</div>
-				<span className={cn("text-lg font-semibold tabular-nums", toneOf(percent))}>
+				<div className="hidden w-28 sm:block">
+					<PercentBar percent={percent} className="w-full" />
+				</div>
+				<span className={cn("w-12 text-right text-lg font-semibold tabular-nums", toneOf(percent))}>
 					{percent !== undefined ? `${Math.round(percent)}%` : "—"}
 				</span>
 				<ChevronDown
@@ -73,20 +77,34 @@ export function CourseGrades({ course }: { course: MoodleCourseGrades }) {
 								<TableHead className="pl-4">Item</TableHead>
 								<TableHead className="text-right">Grade</TableHead>
 								<TableHead className="hidden w-24 sm:table-cell" />
+								<TableHead className="hidden text-right md:table-cell">Graded</TableHead>
 								<TableHead className="pr-4 text-right">Letter</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{course.items.map((item) => {
+							{items.length === 0 && (
+								<TableRow>
+									<TableCell colSpan={5} className="pl-4 text-muted-foreground">No items match.</TableCell>
+								</TableRow>
+							)}
+							{items.map((item) => {
 								const p = itemPercent(item);
 								return (
 									<TableRow key={item.id}>
-										<TableCell className="max-w-0 truncate pl-4">{item.itemName}</TableCell>
+										<TableCell className="max-w-0 pl-4">
+											<span className="block truncate">{item.itemName}</span>
+											{item.feedback && (
+												<RichContent html={item.feedback} className="line-clamp-2 text-xs text-muted-foreground [&_p]:my-0" />
+											)}
+										</TableCell>
 										<TableCell className="text-right tabular-nums">
 											{item.grade !== undefined ? `${item.grade}/${item.maxGrade ?? "—"}` : "—"}
 										</TableCell>
 										<TableCell className="hidden sm:table-cell">
 											<PercentBar percent={p} />
+										</TableCell>
+										<TableCell className="hidden text-right text-xs text-muted-foreground md:table-cell">
+											{item.gradedDate ? new Date(item.gradedDate).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—"}
 										</TableCell>
 										<TableCell className="pr-4 text-right">{item.letterGrade ?? "—"}</TableCell>
 									</TableRow>

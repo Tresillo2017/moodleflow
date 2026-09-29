@@ -7,6 +7,7 @@ import { buildContributions, buildTopCourses } from "@/lib/moodle/activity";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ui/state";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
+import { isCurrentCourse } from "@/lib/moodle/course-filter";
 import { Activity } from "lucide-react";
 
 const ACCENT = "var(--color-primary)";
@@ -27,16 +28,25 @@ export function MoodleActivityCard() {
 	const loading = courses.loading || grades.loading || assignments.loading;
 	const error = courses.error ?? grades.error ?? assignments.error;
 
+	// Past courses (ended or hidden) would drown out what's happening now.
+	const current = useMemo(() => {
+		if (!courses.data || !grades.data || !assignments.data) return undefined;
+		const active = courses.data.filter(isCurrentCourse);
+		const ids = new Set(active.map((c) => c.id));
+		return {
+			courses: active,
+			grades: grades.data.filter((g) => ids.has(g.courseId)),
+			assignments: assignments.data.filter((a) => ids.has(a.courseId)),
+		};
+	}, [courses.data, grades.data, assignments.data]);
+
 	const contributions = useMemo(
-		() => (grades.data && assignments.data ? buildContributions(grades.data, assignments.data) : []),
-		[grades.data, assignments.data],
+		() => (current ? buildContributions(current.grades, current.assignments) : []),
+		[current],
 	);
 	const topCourses = useMemo(
-		() =>
-			courses.data && grades.data && assignments.data
-				? buildTopCourses(courses.data, grades.data, assignments.data)
-				: [],
-		[courses.data, grades.data, assignments.data],
+		() => (current ? buildTopCourses(current.courses, current.grades, current.assignments) : []),
+		[current],
 	);
 
 	if (loading) return <ListSkeleton rows={1} />;

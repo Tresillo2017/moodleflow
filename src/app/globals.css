@@ -141,6 +141,28 @@ html[data-scale="xl"] { font-size: 112.5%; }
 	scroll-behavior: auto !important;
 }
 
+/*
+ * Light mode: bleh's light surfaces are near-white on near-white, so cards blend into the page.
+ * Tint the page, keep cards white, and strengthen borders, shadows and muted text.
+ */
+html[data-bleh--theme_type="light"] {
+	--card: oklch(0.995 0.004 var(--hue));
+	--border: color-mix(in oklch, oklch(var(--b4)) 78%, oklch(var(--c2)) 22%);
+	--muted: color-mix(in oklch, oklch(var(--b4)) 45%, transparent);
+	--muted-foreground: color-mix(in oklch, oklch(var(--c3)) 78%, black);
+}
+html[data-bleh--theme_type="light"] body {
+	background-color: color-mix(in oklch, oklch(var(--b6)) 50%, oklch(0.94 0.035 var(--hue)));
+	background-image:
+		radial-gradient(60rem 38rem at 92% -8%, oklch(var(--h4) / 26%), transparent 70%),
+		radial-gradient(48rem 34rem at -6% 108%, oklch(var(--h4) / 18%), transparent 70%);
+}
+html[data-bleh--theme_type="light"] .bg-card {
+	box-shadow:
+		0 1px 2px oklch(0.3 0.03 var(--hue) / 7%),
+		0 6px 18px -6px oklch(0.3 0.04 var(--hue) / 10%);
+}
+
 @layer base {
 	* {
 		@apply border-border outline-ring/50;

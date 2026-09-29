@@ -7,6 +7,18 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-29
+
+### Added
+- Grades page: overall, best, needs-attention and items-graded stats; recently graded list; search and sort (name, highest, lowest); per-item graded date and teacher feedback.
+
+### Changed
+- Light mode: tinted page background, crisper card borders and shadows, and stronger muted text contrast.
+
+### Fixed
+- Grades page showing no course names on sites whose grade report omits them.
+- Activity showing graded items from past courses instead of current ones.
+
 ## [0.3.1] - 2026-09-29
 
 ### Fixed
