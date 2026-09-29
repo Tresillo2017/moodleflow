@@ -7,6 +7,11 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-09-29
+
+### Fixed
+- Message people search also finds classmates and teachers from your courses, not only the people Moodle's own search exposes.
+
 ## [0.11.0] - 2026-09-29
 
 ### Added

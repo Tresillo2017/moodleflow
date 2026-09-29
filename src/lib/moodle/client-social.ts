@@ -1,3 +1,4 @@
+import { MoodleError } from "@/types/moodle";
 import { callMoodle, type MoodleConnection, type MoodleParams } from "./call";
 import {
 	normalizeForums,
@@ -19,7 +20,7 @@ import {
 	normalizeMeetingInfo,
 	normalizeRecordings,
 } from "./normalize-chat";
-import { asArray, asRecord } from "./normalize";
+import { asArray, asRecord, normalizeParticipants } from "./normalize";
 import { modulePath } from "./links";
 import type {
 	ChatMessage,
@@ -132,6 +133,29 @@ export function createSocialApi({ connection, userId, uploadFiles }: SocialConte
 	const contactCall = (fn: string) => async (otherUserId: number) => {
 		await post(fn, { userid: await userId(), requesteduserid: otherUserId });
 	};
+
+	async function messageSearch(text: string): Promise<PeopleSearchResult> {
+		try {
+			return normalizePeopleSearch(await withUser("core_message_message_search_users", { search: text, limitfrom: 0, limitnum: 20 }, "GET"));
+		} catch {
+			// older sites only have the flat contact search
+			return normalizePeopleSearch(await get("core_message_search_contacts", { searchtext: text, onlymycourses: 0 }));
+		}
+	}
+
+	// Participants of the user's courses, loaded once: Moodle's message search hides people the site policy doesn't expose (often classmates).
+	let participants: Promise<MoodleContact[]> | null = null;
+	async function classmateSearch(text: string): Promise<MoodleContact[]> {
+		participants ??= (async () => {
+			const me = await userId();
+			const courses = asArray(await get("core_enrol_get_users_courses", { userid: me })).map((c) => Number(asRecord(c).id));
+			const lists = await Promise.all(courses.map((id) => get("core_enrol_get_enrolled_users", { courseid: id }).then(normalizeParticipants, () => [])));
+			const byId = new Map(lists.flat().filter((p) => p.id !== me).map((p) => [p.id, { id: p.id, fullName: p.fullName, imageUrl: p.imageUrl }]));
+			return [...byId.values()];
+		})();
+		const q = text.toLowerCase();
+		return (await participants).filter((p) => p.fullName.toLowerCase().includes(q)).slice(0, 20);
+	}
 
 	const DISCUSSION_TOGGLES: Record<DiscussionToggle, string> = {
 		subscribe: "mod_forum_set_subscription_state",
@@ -254,12 +278,14 @@ export function createSocialApi({ connection, userId, uploadFiles }: SocialConte
 		},
 
 		async searchPeople(text) {
-			try {
-				return normalizePeopleSearch(await withUser("core_message_message_search_users", { search: text, limitfrom: 0, limitnum: 20 }, "GET"));
-			} catch {
-				// older sites only have the flat contact search
-				return normalizePeopleSearch(await get("core_message_search_contacts", { searchtext: text, onlymycourses: 0 }));
-			}
+			const [site, classmates] = await Promise.all([
+				messageSearch(text).catch(() => null),
+				classmateSearch(text).catch(() => []),
+			]);
+			if (!site && classmates.length === 0) throw new MoodleError("unknown_error", "Moodle couldn't search for people.");
+			// the site's search knows who is already a contact; course participants fill in everyone it hides
+			const known = new Set([...(site?.contacts ?? []), ...(site?.others ?? [])].map((c) => c.id));
+			return { contacts: site?.contacts ?? [], others: [...(site?.others ?? []), ...classmates.filter((c) => !known.has(c.id))] };
 		},
 
 		async getContacts() {
