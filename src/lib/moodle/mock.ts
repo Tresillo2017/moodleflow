@@ -9,6 +9,8 @@ import type {
 	MoodleCourseContent,
 	MoodleCourseGrades,
 	MoodleNotification,
+	MoodleParticipant,
+	CourseCompletion,
 	MoodleSiteInfo,
 	MoodleUser,
 } from "@/types/moodle";
@@ -83,6 +85,9 @@ const courseContents: Record<number, MoodleCourseContent> = {
 							{ name: "index.html", path: "/2/", url: "data:text/html,%3Ch3%3EEpsilon-delta%3C%2Fh3%3E%3Cp%3EFor%20every%20e%3E0...%3C%2Fp%3E%3C%21--/2/index.html--%3E", size: 90 },
 							{ name: "index.html", path: "/3/", url: "data:text/html,%3Ch2%3ESeries%3C%2Fh2%3E%3Cp%3ESums%20of%20sequences.%3C%2Fp%3E%3C%21--/3/index.html--%3E", size: 90 },
 						] },
+					{ id: 15, instance: 15, courseId: 1, sectionId: 1, type: "imscp", name: "Interactive lesson package", visible: true,
+						chapters: [{ title: "Intro", href: "intro.html", level: 0 }],
+						files: [{ name: "intro.html", url: "data:text/html,%3Ch2%3EPackage%20intro%3C%2Fh2%3E%3Cp%3EContent%20from%20an%20IMS%20package.%3C%2Fp%3E", size: 70 }] },
 					{ id: 14, courseId: 1, sectionId: 1, type: "quiz", name: "Final review (locked)", locked: true, availabilityInfo: "<p>Available from <strong>1 December</strong></p>", visible: true },
 					{ id: 3, courseId: 1, sectionId: 1, type: "quiz", name: "Quiz 1", description: "<p>Ten questions, two attempts allowed.</p>", visible: true, completed: true },
 				],
@@ -162,6 +167,22 @@ const siteInfo: MoodleSiteInfo = {
 	functions: [],
 };
 
+const ago = (n: number) => new Date(now - n * 86_400_000).toISOString();
+const mockParticipants: MoodleParticipant[] = [
+	{ id: 1, fullName: "Tomas", roles: ["Student"], lastAccess: ago(0), groups: [{ id: 1, name: "Group A" }] },
+	{ id: 2, fullName: "Ana Costa", roles: ["Student"], lastAccess: ago(1), groups: [{ id: 1, name: "Group A" }] },
+	{ id: 3, fullName: "Rui Ferreira", roles: ["Student"], lastAccess: ago(9), groups: [{ id: 2, name: "Group B" }] },
+	{ id: 4, fullName: "Prof. Silva", roles: ["Teacher"], lastAccess: ago(0), groups: [] },
+];
+let mockCompletion: CourseCompletion = {
+	completed: false,
+	canSelfComplete: true,
+	criteria: [
+		{ title: "Complete all activities", complete: false },
+		{ title: "Manual self completion", complete: false },
+	],
+};
+
 const user: MoodleUser = {
 	id: 1,
 	username: "demo.student",
@@ -203,6 +224,19 @@ export function createMockMoodleClient(): MoodleClient {
 			delay(
 				courseContents[courseId] ?? { courseId, sections: [] },
 			),
+		getCourseNavOptions: () => delay(["grades", "participants", "badges"]),
+		getParticipants: () => delay(mockParticipants),
+		getCourseCompletion: () => delay(mockCompletion),
+		selfCompleteCourse: () => {
+			mockCompletion = { ...mockCompletion, completed: true, canSelfComplete: false };
+			return delay(undefined);
+		},
+		getCourseBlocks: () =>
+			delay([
+				{ id: 1, name: "site_main_menu", title: "Latest announcements", html: "<ul><li>Midterm moved to <strong>Friday</strong></li><li>Office hours cancelled this week</li></ul>" },
+				{ id: 2, name: "calendar_upcoming", title: "Upcoming events", html: "<p>Problem Set 4 due tomorrow</p>" },
+			]),
+		getUpdatedModules: () => delay([11]),
 		setActivityCompletion: (cmid, completed) => {
 			for (const c of Object.values(courseContents))
 				for (const sec of c.sections) for (const a of sec.activities) if (a.id === cmid) a.completed = completed;

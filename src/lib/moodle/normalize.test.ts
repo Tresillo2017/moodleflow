@@ -4,7 +4,12 @@ import {
 	applySubmissionStatus,
 	deriveSubmissionStatus,
 	normalizeAssignments,
+	normalizeCourseBlocks,
+	normalizeCourseCompletion,
 	normalizeCourseContent,
+	normalizeNavOptions,
+	normalizeParticipants,
+	normalizeUpdatedModules,
 	normalizeCourses,
 	normalizeForumDiscussions,
 	normalizeGrades,
@@ -321,5 +326,27 @@ describe("normalizeSiteConfig", () => {
 
 	it("falls back to site info when the config call is unavailable", () => {
 		expect(normalizeSiteConfig(null, info)).toEqual({ siteName: "Info Name", logoUrl: undefined, maxUploadBytes: 5000, registrationEnabled: false, policyUrl: undefined });
+	});
+});
+
+describe("course extras", () => {
+	it("keeps only available nav options", () => {
+		expect(normalizeNavOptions({ courses: [{ id: 1, navoptions: [{ name: "grades", available: true }, { name: "badges", available: false }] }] })).toEqual(["grades"]);
+	});
+
+	it("maps participants with roles, groups and last access", () => {
+		const [p] = normalizeParticipants([{ id: 2, fullname: "Ana", roles: [{ shortname: "student", name: "Student" }], groups: [{ id: 1, name: "A" }], lastcourseaccess: 0 }]);
+		expect(p).toMatchObject({ id: 2, fullName: "Ana", roles: ["Student"], groups: [{ id: 1, name: "A" }], lastAccess: undefined });
+	});
+
+	it("detects a pending self-completion criterion", () => {
+		const c = normalizeCourseCompletion({ completionstatus: { completed: false, completions: [{ type: 1, title: "Self", complete: false }, { type: 4, title: "Activities", complete: true }] } });
+		expect(c.canSelfComplete).toBe(true);
+		expect(c.criteria).toEqual([{ title: "Self", complete: false }, { title: "Activities", complete: true }]);
+	});
+
+	it("drops empty blocks and non-module updates", () => {
+		expect(normalizeCourseBlocks({ blocks: [{ instanceid: 1, name: "a", contents: { title: "T", content: "<p>x</p>" } }, { instanceid: 2, name: "b", contents: { content: " " } }] })).toHaveLength(1);
+		expect(normalizeUpdatedModules({ instances: [{ contextlevel: "module", id: 5 }, { contextlevel: "course", id: 1 }] })).toEqual([5]);
 	});
 });

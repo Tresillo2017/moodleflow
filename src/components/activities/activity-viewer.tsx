@@ -49,8 +49,11 @@ function BookBody({ activity }: { activity: MoodleActivity }) {
 	const [index, setIndex] = useState(0);
 	const files = activity.files ?? [];
 	const chapter = chapters[index];
-	// chapter hrefs look like "12/index.html"; the matching file's path is "/12/"
-	const file = chapter && files.find((f) => f.path === `/${chapter.href.split("/")[0]}/`);
+	// book hrefs look like "12/index.html" (file path "/12/"); package hrefs are paths from the package root
+	const file =
+		chapter &&
+		(files.find((f) => `${f.path ?? "/"}${f.name}` === `/${chapter.href}`) ??
+			files.find((f) => f.path === `/${chapter.href.split("/")[0]}/`));
 	const nav = "rounded-md px-3 py-1.5 text-xs transition-colors hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent";
 
 	return (
@@ -112,7 +115,7 @@ export function ActivityViewer({ activity, onClose }: { activity: MoodleActivity
 				<DialogHeader className="pr-8">
 					<DialogTitle className="truncate text-sm">{activity.name}</DialogTitle>
 				</DialogHeader>
-				{activity.type === "book" ? (
+				{activity.type === "book" || activity.type === "imscp" ? (
 					<BookBody activity={activity} />
 				) : activity.type === "folder" ? (
 					<FolderBody files={activity.files ?? []} />
@@ -126,4 +129,4 @@ export function ActivityViewer({ activity, onClose }: { activity: MoodleActivity
 	);
 }
 
-export const hasViewer = (a: MoodleActivity) => a.type === "page" || a.type === "book" || a.type === "folder";
+export const hasViewer = (a: MoodleActivity) => a.type === "page" || a.type === "book" || a.type === "folder" || a.type === "imscp";

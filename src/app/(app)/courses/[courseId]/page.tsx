@@ -19,6 +19,10 @@ import { CourseBanner } from "@/components/courses/course-banner";
 import { FileList } from "@/components/files/file-list";
 import { fileKind } from "@/lib/file-kind";
 import { CourseGrades } from "@/components/grades/course-grades";
+import { CourseBlocks } from "@/components/courses/course-blocks";
+import { CourseCompletionCard } from "@/components/courses/course-completion";
+import { CourseParticipants } from "@/components/courses/course-participants";
+import { useUpdatedModules } from "@/hooks/use-updated-modules";
 import { CourseOutline, sectionAnchor } from "@/components/courses/course-outline";
 import { RichContent } from "@/components/content/rich-content";
 import { ArrowLeft, CheckCircle2, ChevronDown, Circle, ExternalLink, FolderOpen, GraduationCap, Lock, MessageSquare, Pin, Star } from "lucide-react";
@@ -27,7 +31,7 @@ import { toast } from "@/lib/toast";
 import { isHttpUrl } from "@/lib/utils";
 import type { MoodleActivity, MoodleAssignment, MoodleSection } from "@/types/moodle";
 
-function ActivityRow({ activity: a, assignment }: { activity: MoodleActivity; assignment?: MoodleAssignment }) {
+function ActivityRow({ activity: a, assignment, updated }: { activity: MoodleActivity; assignment?: MoodleAssignment; updated?: boolean }) {
 	const { client, refresh } = useMoodleConnection();
 	const logView = () => void client?.logActivityView(a);
 	const submittable = assignment ? canSubmit(assignment) : false;
@@ -76,6 +80,7 @@ function ActivityRow({ activity: a, assignment }: { activity: MoodleActivity; as
 		<>
 			<ActivityIcon type={a.type} className="size-4 shrink-0 text-muted-foreground" />
 			<span className="flex-1 truncate">{a.name}</span>
+			{updated && <span className="rounded-md bg-primary/15 px-1.5 py-0.5 text-[0.65rem] font-medium text-primary">Updated</span>}
 			<DeadlineBadge dueDate={assignment && isDone(assignment) ? undefined : (a.dueDate ?? assignment?.dueDate)} />
 			{isHttpUrl(href) && (
 				<ExternalLink
@@ -128,6 +133,9 @@ function ActivityRow({ activity: a, assignment }: { activity: MoodleActivity; as
 					</div>
 				)}
 			</div>
+			{a.completionDetails && a.completed !== undefined && (
+				<p className="px-4 pb-2 pl-11 text-xs text-muted-foreground">To do: {a.completionDetails.join(", ")}</p>
+			)}
 			{viewing && <ActivityViewer activity={a} onClose={() => setViewing(false)} />}
 			{a.description && (
 				<RichContent html={a.description} className="line-clamp-3 px-4 pb-3 pl-11 text-xs text-muted-foreground [&_p]:my-1" />
@@ -137,7 +145,7 @@ function ActivityRow({ activity: a, assignment }: { activity: MoodleActivity; as
 	);
 }
 
-function SectionBlock({ section, assignments }: { section: MoodleSection; assignments: Map<number, MoodleAssignment> }) {
+function SectionBlock({ section, assignments, updated }: { section: MoodleSection; assignments: Map<number, MoodleAssignment>; updated: Set<number> }) {
 	const tracked = section.activities.filter((a) => a.completed !== undefined);
 	const done = tracked.filter((a) => a.completed).length;
 	const items = section.activities.filter((a) => a.type !== "label");
@@ -174,6 +182,12 @@ function SectionBlock({ section, assignments }: { section: MoodleSection; assign
 				)}
 			</CollapsibleTrigger>
 			<CollapsibleContent className="h-(--collapsible-panel-height) overflow-hidden transition-[height] duration-200 ease-out data-ending-style:h-0 data-starting-style:h-0">
+				{section.locked && (
+					<div className="flex items-start gap-2 border-t px-4 py-3 text-xs text-muted-foreground">
+						<Lock className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+						{section.availabilityInfo ? <RichContent html={section.availabilityInfo} className="text-xs [&_p]:my-0" /> : "This section is restricted."}
+					</div>
+				)}
 				{section.summary && <RichContent html={section.summary} className="border-t px-4 py-3 text-muted-foreground" />}
 				<div className="flex flex-col divide-y border-t">
 					{section.activities.map((a) => (
@@ -181,6 +195,7 @@ function SectionBlock({ section, assignments }: { section: MoodleSection; assign
 							key={a.id}
 							activity={a}
 							assignment={a.type === "assignment" && a.instance !== undefined ? assignments.get(a.instance) : undefined}
+							updated={updated.has(a.id)}
 						/>
 					))}
 				</div>
@@ -249,6 +264,10 @@ function CourseDetailContent({ params }: { params: Promise<{ courseId: string }>
 	const content = useMoodleQuery(client ? () => client.getCourseContents(id) : null, [client, id]);
 	const assignmentsQuery = useMoodleQuery(client ? () => client.getAssignments([id]) : null, [client, id]);
 	const gradesQuery = useMoodleQuery(client ? () => client.getGrades(id) : null, [client, id]);
+	const navOptions = useMoodleQuery(client ? () => client.getCourseNavOptions(id) : null, [client, id]).data;
+	// null = the site can't say, so show every tab
+	const canOpen = (name: string) => !navOptions || navOptions.includes(name);
+	const updatedModules = useUpdatedModules(id);
 	const course = courses.data?.find((c) => c.id === id);
 	const sections = content.data?.sections.filter((s) => s.activities.length > 0) ?? [];
 	const assignmentsById = useMemo(
@@ -299,7 +318,8 @@ function CourseDetailContent({ params }: { params: Promise<{ courseId: string }>
 			<Tabs defaultValue="content">
 				<TabsList>
 					<TabsTrigger value="content">Content</TabsTrigger>
-					<TabsTrigger value="grades">Grades</TabsTrigger>
+					{canOpen("grades") && <TabsTrigger value="grades">Grades</TabsTrigger>}
+					{canOpen("participants") && <TabsTrigger value="participants">Participants</TabsTrigger>}
 					{forums.length > 0 && <TabsTrigger value="forums">Forums</TabsTrigger>}
 				</TabsList>
 
@@ -311,6 +331,8 @@ function CourseDetailContent({ params }: { params: Promise<{ courseId: string }>
 						/>
 					)}
 					<div className="flex min-w-0 flex-col gap-6">
+					<CourseCompletionCard courseId={id} />
+					<CourseBlocks courseId={id} className="flex flex-col gap-3" />
 					{content.loading && <ListSkeleton rows={4} />}
 					{content.error && <ErrorState error={content.error} onRetry={refresh} />}
 					{content.data && sections.length === 0 && (
@@ -324,7 +346,7 @@ function CourseDetailContent({ params }: { params: Promise<{ courseId: string }>
 								className="animate-track-in"
 								style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
 							>
-								<SectionBlock section={section} assignments={assignmentsById} />
+								<SectionBlock section={section} assignments={assignmentsById} updated={updatedModules} />
 							</div>
 						))}
 					</div>
@@ -338,6 +360,10 @@ function CourseDetailContent({ params }: { params: Promise<{ courseId: string }>
 						<EmptyState icon={GraduationCap} title="No grades yet" description="Grades for this course show up here." />
 					)}
 					{courseGrades && <CourseGrades course={courseGrades} />}
+				</TabsContent>
+
+				<TabsContent value="participants" className="pt-2">
+					<CourseParticipants courseId={id} />
 				</TabsContent>
 
 				<TabsContent value="forums" className="flex flex-col gap-3 pt-2">

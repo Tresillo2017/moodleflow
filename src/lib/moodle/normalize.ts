@@ -1,6 +1,9 @@
 import { MoodleError } from "@/types/moodle";
 import type {
 	BookChapter,
+	CourseBlock,
+	CourseCompletion,
+	MoodleParticipant,
 	ActivityType,
 	AssignmentConfig,
 	AssignmentSubmission,
@@ -124,16 +127,17 @@ function normalizeFiles(contents: unknown): MoodleFile[] {
 		}));
 }
 
-/** Book contents carry the table of contents as a JSON "structure" entry. */
+/** Book and IMS package contents carry the table of contents as a JSON "structure" entry (possibly nested via subitems). */
 function normalizeChapters(contents: unknown): BookChapter[] | undefined {
 	const entry = asArray(contents).map(asRecord).find((c) => c.filename === "structure" && typeof c.content === "string");
 	if (!entry) return undefined;
+	const flatten = (items: unknown[], depth: number): BookChapter[] =>
+		items.map(asRecord).flatMap((c) => [
+			{ title: String(c.title ?? ""), href: String(c.href ?? ""), level: Number(c.level ?? depth) },
+			...flatten(asArray(c.subitems), depth + 1),
+		]);
 	try {
-		return asArray(JSON.parse(String(entry.content))).map(asRecord).map((c) => ({
-			title: String(c.title ?? ""),
-			href: String(c.href ?? ""),
-			level: Number(c.level ?? 0),
-		}));
+		return flatten(asArray(JSON.parse(String(entry.content))), 0);
 	} catch {
 		return undefined;
 	}
@@ -143,6 +147,15 @@ function normalizeChapters(contents: unknown): BookChapter[] | undefined {
 function normalizeExternalUrl(contents: unknown): string | undefined {
 	const entry = asArray(contents).map(asRecord).find((c) => c.type === "url" && typeof c.fileurl === "string");
 	return entry ? String(entry.fileurl) : undefined;
+}
+
+function normalizeCompletionDetails(data: unknown): string[] | undefined {
+	if (!data || typeof data !== "object") return undefined;
+	const details = asArray((data as Record<string, unknown>).details)
+		.map((d) => asRecord(d).rulevalue)
+		.map((v) => (v && typeof v === "object" ? (v as Record<string, unknown>).description : undefined))
+		.filter((d): d is string => typeof d === "string" && d !== "");
+	return details.length ? details : undefined;
 }
 
 // core_course_get_contents
@@ -167,7 +180,8 @@ export function normalizeCourseContent(courseId: number, raw: unknown): MoodleCo
 					: undefined,
 				manualCompletion: mod.completion === 1 ? true : undefined,
 				externalUrl: modname === "url" ? normalizeExternalUrl(mod.contents) : undefined,
-				chapters: modname === "book" ? normalizeChapters(mod.contents) : undefined,
+				chapters: modname === "book" || modname === "imscp" ? normalizeChapters(mod.contents) : undefined,
+				completionDetails: normalizeCompletionDetails(mod.completiondata),
 				locked: mod.uservisible === false ? true : undefined,
 				availabilityInfo: typeof mod.availabilityinfo === "string" ? mod.availabilityinfo : undefined,
 				visible: mod.visible === undefined ? true : Boolean(mod.visible),
@@ -177,6 +191,8 @@ export function normalizeCourseContent(courseId: number, raw: unknown): MoodleCo
 			id: Number(r.id),
 			name: String(r.name ?? ""),
 			summary: r.summary ? String(r.summary) : undefined,
+			locked: r.uservisible === false ? true : undefined,
+			availabilityInfo: typeof r.availabilityinfo === "string" ? r.availabilityinfo : undefined,
 			activities,
 		};
 	});
@@ -435,4 +451,64 @@ export function normalizeGrades(raw: unknown): MoodleCourseGrades[] {
 			items,
 		};
 	});
+}
+
+// core_course_get_user_navigation_options: names of the tabs the user may open (navigation, grades, participants...)
+export function normalizeNavOptions(raw: unknown): string[] {
+	const course = asArray(asRecord(raw).courses).map(asRecord)[0];
+	return asArray(course?.navoptions)
+		.map(asRecord)
+		.filter((o) => o.available)
+		.map((o) => String(o.name));
+}
+
+// core_enrol_get_enrolled_users
+export function normalizeParticipants(raw: unknown): MoodleParticipant[] {
+	return asArray(raw).map((u) => {
+		const r = asRecord(u);
+		return {
+			id: Number(r.id),
+			fullName: String(r.fullname ?? ""),
+			imageUrl: typeof r.profileimageurlsmall === "string" ? r.profileimageurlsmall : undefined,
+			roles: asArray(r.roles).map((x) => String(asRecord(x).name || asRecord(x).shortname || "")).filter(Boolean),
+			lastAccess: r.lastcourseaccess ? new Date(Number(r.lastcourseaccess) * 1000).toISOString() : undefined,
+			groups: asArray(r.groups).map((g) => ({ id: Number(asRecord(g).id), name: String(asRecord(g).name ?? "") })),
+		};
+	});
+}
+
+// core_completion_get_course_completion_status
+export function normalizeCourseCompletion(raw: unknown): CourseCompletion {
+	const status = asRecord(asRecord(raw).completionstatus);
+	const completions = asArray(status.completions).map(asRecord);
+	const SELF = 1; // COMPLETION_CRITERIA_TYPE_SELF
+	return {
+		completed: Boolean(status.completed),
+		criteria: completions.map((c) => ({ title: String(c.title || (c.details && typeof c.details === "object" ? (c.details as Record<string, unknown>).criteria : "") || ""), complete: Boolean(c.complete) })),
+		canSelfComplete: completions.some((c) => Number(c.type) === SELF && !c.complete),
+	};
+}
+
+// core_block_get_course_blocks
+export function normalizeCourseBlocks(raw: unknown): CourseBlock[] {
+	return asArray(asRecord(raw).blocks)
+		.map(asRecord)
+		.map((b) => {
+			const contents = b.contents && typeof b.contents === "object" ? (b.contents as Record<string, unknown>) : {};
+			return {
+				id: Number(b.instanceid),
+				name: String(b.name ?? ""),
+				title: String(contents.title ?? b.name ?? ""),
+				html: String(contents.content ?? ""),
+			};
+		})
+		.filter((b) => b.html.trim() !== "");
+}
+
+// core_course_get_updates_since: ids of course modules changed since the timestamp
+export function normalizeUpdatedModules(raw: unknown): number[] {
+	return asArray(asRecord(raw).instances)
+		.map(asRecord)
+		.filter((i) => i.contextlevel === "module")
+		.map((i) => Number(i.id));
 }

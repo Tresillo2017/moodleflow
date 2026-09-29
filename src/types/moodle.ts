@@ -94,6 +94,8 @@ export interface MoodleActivity {
 	/** Restricted for this user; `availabilityInfo` is Moodle's HTML explanation. */
 	locked?: boolean;
 	availabilityInfo?: string;
+	/** Human-readable completion requirements, e.g. "View", "Receive a grade". */
+	completionDetails?: string[];
 	visible: boolean;
 }
 
@@ -101,6 +103,8 @@ export interface MoodleSection {
 	id: number;
 	name: string;
 	summary?: string;
+	locked?: boolean;
+	availabilityInfo?: string;
 	activities: MoodleActivity[];
 }
 
@@ -247,4 +251,27 @@ export class MoodleError extends Error {
 		this.code = code;
 		this.moodleCode = moodleCode;
 	}
+}
+
+export interface MoodleParticipant {
+	id: number;
+	fullName: string;
+	imageUrl?: string;
+	roles: string[];
+	lastAccess?: string;
+	groups: { id: number; name: string }[];
+}
+
+export interface CourseCompletion {
+	completed: boolean;
+	criteria: { title: string; complete: boolean }[];
+	/** The course has a "manual self completion" criterion the student hasn't ticked yet. */
+	canSelfComplete: boolean;
+}
+
+export interface CourseBlock {
+	id: number;
+	name: string;
+	title: string;
+	html: string;
 }

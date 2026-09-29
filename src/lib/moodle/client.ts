@@ -12,7 +12,10 @@ import {
 } from "./call";
 import { viewCall, type ViewTarget } from "./views";
 import type {
+	CourseBlock,
+	CourseCompletion,
 	MoodleAssignment,
+	MoodleParticipant,
 	MoodleCalendarEvent,
 	MoodleCourse,
 	MoodleCourseContent,
@@ -32,7 +35,12 @@ import {
 	normalizeComments,
 	normalizeCalendarEvents,
 	normalizeCourseContent,
+	normalizeCourseBlocks,
+	normalizeCourseCompletion,
 	normalizeCourses,
+	normalizeNavOptions,
+	normalizeParticipants,
+	normalizeUpdatedModules,
 	normalizeForumDiscussions,
 	normalizeGrades,
 	normalizeNotifications,
@@ -60,6 +68,16 @@ export interface MoodleClient {
 	getCourseContents(courseId: number): Promise<MoodleCourseContent>;
 	/** Manual completion: ticks or unticks "mark as done" for a course module. */
 	setActivityCompletion(cmid: number, completed: boolean): Promise<void>;
+	/** Tabs the user may open in this course ("grades", "participants", ...); null when the site can't say. */
+	getCourseNavOptions(courseId: number): Promise<string[] | null>;
+	getParticipants(courseId: number): Promise<MoodleParticipant[]>;
+	/** Null when the course has no completion tracking. */
+	getCourseCompletion(courseId: number): Promise<CourseCompletion | null>;
+	selfCompleteCourse(courseId: number): Promise<void>;
+	/** Side blocks with content (announcements, latest news, upcoming events); empty when unsupported. */
+	getCourseBlocks(courseId: number): Promise<CourseBlock[]>;
+	/** Course-module ids changed since the timestamp (seconds); empty when unsupported. */
+	getUpdatedModules(courseId: number, sinceSeconds: number): Promise<number[]>;
 	getCalendarEvents(): Promise<MoodleCalendarEvent[]>;
 	/** With courseIds, also fetches each assignment's real submission status; without, status is "unknown". */
 	getAssignments(courseIds?: number[]): Promise<MoodleAssignment[]>;
@@ -248,6 +266,48 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 				{ cmid, completed: completed ? 1 : 0 },
 				"POST",
 			);
+		},
+
+		async getCourseNavOptions(courseId) {
+			try {
+				return normalizeNavOptions(await callMoodle(connection, "core_course_get_user_navigation_options", { courseids: { 0: courseId } }));
+			} catch {
+				return null;
+			}
+		},
+
+		async getParticipants(courseId) {
+			return normalizeParticipants(await callMoodle(connection, "core_enrol_get_enrolled_users", { courseid: courseId }));
+		},
+
+		async getCourseCompletion(courseId) {
+			try {
+				const info = await fetchSiteInfo();
+				const raw = await callMoodle(connection, "core_completion_get_course_completion_status", { courseid: courseId, userid: info.userId });
+				return normalizeCourseCompletion(raw);
+			} catch {
+				return null; // tracking disabled for this course
+			}
+		},
+
+		async selfCompleteCourse(courseId) {
+			await callMoodle(connection, "core_completion_mark_course_self_completed", { courseid: courseId }, "POST");
+		},
+
+		async getCourseBlocks(courseId) {
+			try {
+				return normalizeCourseBlocks(await callMoodle(connection, "core_block_get_course_blocks", { courseid: courseId, returncontents: 1 }));
+			} catch {
+				return [];
+			}
+		},
+
+		async getUpdatedModules(courseId, sinceSeconds) {
+			try {
+				return normalizeUpdatedModules(await callMoodle(connection, "core_course_get_updates_since", { courseid: courseId, since: sinceSeconds }));
+			} catch {
+				return [];
+			}
 		},
 
 		async getCalendarEvents() {
