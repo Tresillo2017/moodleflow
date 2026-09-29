@@ -233,7 +233,7 @@ export function createMockMoodleClient(): MoodleClient {
 		},
 		getCourseBlocks: () =>
 			delay([
-				{ id: 1, name: "site_main_menu", title: "Latest announcements", html: "<ul><li>Midterm moved to <strong>Friday</strong></li><li>Office hours cancelled this week</li></ul>" },
+				{ id: 1, name: "news_items", title: "Latest announcements", html: "<ul><li>Midterm moved to <strong>Friday</strong></li><li>Office hours cancelled this week</li></ul>" },
 				{ id: 2, name: "calendar_upcoming", title: "Upcoming events", html: "<p>Problem Set 4 due tomorrow</p>" },
 			]),
 		getUpdatedModules: () => delay([11]),

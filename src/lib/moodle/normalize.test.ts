@@ -346,7 +346,16 @@ describe("course extras", () => {
 	});
 
 	it("drops empty blocks and non-module updates", () => {
-		expect(normalizeCourseBlocks({ blocks: [{ instanceid: 1, name: "a", contents: { title: "T", content: "<p>x</p>" } }, { instanceid: 2, name: "b", contents: { content: " " } }] })).toHaveLength(1);
+		expect(
+			normalizeCourseBlocks({
+				blocks: [
+					{ instanceid: 1, name: "news_items", contents: { title: "T", content: "<p>x</p>" } },
+					{ instanceid: 2, name: "html", contents: { content: " " } },
+					{ instanceid: 3, name: "navigation", contents: { title: "Navigation", content: "<ul></ul>" } },
+					{ instanceid: 4, name: "timeline", contents: { title: "Timeline", content: "<p>x</p>" } },
+				],
+			}),
+		).toHaveLength(1);
 		expect(normalizeUpdatedModules({ instances: [{ contextlevel: "module", id: 5 }, { contextlevel: "course", id: 1 }] })).toEqual([5]);
 	});
 });

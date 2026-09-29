@@ -7,6 +7,9 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+### Fixed
+- Course blocks: only announcements, upcoming events, recent activity, HTML and online-users blocks are shown; Navigation, Timeline, Info and third-party blocks no longer clutter every course.
+
 ## [0.10.0] - 2026-09-29
 
 ### Added

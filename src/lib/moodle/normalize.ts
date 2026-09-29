@@ -489,10 +489,14 @@ export function normalizeCourseCompletion(raw: unknown): CourseCompletion {
 	};
 }
 
+/** Blocks worth showing in-app; navigation, timeline, notes, third-party stats etc. are skipped (they duplicate MoodleFlow or don't render as plain HTML). */
+const SUPPORTED_BLOCKS = new Set(["news_items", "calendar_upcoming", "recent_activity", "html", "online_users"]);
+
 // core_block_get_course_blocks
 export function normalizeCourseBlocks(raw: unknown): CourseBlock[] {
 	return asArray(asRecord(raw).blocks)
 		.map(asRecord)
+		.filter((b) => SUPPORTED_BLOCKS.has(String(b.name)))
 		.map((b) => {
 			const contents = b.contents && typeof b.contents === "object" ? (b.contents as Record<string, unknown>) : {};
 			return {
