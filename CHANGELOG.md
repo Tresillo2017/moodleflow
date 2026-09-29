@@ -7,6 +7,19 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-09-29
+
+### Added
+- Page, book, folder and IMS package activities open in an in-app reader (book chapters with previous/next).
+- URL activities open the external link directly.
+- File previews for Word (.docx), Markdown, CSV, Jupyter notebooks, audio and video.
+- Manual "mark as done" on activities, completion requirements, and a course completion card with self-complete.
+- Participants tab with search, role and group filters.
+- Course side blocks (announcements, latest news, upcoming events).
+- "Updated" badge on activities changed since your last visit.
+- Restricted activities and sections show Moodle's availability message.
+- Grades and Participants tabs follow what your Moodle allows.
+
 ## [0.9.0] - 2026-09-29
 
 ### Added
