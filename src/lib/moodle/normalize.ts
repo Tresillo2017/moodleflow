@@ -229,6 +229,7 @@ export function normalizeAssignments(raw: unknown): MoodleAssignment[] {
 				openDate: iso(assign.allowsubmissionsfromdate),
 				dueDate: iso(assign.duedate),
 				cutoffDate: iso(assign.cutoffdate),
+				isGroup: Number(assign.teamsubmission ?? 0) === 1,
 				maxGrade: Number(assign.grade) > 0 ? Number(assign.grade) : undefined,
 				status: "unknown",
 				config: assignConfig(assign),
@@ -270,7 +271,12 @@ function pluginFiles(plugin: Record<string, unknown>): MoodleFile[] {
 export function applySubmissionStatus(assignment: MoodleAssignment, raw: unknown): MoodleAssignment {
 	const r = asRecord(raw);
 	const last = r.lastattempt ? asRecord(r.lastattempt) : {};
-	const sub = last.submission ? asRecord(last.submission) : undefined;
+	// Group assignments: the shared team submission is the one that counts.
+	const rawSub = last.teamsubmission ?? last.submission;
+	const sub = rawSub ? asRecord(rawSub) : undefined;
+	const extension = iso(last.extensionduedate);
+	const extended = extension && (!assignment.dueDate || extension > assignment.dueDate);
+	const dueDate = extended ? extension : assignment.dueDate;
 	const feedback = r.feedback ? asRecord(r.feedback) : undefined;
 
 	const plugins = asArray(sub?.plugins).map(asRecord);
@@ -291,16 +297,19 @@ export function applySubmissionStatus(assignment: MoodleAssignment, raw: unknown
 
 	return {
 		...assignment,
+		dueDate,
+		originalDueDate: extended ? assignment.dueDate : undefined,
 		status: deriveSubmissionStatus({
 			submissionStatus: submission?.status,
 			graded,
-			dueDate: assignment.dueDate,
+			dueDate,
 			submittedAt: submission?.timeModified,
 		}),
 		submission,
 		canEdit: last.canedit === undefined ? undefined : Boolean(last.canedit),
 		grade: graded ? rawGrade : undefined,
 		gradedDate: iso(feedback?.gradeddate),
+		gradingDetails: /<[a-z]/i.test(String(feedback?.gradefordisplay ?? "")) ? String(feedback?.gradefordisplay) : undefined,
 		feedback: feedbackPlugins.map((p) => (p.type === "comments" ? editorText(p, "comments") : undefined)).find(Boolean),
 		feedbackFiles: feedbackPlugins.filter((p) => p.type === "file").flatMap(pluginFiles),
 	};

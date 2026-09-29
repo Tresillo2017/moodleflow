@@ -61,7 +61,8 @@ function withCache(client: MoodleClient, persist: boolean): MoodleClient {
 	return {
 		async getSiteInfo() {
 			const info = await siteInfo();
-			functions = new Set(info.functions);
+			// A real site always lists some functions; an empty list (demo mode) means "unknown, assume supported".
+			functions = info.functions.length ? new Set(info.functions) : null;
 			return info;
 		},
 		getSiteConfig: cached("siteConfig", TTL.siteInfo, () => client.getSiteConfig()),

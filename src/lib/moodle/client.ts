@@ -269,7 +269,7 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 		async saveAssignmentSubmission(assignment: MoodleAssignment, input: SubmissionInput) {
 			const plugindata: MoodleParams = {};
 			if (input.text !== undefined) {
-				plugindata.onlinetext_editor = { text: input.text, format: 2, itemid: 0 };
+				plugindata.onlinetext_editor = { text: input.text, format: 1, itemid: 0 };
 			}
 			if (input.files) {
 				const files = await Promise.all(

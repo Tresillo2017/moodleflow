@@ -128,7 +128,11 @@ export interface MoodleAssignment {
 	cmid?: number;
 	openDate?: string;
 	dueDate?: string;
+	/** Set when an extension moved dueDate; the date Moodle originally set. */
+	originalDueDate?: string;
 	cutoffDate?: string;
+	/** Group assignment: one shared submission for the whole team. */
+	isGroup?: boolean;
 	status: SubmissionStatus;
 	completion?: { done: boolean; label?: string };
 	config?: AssignmentConfig;
@@ -139,6 +143,8 @@ export interface MoodleAssignment {
 	maxGrade?: number;
 	gradedDate?: string;
 	feedback?: string;
+	/** Rubric / marking-guide result: Moodle renders it as HTML in gradefordisplay. */
+	gradingDetails?: string;
 	feedbackFiles?: MoodleFile[];
 }
 

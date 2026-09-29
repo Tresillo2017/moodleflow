@@ -242,6 +242,25 @@ describe("applySubmissionStatus", () => {
 		expect(a.submission?.files).toEqual([{ name: "a.pdf", url: "https://m/a.pdf", size: 10, mimeType: undefined }]);
 	});
 
+	it("uses a granted extension as the due date and keeps the original", () => {
+		const a = applySubmissionStatus(base, { lastattempt: { extensionduedate: 1_700_100_000 } });
+		expect(a.dueDate).toBe(new Date(1_700_100_000_000).toISOString());
+		expect(a.originalDueDate).toBe(base.dueDate);
+		expect(applySubmissionStatus(base, { lastattempt: { extensionduedate: 1_600_000_000 } }).originalDueDate).toBeUndefined();
+	});
+
+	it("prefers the shared team submission on group assignments", () => {
+		const a = applySubmissionStatus(base, {
+			lastattempt: { submission: { status: "draft" }, teamsubmission: { status: "submitted", timemodified: 1_699_990_000 } },
+		});
+		expect(a.submission?.status).toBe("submitted");
+	});
+
+	it("keeps rubric HTML from gradefordisplay but not a plain grade string", () => {
+		expect(applySubmissionStatus(base, { feedback: { gradefordisplay: "<table class='rubric'></table>" } }).gradingDetails).toContain("rubric");
+		expect(applySubmissionStatus(base, { feedback: { gradefordisplay: "85.00 / 100.00" } }).gradingDetails).toBeUndefined();
+	});
+
 	it("treats a negative grade as ungraded and reads feedback comments", () => {
 		const ungraded = applySubmissionStatus(base, { feedback: { grade: { grade: "-1.00000" } } });
 		expect(ungraded.grade).toBeUndefined();

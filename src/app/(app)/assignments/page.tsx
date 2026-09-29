@@ -8,6 +8,7 @@ import { ContextMenuItem } from "@/components/ui/context-menu";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
 import { PageHeader } from "@/components/layout/page-header";
+import { Button } from "@/components/ui/button";
 import { EmptyState, ErrorState, ListSkeleton, FeatureGate } from "@/components/ui/state";
 import { SearchInput } from "@/components/ui/search-input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -111,19 +112,21 @@ function AssignmentsPageContent() {
 	const courses = useMoodleQuery(client ? () => client.getCourses() : null, [client]);
 	const [view, setView] = useState<View>("todo");
 	const [query, setQuery] = useState("");
+	const [courseId, setCourseId] = useState(0);
+	const [newestFirst, setNewestFirst] = useState(false);
 
 	const now = Date.now();
 	const currentCourseIds = new Set(courses.data?.filter(isCurrentCourse).map((c) => c.id));
 	const current = (assignments.data ?? []).filter((a) => currentCourseIds.has(a.courseId));
 	const q = query.trim().toLowerCase();
 	const matching = current.filter(
-		(a) => !q || a.name.toLowerCase().includes(q) || a.courseName.toLowerCase().includes(q),
+		(a) => (!courseId || a.courseId === courseId) && (!q || a.name.toLowerCase().includes(q) || a.courseName.toLowerCase().includes(q)),
 	);
 
 	const groups = VIEWS[view].buckets
 		.map((bucket) => ({
 			bucket,
-			items: matching.filter((a) => bucketOf(a, now) === bucket).sort(byDue),
+			items: matching.filter((a) => bucketOf(a, now) === bucket).sort(newestFirst ? (a, b) => byDue(b, a) : byDue),
 		}))
 		.filter((g) => g.items.length > 0);
 
@@ -150,6 +153,20 @@ function AssignmentsPageContent() {
 						))}
 					</TabsList>
 				</Tabs>
+				<select
+					value={courseId}
+					onChange={(e) => setCourseId(Number(e.target.value))}
+					aria-label="Filter by course"
+					className="h-9 max-w-52 rounded-md border bg-transparent px-2 text-sm"
+				>
+					<option value={0}>All courses</option>
+					{courses.data?.filter(isCurrentCourse).map((c) => (
+						<option key={c.id} value={c.id}>{c.fullName}</option>
+					))}
+				</select>
+				<Button variant="outline" size="sm" onClick={() => setNewestFirst(!newestFirst)}>
+					Due: {newestFirst ? "latest first" : "soonest first"}
+				</Button>
 				<SearchInput
 					value={query}
 					onChange={(e) => setQuery(e.target.value)}

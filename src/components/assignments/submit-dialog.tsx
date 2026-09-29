@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "@/lib/toast";
 import { FileText, Loader2, Paperclip, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import {
 	Dialog,
 	DialogContent,
@@ -20,7 +20,6 @@ import type { MoodleAssignment, MoodleFile } from "@/types/moodle";
 
 type Attachment = File | MoodleFile;
 
-/** Moodle stores online text as HTML; the editor here is plain text. */
 function htmlToText(html: string): string {
 	return new DOMParser().parseFromString(html, "text/html").body.textContent ?? "";
 }
@@ -56,13 +55,15 @@ export function SubmitDialog({ assignment, onSubmitted, droppedFiles, onDroppedH
 	const [open, setOpen] = useState(false);
 	const [progress, setProgress] = useState<number | null>(null);
 	const [text, setText] = useState("");
+	const [editorKey, setEditorKey] = useState(0);
 	const [files, setFiles] = useState<Attachment[]>([]);
 	const [statement, setStatement] = useState(false);
 	const [busy, setBusy] = useState(false);
 
 	function handleOpenChange(next: boolean) {
 		if (next) {
-			setText(existing?.text ? htmlToText(existing.text) : "");
+			setText(existing?.text ?? "");
+			setEditorKey((k) => k + 1);
 			setFiles(existing?.files ?? []);
 			setStatement(false);
 		}
@@ -71,17 +72,19 @@ export function SubmitDialog({ assignment, onSubmitted, droppedFiles, onDroppedH
 
 	useEffect(() => {
 		if (!droppedFiles?.length) return;
-		setText(existing?.text ? htmlToText(existing.text) : "");
+		setText(existing?.text ?? "");
+		setEditorKey((k) => k + 1);
 		setFiles([...(existing?.files ?? []), ...droppedFiles]);
 		setStatement(false);
 		setOpen(true);
 		onDroppedHandled?.();
 	}, [droppedFiles, existing, onDroppedHandled]);
 
-	const hasContent = text.trim().length > 0 || files.length > 0;
+	const plainText = htmlToText(text).trim();
+	const hasContent = plainText.length > 0 || files.length > 0;
 	const fileError = validateFiles(files, assignment);
 	const needsStatement = draftMode && Boolean(config?.requiresStatement);
-	const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+	const wordCount = plainText ? plainText.split(/\s+/).length : 0;
 
 	async function save(finalize: boolean) {
 		if (!client || !hasContent || busy || fileError) return;
@@ -126,15 +129,13 @@ export function SubmitDialog({ assignment, onSubmitted, droppedFiles, onDroppedH
 				</DialogHeader>
 
 				{acceptsText && (
-					<Textarea
-						value={text}
-						onChange={(e) => setText(e.target.value)}
-						onKeyDown={(e) => {
-							if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) (!needsStatement || statement) && save(draftMode);
-						}}
+					<RichTextEditor
+						key={editorKey}
+						initialHtml={text}
+						onChange={setText}
 						placeholder="Write your submission…"
-						rows={acceptsFiles ? 5 : 8}
-						autoFocus
+						minRows={acceptsFiles ? 5 : 8}
+						onSubmitShortcut={() => (!needsStatement || statement) && save(draftMode)}
 					/>
 				)}
 

@@ -220,7 +220,10 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ ass
 							)}
 							<div className="flex gap-2">
 								<dt className="font-medium">Due:</dt>
-								<dd className="text-muted-foreground">{a.dueDate ? dateTime(a.dueDate) : "No due date"}</dd>
+								<dd className="text-muted-foreground">
+									{a.dueDate ? dateTime(a.dueDate) : "No due date"}
+									{a.originalDueDate && <span> (extended from {dateTime(a.originalDueDate)})</span>}
+								</dd>
 							</div>
 						</dl>
 						{a.description && (
@@ -245,6 +248,9 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ ass
 						<StatusRow label="Grading status" tone={a.status === "graded" ? "success" : "neutral"}>
 							{a.status === "graded" ? "Graded" : "Not graded"}
 						</StatusRow>
+						{a.isGroup && (
+							<StatusRow label="Group submission">One submission shared by your whole group.</StatusRow>
+						)}
 						{timing && (
 							<StatusRow label="Time remaining" tone={timing.tone}>
 								{timing.text}
@@ -270,7 +276,7 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ ass
 						)}
 					</dl>
 
-					{(a.feedback || (a.feedbackFiles && a.feedbackFiles.length > 0) || a.grade !== undefined) && (
+					{(a.feedback || a.gradingDetails || (a.feedbackFiles && a.feedbackFiles.length > 0) || a.grade !== undefined) && (
 						<Section title="Grade and feedback">
 							{a.grade !== undefined && (
 								<p className="text-2xl font-semibold tabular-nums">
@@ -279,6 +285,7 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ ass
 								</p>
 							)}
 							{a.gradedDate && <p className="text-xs text-muted-foreground">Graded {dateTime(a.gradedDate)}</p>}
+							{a.gradingDetails && <RichContent html={a.gradingDetails} />}
 							{a.feedback && <RichContent html={a.feedback} />}
 							{a.feedbackFiles && a.feedbackFiles.length > 0 && <FileList files={a.feedbackFiles} />}
 						</Section>
