@@ -37,3 +37,12 @@ export function parseProxyTarget(site: string | null): string | null {
 	}
 	return url.origin;
 }
+
+/**
+ * Optional deployment allowlist (comma-separated hostnames, e.g. "moodle.school.edu,learn.uni.edu").
+ * Empty or unset means any public HTTPS Moodle site is allowed.
+ */
+export function isHostAllowed(origin: string, allowlist: string | undefined): boolean {
+	const hosts = (allowlist ?? "").split(",").map((h) => h.trim().toLowerCase()).filter(Boolean);
+	return hosts.length === 0 || hosts.includes(new URL(origin).hostname);
+}

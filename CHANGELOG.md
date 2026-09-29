@@ -7,6 +7,15 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-29
+
+### Added
+- After you reload for an update, a popout shows what's new in that version.
+
+### Changed
+- Notifications now use the Sileo toast library, including the update prompt.
+- The courses and dashboard pages show a not-enabled state when the site lacks the courses function.
+
 ## [0.6.0] - 2026-09-29
 
 ### Added

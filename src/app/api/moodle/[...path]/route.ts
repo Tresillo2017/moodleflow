@@ -1,4 +1,4 @@
-import { isProxiedPath, parseProxyTarget } from "@/lib/moodle/proxy";
+import { isHostAllowed, isProxiedPath, parseProxyTarget } from "@/lib/moodle/proxy";
 
 // Opt-in CORS proxy for Moodle sites that don't send CORS headers. It forwards only web service
 // endpoints to the public HTTPS site named in `moodle_site`, drops cookies, and stores nothing.
@@ -18,6 +18,9 @@ async function proxy(req: Request, { params }: { params: Promise<{ path: string[
 	const incoming = new URL(req.url);
 	const origin = parseProxyTarget(incoming.searchParams.get("moodle_site"));
 	if (!origin) return Response.json({ error: "Invalid Moodle site" }, { status: 400 });
+	if (!isHostAllowed(origin, process.env.MOODLE_PROXY_ALLOWED_HOSTS)) {
+		return Response.json({ error: "This Moodle site isn't allowed on this deployment" }, { status: 403 });
+	}
 	incoming.searchParams.delete("moodle_site");
 
 	const target = new URL(`/${rel}`, origin);

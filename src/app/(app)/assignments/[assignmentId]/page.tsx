@@ -2,7 +2,7 @@
 
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { ArrowLeft, CheckCircle2, Circle, ClipboardX, Loader2, Upload } from "lucide-react";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useFileDrop } from "@/hooks/use-file-drop";

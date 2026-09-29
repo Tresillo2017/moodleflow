@@ -36,3 +36,12 @@ The proxy is deliberately narrow so it can't be used as a general relay:
 
 When the proxy is on, your token passes through this deployment's Worker for each request. Self-host
 MoodleFlow if you don't want to trust a shared deployment with that.
+
+### Limits and locking it down
+
+- The proxy checks the hostname text, not what it resolves to. On Cloudflare Workers this is safe in practice:
+  Workers can't connect to loopback, private or link-local addresses. If you self-host on Node, put the
+  proxy behind a network egress filter, since a public name pointing at a private IP would otherwise pass.
+- Anyone can use a deployment's proxy as a relay for the four paths above. To restrict it, set
+  `MOODLE_PROXY_ALLOWED_HOSTS` to a comma-separated list of hostnames (for example
+  `moodle.school.edu,learn.uni.edu`); other sites get a 403. Unset means any public HTTPS Moodle site.

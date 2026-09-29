@@ -5,7 +5,8 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { PreferencesProvider } from "@/components/providers/preferences-provider";
 import { MoodleProvider } from "@/components/providers/moodle-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
+import { WhatsNew } from "@/components/whats-new";
 import { UpdatePrompt } from "@/components/update-prompt";
 import { PREFERENCES_SCRIPT } from "@/lib/preferences";
 
@@ -39,6 +40,7 @@ export default function RootLayout({
 								{children}
 								<Toaster />
 								<UpdatePrompt />
+								<WhatsNew />
 							</TooltipProvider>
 						</MoodleProvider>
 					</PreferencesProvider>

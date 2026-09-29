@@ -8,7 +8,7 @@ import { useMoodleQuery } from "@/hooks/use-moodle-query";
 import { CourseCard } from "@/components/courses/course-card";
 import { isDone } from "@/lib/moodle/assignment";
 import { DeadlineBadge } from "@/components/assignments/deadline-badge";
-import { EmptyState, ErrorState, ListSkeleton } from "@/components/ui/state";
+import { EmptyState, ErrorState, ListSkeleton, FeatureGate } from "@/components/ui/state";
 import { DitherGradient } from "@/components/dither-kit/gradient";
 import { MoodleActivityCard } from "@/components/dashboard/moodle-activity-card";
 import { Card } from "@/components/ui/card";
@@ -141,7 +141,7 @@ function CustomizeMenu() {
 	);
 }
 
-export default function DashboardPage() {
+function DashboardPageContent() {
 	const { client, connection } = useMoodleConnection();
 	const { prefs } = usePreferences();
 	const show = prefs.dashboard;
@@ -334,5 +334,13 @@ export default function DashboardPage() {
 				</Reveal>
 			)}
 		</div>
+	);
+}
+
+export default function DashboardPage() {
+	return (
+		<FeatureGate feature="Dashboard" functions={["core_enrol_get_users_courses"]}>
+			<DashboardPageContent />
+		</FeatureGate>
 	);
 }

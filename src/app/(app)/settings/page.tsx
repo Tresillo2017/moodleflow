@@ -4,7 +4,7 @@ import { useId } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { motion } from "motion/react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Check, LogOut, Monitor, Moon, RotateCcw, RotateCw, Sun } from "lucide-react";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { usePreferences } from "@/components/providers/preferences-provider";

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isProxiedPath, parseProxyTarget } from "./proxy";
+import { isHostAllowed, isProxiedPath, parseProxyTarget } from "./proxy";
 
 describe("parseProxyTarget", () => {
 	it("accepts a public https site and returns its origin", () => {
@@ -33,5 +33,19 @@ describe("isProxiedPath", () => {
 		expect(isProxiedPath("webservice/pluginfile.php/1/mod_resource/content/0/a.pdf")).toBe(true);
 		expect(isProxiedPath("admin/index.php")).toBe(false);
 		expect(isProxiedPath("webservice/rest/server.php/../../admin")).toBe(false);
+	});
+});
+
+describe("isHostAllowed", () => {
+	it("allows any host when no allowlist is set", () => {
+		expect(isHostAllowed("https://a.example.com", undefined)).toBe(true);
+		expect(isHostAllowed("https://a.example.com", " , ")).toBe(true);
+	});
+
+	it("restricts to the listed hosts", () => {
+		const list = "Moodle.School.edu, learn.uni.edu";
+		expect(isHostAllowed("https://moodle.school.edu", list)).toBe(true);
+		expect(isHostAllowed("https://evil.example.com", list)).toBe(false);
+		expect(isHostAllowed("https://moodle.school.edu.evil.com", list)).toBe(false);
 	});
 });

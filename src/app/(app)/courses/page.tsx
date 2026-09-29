@@ -5,7 +5,7 @@ import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
 import { CourseCard } from "@/components/courses/course-card";
 import { PageHeader } from "@/components/layout/page-header";
-import { EmptyState, ErrorState, ListSkeleton } from "@/components/ui/state";
+import { EmptyState, ErrorState, ListSkeleton, FeatureGate } from "@/components/ui/state";
 import { SearchInput } from "@/components/ui/search-input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { isCurrentCourse } from "@/lib/moodle/course-filter";
@@ -20,7 +20,7 @@ const FILTERS = {
 
 type Filter = keyof typeof FILTERS;
 
-export default function CoursesPage() {
+function CoursesPageContent() {
 	const { client, refresh } = useMoodleConnection();
 	const courses = useMoodleQuery(client ? () => client.getCourses() : null, [client]);
 	const [filter, setFilter] = useState<Filter>("current");
@@ -85,5 +85,13 @@ export default function CoursesPage() {
 				</div>
 			)}
 		</div>
+	);
+}
+
+export default function CoursesPage() {
+	return (
+		<FeatureGate feature="Courses" functions={["core_enrol_get_users_courses"]}>
+			<CoursesPageContent />
+		</FeatureGate>
 	);
 }

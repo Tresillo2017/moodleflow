@@ -249,3 +249,8 @@ html[data-bleh--theme_type="light"] .bg-card {
 		animation: var(--motion, page_in_reduced 0.15s ease);
 	}
 }
+
+/* Sileo capitalises titles; keep version numbers like "v0.6.0" intact. */
+[data-sileo-viewport] [data-sileo-title] {
+	text-transform: none;
+}

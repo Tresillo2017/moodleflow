@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { createMoodleClient, type MoodleClient } from "@/lib/moodle/client";
 import { createMockMoodleClient } from "@/lib/moodle/mock";
 import { idbStore } from "@/lib/idb-store";
