@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FileText, Loader2, Paperclip, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
+import { celebrate } from "@/lib/confetti";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import type { MoodleAssignment, MoodleFile } from "@/types/moodle";
 
@@ -38,9 +39,12 @@ function validateFiles(files: Attachment[], assignment: MoodleAssignment): strin
 interface SubmitDialogProps {
 	assignment: MoodleAssignment;
 	onSubmitted?: () => void;
+	/** Files dropped on the page: opens the dialog with them attached. */
+	droppedFiles?: File[] | null;
+	onDroppedHandled?: () => void;
 }
 
-export function SubmitDialog({ assignment, onSubmitted }: SubmitDialogProps) {
+export function SubmitDialog({ assignment, onSubmitted, droppedFiles, onDroppedHandled }: SubmitDialogProps) {
 	const { client } = useMoodleConnection();
 	const config = assignment.config;
 	const acceptsText = config?.acceptsText ?? true;
@@ -64,6 +68,15 @@ export function SubmitDialog({ assignment, onSubmitted }: SubmitDialogProps) {
 		setOpen(next);
 	}
 
+	useEffect(() => {
+		if (!droppedFiles?.length) return;
+		setText(existing?.text ? htmlToText(existing.text) : "");
+		setFiles([...(existing?.files ?? []), ...droppedFiles]);
+		setStatement(false);
+		setOpen(true);
+		onDroppedHandled?.();
+	}, [droppedFiles, existing, onDroppedHandled]);
+
 	const hasContent = text.trim().length > 0 || files.length > 0;
 	const fileError = validateFiles(files, assignment);
 	const needsStatement = draftMode && Boolean(config?.requiresStatement);
@@ -78,7 +91,9 @@ export function SubmitDialog({ assignment, onSubmitted }: SubmitDialogProps) {
 				...(acceptsFiles ? { files } : {}),
 			});
 			if (finalize) await client.submitAssignmentForGrading(assignment.id);
-			toast.success(finalize || !draftMode ? "Submission sent" : "Draft saved");
+			const submitted = finalize || !draftMode;
+			toast.success(submitted ? "Submission sent" : "Draft saved");
+			if (submitted) void celebrate();
 			setOpen(false);
 			onSubmitted?.();
 		} catch (error) {

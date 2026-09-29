@@ -1,10 +1,12 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useCallback, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle2, Circle, ClipboardX, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Circle, ClipboardX, Loader2, Upload } from "lucide-react";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
+import { useFileDrop } from "@/hooks/use-file-drop";
+import { celebrate } from "@/lib/confetti";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
@@ -67,6 +69,9 @@ function Actions({ assignment: a, onChanged }: { assignment: MoodleAssignment; o
 	const [busy, setBusy] = useState(false);
 	const [confirmingRemove, setConfirmingRemove] = useState(false);
 	const editable = canSubmit(a) || ((a.status === "submitted" || a.status === "late") && a.canEdit === true);
+	const [dropped, setDropped] = useState<File[] | null>(null);
+	const clearDropped = useCallback(() => setDropped(null), []);
+	const dragging = useFileDrop(editable && a.config?.acceptsFiles === true, setDropped);
 	const readyForGrading = a.status === "draft" && a.config?.requiresSubmitAction && a.canEdit !== false;
 
 	async function submitForGrading() {
@@ -75,6 +80,7 @@ function Actions({ assignment: a, onChanged }: { assignment: MoodleAssignment; o
 		try {
 			await client.submitAssignmentForGrading(a.id);
 			toast.success("Submitted for grading");
+			void celebrate();
 			onChanged();
 		} catch (error) {
 			toast.error(error instanceof Error && error.message ? error.message : "Couldn't submit. Try again.");
@@ -104,7 +110,16 @@ function Actions({ assignment: a, onChanged }: { assignment: MoodleAssignment; o
 	if (!editable && !readyForGrading && !removable) return null;
 	return (
 		<div className="flex flex-wrap items-center gap-2">
-			{editable && <SubmitDialog assignment={a} onSubmitted={onChanged} />}
+			{dragging && (
+				<div className="pointer-events-none fixed inset-0 z-50 grid place-items-center bg-background/70 backdrop-blur-sm motion-safe:animate-in motion-safe:fade-in">
+					<div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-primary px-12 py-10 text-center">
+						<Upload className="size-8 text-primary" aria-hidden="true" />
+						<p className="text-lg font-medium">Drop to submit</p>
+						<p className="text-sm text-muted-foreground">{a.name}</p>
+					</div>
+				</div>
+			)}
+			{editable && <SubmitDialog assignment={a} onSubmitted={onChanged} droppedFiles={dropped} onDroppedHandled={clearDropped} />}
 			{readyForGrading && (
 				<Button size="sm" onClick={submitForGrading} disabled={busy}>
 					{busy && <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />}

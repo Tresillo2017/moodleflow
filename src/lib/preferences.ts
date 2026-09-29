@@ -273,7 +273,8 @@ export function applyAppearance(prefs: Preferences): void {
 }
 
 /** Runs in <head> before first paint so a custom accent/radius/font never flashes the defaults. */
-export const PREFERENCES_SCRIPT = `try{(${applyAppearanceWith.toString()})(Object.assign(${JSON.stringify(
+// The bundler can inject a __name() helper into serialized functions; define it so the script never throws.
+export const PREFERENCES_SCRIPT = `try{var __name=function(f){return f};(${applyAppearanceWith.toString()})(Object.assign(${JSON.stringify(
 	DEFAULT_PREFERENCES,
 )},JSON.parse(localStorage.getItem(${JSON.stringify(STORAGE_KEY)})||"{}")),${JSON.stringify(HUES)},${JSON.stringify(
 	APPEARANCE_KEYS,
