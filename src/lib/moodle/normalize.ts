@@ -8,6 +8,7 @@ import type {
 	MoodleCalendarEvent,
 	MoodleCourse,
 	MoodleCourseContent,
+	MoodleComment,
 	MoodleCourseGrades,
 	MoodleFile,
 	MoodleForumDiscussion,
@@ -207,6 +208,8 @@ export function normalizeAssignments(raw: unknown): MoodleAssignment[] {
 				name: String(assign.name ?? ""),
 				description: assign.intro ? String(assign.intro) : undefined,
 				introFiles: asArray(assign.introattachments).map(mapFile),
+				cmid: assign.cmid !== undefined ? Number(assign.cmid) : undefined,
+				openDate: iso(assign.allowsubmissionsfromdate),
 				dueDate: iso(assign.duedate),
 				cutoffDate: iso(assign.cutoffdate),
 				maxGrade: Number(assign.grade) > 0 ? Number(assign.grade) : undefined,
@@ -256,6 +259,7 @@ export function applySubmissionStatus(assignment: MoodleAssignment, raw: unknown
 	const plugins = asArray(sub?.plugins).map(asRecord);
 	const submission: AssignmentSubmission | undefined = sub
 		? {
+				id: sub.id !== undefined ? Number(sub.id) : undefined,
 				status: String(sub.status ?? "new") as AssignmentSubmission["status"],
 				timeModified: iso(sub.timemodified),
 				text: plugins.map((p) => (p.type === "onlinetext" ? editorText(p, "onlinetext") : undefined)).find(Boolean),
@@ -283,6 +287,32 @@ export function applySubmissionStatus(assignment: MoodleAssignment, raw: unknown
 		feedback: feedbackPlugins.map((p) => (p.type === "comments" ? editorText(p, "comments") : undefined)).find(Boolean),
 		feedbackFiles: feedbackPlugins.filter((p) => p.type === "file").flatMap(pluginFiles),
 	};
+}
+
+// core_completion_get_activities_completion_status
+export function normalizeActivityCompletion(raw: unknown, cmid: number): MoodleAssignment["completion"] {
+	const status = asArray(asRecord(raw).statuses)
+		.map(asRecord)
+		.find((s) => Number(s.cmid) === cmid);
+	if (!status || Number(status.tracking ?? 0) === 0) return undefined;
+	const done = Number(status.state) === 1 || Number(status.state) === 2;
+	const details = asArray(status.details).map(asRecord);
+	const rule = details.find((d) => d.rulevalue && Number(asRecord(d.rulevalue).status) === (done ? 1 : 0)) ?? details[0];
+	const label = rule?.rulevalue ? String(asRecord(rule.rulevalue).description ?? "") : "";
+	return { done, label: label || undefined };
+}
+
+// core_comment_get_comments
+export function normalizeComments(raw: unknown): MoodleComment[] {
+	return asArray(asRecord(raw).comments).map((c) => {
+		const r = asRecord(c);
+		return {
+			id: Number(r.id),
+			author: String(r.fullname ?? ""),
+			content: String(r.content ?? ""),
+			time: new Date(Number(r.timecreated ?? 0) * 1000).toISOString(),
+		};
+	});
 }
 
 // mod_forum_get_forum_discussions

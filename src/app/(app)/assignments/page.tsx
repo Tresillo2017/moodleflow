@@ -94,7 +94,7 @@ function AssignmentRow({ assignment: a, onSubmitted }: { assignment: MoodleAssig
 				)}
 				{/* the deadline badge already says "Overdue by …" */}
 				{a.status !== "overdue" && <StatusBadge status={a.status} />}
-				{a.status !== "graded" && <DeadlineBadge dueDate={a.dueDate} />}
+				{!isDone(a) && <DeadlineBadge dueDate={a.dueDate} />}
 				{canSubmit(a) && (
 					<div className="relative z-10">
 						<SubmitDialog assignment={a} onSubmitted={onSubmitted} />

@@ -5,6 +5,7 @@ import type {
 	MoodleCalendarEvent,
 	MoodleCourse,
 	MoodleCourseContent,
+	MoodleComment,
 	MoodleCourseGrades,
 	MoodleFile,
 	MoodleForumDiscussion,
@@ -14,7 +15,9 @@ import type {
 } from "@/types/moodle";
 import {
 	applySubmissionStatus,
+	normalizeActivityCompletion,
 	normalizeAssignments,
+	normalizeComments,
 	normalizeCalendarEvents,
 	normalizeCourseContent,
 	normalizeCourses,
@@ -37,6 +40,10 @@ export interface MoodleClient {
 	/** Saves text and/or files (existing MoodleFile entries are re-uploaded so they survive the save). */
 	saveAssignmentSubmission(assignment: MoodleAssignment, input: SubmissionInput): Promise<void>;
 	submitAssignmentForGrading(assignmentId: number): Promise<void>;
+	removeAssignmentSubmission(assignmentId: number): Promise<void>;
+	/** Empty when the site has submission comments disabled. */
+	getSubmissionComments(assignment: MoodleAssignment): Promise<MoodleComment[]>;
+	addSubmissionComment(assignment: MoodleAssignment, content: string): Promise<void>;
 	getGrades(courseId?: number): Promise<MoodleCourseGrades[]>;
 	getForumDiscussions(forumId: number): Promise<MoodleForumDiscussion[]>;
 	/** Adds the auth token to a Moodle file URL so the browser can download it. */
@@ -173,6 +180,29 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 		}
 	}
 
+	/** Activity completion ("Done: Make a submission"); optional, so failures are ignored. */
+	async function completionOf(assignment: MoodleAssignment): Promise<MoodleAssignment["completion"]> {
+		if (assignment.cmid === undefined) return undefined;
+		try {
+			const info = await (siteInfo ??= callMoodle(connection, "core_webservice_get_site_info").then(normalizeSiteInfo));
+			const raw = await callMoodle(connection, "core_completion_get_activities_completion_status", {
+				courseid: assignment.courseId,
+				userid: info.userId,
+			});
+			return normalizeActivityCompletion(raw, assignment.cmid);
+		} catch {
+			return undefined;
+		}
+	}
+
+	const commentTarget = (a: MoodleAssignment) => ({
+		contextlevel: "module",
+		instanceid: a.cmid ?? 0,
+		component: "assignsubmission_comments",
+		itemid: a.submission?.id ?? 0,
+		area: "submission_comments",
+	});
+
 	return {
 		getSiteInfo() {
 			siteInfo ??= callMoodle(connection, "core_webservice_get_site_info")
@@ -237,7 +267,9 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 		async getAssignment(assignmentId: number) {
 			const raw = await callMoodle(connection, "mod_assign_get_assignments");
 			const found = normalizeAssignments(raw).find((a) => a.id === assignmentId);
-			return found && withStatus(found);
+			if (!found) return undefined;
+			const withDetails = await withStatus(found);
+			return { ...withDetails, completion: await completionOf(withDetails) };
 		},
 
 		async saveAssignmentSubmission(assignment: MoodleAssignment, input: SubmissionInput) {
@@ -260,6 +292,33 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 				connection,
 				"mod_assign_save_submission",
 				{ assignmentid: assignment.id, plugindata },
+				"POST",
+			);
+		},
+
+		async removeAssignmentSubmission(assignmentId: number) {
+			await callMoodle(connection, "mod_assign_remove_submission", { assignmentid: assignmentId }, "POST");
+		},
+
+		async getSubmissionComments(assignment: MoodleAssignment) {
+			if (assignment.cmid === undefined || !assignment.submission?.id) return [];
+			try {
+				const raw = await callMoodle(connection, "core_comment_get_comments", {
+					...commentTarget(assignment),
+					page: 0,
+					sortdirection: "ASC",
+				});
+				return normalizeComments(raw);
+			} catch {
+				return []; // plugin disabled or not permitted
+			}
+		},
+
+		async addSubmissionComment(assignment: MoodleAssignment, content: string) {
+			await callMoodle(
+				connection,
+				"core_comment_add_comments",
+				{ comments: { 0: { ...commentTarget(assignment), content } } },
 				"POST",
 			);
 		},

@@ -6,6 +6,7 @@ import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { usePreferences } from "@/components/providers/preferences-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
 import { CourseCard } from "@/components/courses/course-card";
+import { isDone } from "@/lib/moodle/assignment";
 import { DeadlineBadge } from "@/components/assignments/deadline-badge";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ui/state";
 import { DitherGradient } from "@/components/dither-kit/gradient";
@@ -49,7 +50,7 @@ function greeting() {
 }
 
 function isOpen(a: MoodleAssignment) {
-	return a.status !== "graded" && a.status !== "submitted";
+	return !isDone(a);
 }
 
 /** Section wrapper with a staggered entrance; index controls the delay. Disabled under reduced motion. */

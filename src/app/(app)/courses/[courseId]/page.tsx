@@ -13,7 +13,7 @@ import { ActivityIcon } from "@/components/activities/activity-icon";
 import { DeadlineBadge } from "@/components/assignments/deadline-badge";
 import { SubmitDialog } from "@/components/assignments/submit-dialog";
 import { FileViewer } from "@/components/files/file-viewer";
-import { canSubmit } from "@/lib/moodle/assignment";
+import { canSubmit, isDone } from "@/lib/moodle/assignment";
 import { CourseBanner } from "@/components/courses/course-banner";
 import { FileList } from "@/components/files/file-list";
 import { fileKind } from "@/lib/file-kind";
@@ -37,7 +37,7 @@ function ActivityRow({ activity: a, assignment }: { activity: MoodleActivity; as
 			)}
 			<ActivityIcon type={a.type} className="size-4 shrink-0 text-muted-foreground" />
 			<span className="flex-1 truncate">{a.name}</span>
-			<DeadlineBadge dueDate={a.dueDate ?? assignment?.dueDate} />
+			<DeadlineBadge dueDate={assignment && isDone(assignment) ? undefined : (a.dueDate ?? assignment?.dueDate)} />
 			{isHttpUrl(a.url) && (
 				<ExternalLink
 					className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"

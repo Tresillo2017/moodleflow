@@ -98,6 +98,7 @@ export interface AssignmentConfig {
 }
 
 export interface AssignmentSubmission {
+	id?: number;
 	status: "new" | "draft" | "submitted" | "reopened";
 	timeModified?: string;
 	text?: string;
@@ -112,9 +113,13 @@ export interface MoodleAssignment {
 	/** Assignment intro (Moodle HTML). */
 	description?: string;
 	introFiles?: MoodleFile[];
+	/** Course-module id: comments and completion are addressed by it. */
+	cmid?: number;
+	openDate?: string;
 	dueDate?: string;
 	cutoffDate?: string;
 	status: SubmissionStatus;
+	completion?: { done: boolean; label?: string };
 	config?: AssignmentConfig;
 	submission?: AssignmentSubmission;
 	/** Moodle's verdict on whether the current user may add/edit a submission. */
@@ -124,6 +129,14 @@ export interface MoodleAssignment {
 	gradedDate?: string;
 	feedback?: string;
 	feedbackFiles?: MoodleFile[];
+}
+
+export interface MoodleComment {
+	id: number;
+	author: string;
+	/** Moodle HTML */
+	content: string;
+	time: string;
 }
 
 export interface MoodleForumDiscussion {

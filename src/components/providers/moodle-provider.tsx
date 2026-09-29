@@ -90,6 +90,14 @@ function withCache(client: MoodleClient): MoodleClient {
 			await client.saveAssignmentSubmission(assignment, input);
 			invalidateAssignments();
 		},
+		async removeAssignmentSubmission(id) {
+			await client.removeAssignmentSubmission(id);
+			invalidateAssignments();
+		},
+		getSubmissionComments: (a) => client.getSubmissionComments(a),
+		async addSubmissionComment(a, content) {
+			await client.addSubmissionComment(a, content);
+		},
 		async submitAssignmentForGrading(id) {
 			await client.submitAssignmentForGrading(id);
 			invalidateAssignments();

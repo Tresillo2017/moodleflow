@@ -1,5 +1,6 @@
 "use client";
 
+import { isDone } from "@/lib/moodle/assignment";
 import { useAssignments } from "@/hooks/use-assignments";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -41,7 +42,7 @@ export function CommandPalette() {
 	const currentCourses = courses.data?.filter(isCurrentCourse) ?? [];
 	const currentIds = new Set(currentCourses.map((c) => c.id));
 	const openAssignments =
-		assignments.data?.filter((a) => a.status !== "graded" && a.status !== "submitted" && currentIds.has(a.courseId)) ?? [];
+		assignments.data?.filter((a) => !isDone(a) && currentIds.has(a.courseId)) ?? [];
 
 	useEffect(() => {
 		function onKeyDown(e: KeyboardEvent) {
