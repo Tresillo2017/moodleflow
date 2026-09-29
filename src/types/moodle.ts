@@ -52,6 +52,8 @@ export type ActivityType =
 	| "feedback"
 	| "folder"
 	| "label"
+	| "book"
+	| "imscp"
 	| "unknown";
 
 export interface MoodleFile {
@@ -59,6 +61,15 @@ export interface MoodleFile {
 	url: string;
 	size: number;
 	mimeType?: string;
+	/** Folder-relative directory (folder activities), e.g. "/week1/". */
+	path?: string;
+}
+
+export interface BookChapter {
+	title: string;
+	/** Chapter file path relative to the book contents, e.g. "12/index.html". */
+	href: string;
+	level: number;
 }
 
 export interface MoodleActivity {
@@ -74,6 +85,15 @@ export interface MoodleActivity {
 	url?: string;
 	dueDate?: string;
 	completed?: boolean;
+	/** Completion is ticked by the student rather than tracked automatically. */
+	manualCompletion?: boolean;
+	/** URL activities: the external link (`url` is the Moodle page). */
+	externalUrl?: string;
+	/** Book activities: table of contents. */
+	chapters?: BookChapter[];
+	/** Restricted for this user; `availabilityInfo` is Moodle's HTML explanation. */
+	locked?: boolean;
+	availabilityInfo?: string;
 	visible: boolean;
 }
 

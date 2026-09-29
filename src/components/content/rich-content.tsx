@@ -24,7 +24,7 @@ export function RichContent({ html, className, pluginfileBase }: { html: string;
 	return (
 		<div
 			className={cn(
-				"text-sm leading-relaxed [&_a]:text-primary [&_a]:underline [&_img]:max-w-full [&_li]:ml-5 [&_ol]:list-decimal [&_p]:my-2 [&_pre]:overflow-auto [&_table]:w-full [&_ul]:list-disc",
+				"text-sm leading-relaxed [&_h1]:mt-4 [&_h1]:text-xl [&_h2]:mt-4 [&_h2]:text-lg [&_h3]:mt-3 [&_h3]:text-base [&_h3]:font-semibold [&_a]:text-primary [&_a]:underline [&_img]:max-w-full [&_li]:ml-5 [&_ol]:list-decimal [&_p]:my-2 [&_pre]:overflow-auto [&_table]:w-full [&_ul]:list-disc",
 				className,
 			)}
 			dangerouslySetInnerHTML={{ __html: clean }}

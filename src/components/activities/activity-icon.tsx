@@ -9,6 +9,8 @@ import {
 	Notebook,
 	Star,
 	File,
+	BookOpen,
+	Package,
 } from "lucide-react";
 import type { ActivityType } from "@/types/moodle";
 
@@ -23,6 +25,8 @@ const ICONS: Record<ActivityType, React.ComponentType<{ className?: string }>> =
 	feedback: Star,
 	folder: Folder,
 	label: AlignLeft,
+	book: BookOpen,
+	imscp: Package,
 	unknown: File,
 };
 

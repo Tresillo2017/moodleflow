@@ -1,5 +1,6 @@
 import { MoodleError } from "@/types/moodle";
 import type {
+	BookChapter,
 	ActivityType,
 	AssignmentConfig,
 	AssignmentSubmission,
@@ -106,6 +107,8 @@ const MODNAME_TO_TYPE: Record<string, ActivityType> = {
 	feedback: "feedback",
 	folder: "folder",
 	label: "label",
+	book: "book",
+	imscp: "imscp",
 };
 
 function normalizeFiles(contents: unknown): MoodleFile[] {
@@ -117,7 +120,29 @@ function normalizeFiles(contents: unknown): MoodleFile[] {
 			url: String(f.fileurl),
 			size: Number(f.filesize ?? 0),
 			mimeType: typeof f.mimetype === "string" ? f.mimetype : undefined,
+			path: typeof f.filepath === "string" && f.filepath !== "/" ? f.filepath : undefined,
 		}));
+}
+
+/** Book contents carry the table of contents as a JSON "structure" entry. */
+function normalizeChapters(contents: unknown): BookChapter[] | undefined {
+	const entry = asArray(contents).map(asRecord).find((c) => c.filename === "structure" && typeof c.content === "string");
+	if (!entry) return undefined;
+	try {
+		return asArray(JSON.parse(String(entry.content))).map(asRecord).map((c) => ({
+			title: String(c.title ?? ""),
+			href: String(c.href ?? ""),
+			level: Number(c.level ?? 0),
+		}));
+	} catch {
+		return undefined;
+	}
+}
+
+/** URL activities keep the external link as their only content entry. */
+function normalizeExternalUrl(contents: unknown): string | undefined {
+	const entry = asArray(contents).map(asRecord).find((c) => c.type === "url" && typeof c.fileurl === "string");
+	return entry ? String(entry.fileurl) : undefined;
 }
 
 // core_course_get_contents
@@ -140,6 +165,11 @@ export function normalizeCourseContent(courseId: number, raw: unknown): MoodleCo
 				completed: mod.completiondata
 					? asRecord(mod.completiondata).state === 1
 					: undefined,
+				manualCompletion: mod.completion === 1 ? true : undefined,
+				externalUrl: modname === "url" ? normalizeExternalUrl(mod.contents) : undefined,
+				chapters: modname === "book" ? normalizeChapters(mod.contents) : undefined,
+				locked: mod.uservisible === false ? true : undefined,
+				availabilityInfo: typeof mod.availabilityinfo === "string" ? mod.availabilityinfo : undefined,
 				visible: mod.visible === undefined ? true : Boolean(mod.visible),
 			};
 		});

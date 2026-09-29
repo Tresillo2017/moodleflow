@@ -58,6 +58,8 @@ export interface MoodleClient {
 	getCourses(): Promise<MoodleCourse[]>;
 	setCourseFavourite(courseId: number, favourite: boolean): Promise<void>;
 	getCourseContents(courseId: number): Promise<MoodleCourseContent>;
+	/** Manual completion: ticks or unticks "mark as done" for a course module. */
+	setActivityCompletion(cmid: number, completed: boolean): Promise<void>;
 	getCalendarEvents(): Promise<MoodleCalendarEvent[]>;
 	/** With courseIds, also fetches each assignment's real submission status; without, status is "unknown". */
 	getAssignments(courseIds?: number[]): Promise<MoodleAssignment[]>;
@@ -237,6 +239,15 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 				courseid: courseId,
 			});
 			return normalizeCourseContent(courseId, raw);
+		},
+
+		async setActivityCompletion(cmid, completed) {
+			await callMoodle(
+				connection,
+				"core_completion_update_activity_completion_status_manually",
+				{ cmid, completed: completed ? 1 : 0 },
+				"POST",
+			);
 		},
 
 		async getCalendarEvents() {

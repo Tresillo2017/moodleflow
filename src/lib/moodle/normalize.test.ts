@@ -71,6 +71,33 @@ describe("normalizeCourseContent", () => {
 	});
 });
 
+describe("normalizeCourseContent activity details", () => {
+	it("extracts url target, book chapters, manual completion and restrictions", () => {
+		const [section] = normalizeCourseContent(1, [
+			{
+				id: 1,
+				name: "S",
+				modules: [
+					{ id: 1, modname: "url", name: "Link", contents: [{ type: "url", fileurl: "https://example.com" }] },
+					{
+						id: 2,
+						modname: "book",
+						name: "Book",
+						contents: [{ type: "content", filename: "structure", content: '[{"title":"One","href":"1/index.html","level":0}]' }],
+					},
+					{ id: 3, modname: "page", name: "P", completion: 1, completiondata: { state: 0 } },
+					{ id: 4, modname: "quiz", name: "Q", uservisible: false, availabilityinfo: "<p>Later</p>" },
+				],
+			},
+		]).sections;
+		const [url, book, page, quiz] = section.activities;
+		expect(url.externalUrl).toBe("https://example.com");
+		expect(book.chapters).toEqual([{ title: "One", href: "1/index.html", level: 0 }]);
+		expect(page).toMatchObject({ manualCompletion: true, completed: false });
+		expect(quiz).toMatchObject({ locked: true, availabilityInfo: "<p>Later</p>" });
+	});
+});
+
 describe("normalizeAssignments", () => {
 	it("flattens nested course.assignments and converts unix due dates", () => {
 		const dueUnix = 1_700_000_000;

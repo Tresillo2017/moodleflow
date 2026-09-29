@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useMemo } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
@@ -9,6 +9,7 @@ import { EmptyState, ErrorState, FeatureGate, ListSkeleton } from "@/components/
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ActivityViewer, hasViewer } from "@/components/activities/activity-viewer";
 import { ActivityIcon } from "@/components/activities/activity-icon";
 import { DeadlineBadge } from "@/components/assignments/deadline-badge";
 import { SubmitDialog } from "@/components/assignments/submit-dialog";
@@ -20,8 +21,9 @@ import { fileKind } from "@/lib/file-kind";
 import { CourseGrades } from "@/components/grades/course-grades";
 import { CourseOutline, sectionAnchor } from "@/components/courses/course-outline";
 import { RichContent } from "@/components/content/rich-content";
-import { ArrowLeft, CheckCircle2, ChevronDown, Circle, ExternalLink, FolderOpen, GraduationCap, MessageSquare, Pin, Star } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronDown, Circle, ExternalLink, FolderOpen, GraduationCap, Lock, MessageSquare, Pin, Star } from "lucide-react";
 import { courseHue, formatDistanceToNow } from "@/lib/format";
+import { toast } from "@/lib/toast";
 import { isHttpUrl } from "@/lib/utils";
 import type { MoodleActivity, MoodleAssignment, MoodleSection } from "@/types/moodle";
 
@@ -33,19 +35,49 @@ function ActivityRow({ activity: a, assignment }: { activity: MoodleActivity; as
 	if (a.type === "label") {
 		return <RichContent html={a.description ?? a.name} className="px-4 py-3" />;
 	}
+	const [viewing, setViewing] = useState(false);
+	const [pending, setPending] = useState(false);
+	const external = a.type === "url" && isHttpUrl(a.externalUrl) ? a.externalUrl : undefined;
+	const href = external ?? a.url;
+
+	if (a.locked) {
+		return (
+			<div className="flex items-start gap-3 px-4 py-3 text-sm text-muted-foreground">
+				<Lock className="mt-0.5 size-4 shrink-0" aria-label="Restricted" />
+				<div className="min-w-0 flex-1">
+					<p className="truncate">{a.name}</p>
+					{a.availabilityInfo && <RichContent html={a.availabilityInfo} className="text-xs [&_p]:my-0.5" />}
+				</div>
+			</div>
+		);
+	}
+
+	async function toggleDone() {
+		setPending(true);
+		try {
+			await client?.setActivityCompletion(a.id, !a.completed);
+			refresh();
+		} catch {
+			toast.error("Couldn't update completion", { description: "Moodle rejected the change." });
+		} finally {
+			setPending(false);
+		}
+	}
+
+	const statusIcon =
+		a.completed === undefined ? (
+			<span className="size-4 shrink-0" />
+		) : a.completed ? (
+			<CheckCircle2 className="size-4 shrink-0 text-success" aria-label="Completed" />
+		) : (
+			<Circle className="size-4 shrink-0 text-muted-foreground/60" aria-label="Not completed" />
+		);
 	const content = (
 		<>
-			{a.completed === undefined ? (
-				<span className="size-4 shrink-0" />
-			) : a.completed ? (
-				<CheckCircle2 className="size-4 shrink-0 text-success" aria-label="Completed" />
-			) : (
-				<Circle className="size-4 shrink-0 text-muted-foreground/60" aria-label="Not completed" />
-			)}
 			<ActivityIcon type={a.type} className="size-4 shrink-0 text-muted-foreground" />
 			<span className="flex-1 truncate">{a.name}</span>
 			<DeadlineBadge dueDate={assignment && isDone(assignment) ? undefined : (a.dueDate ?? assignment?.dueDate)} />
-			{isHttpUrl(a.url) && (
+			{isHttpUrl(href) && (
 				<ExternalLink
 					className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
 					aria-hidden="true"
@@ -53,22 +85,42 @@ function ActivityRow({ activity: a, assignment }: { activity: MoodleActivity; as
 			)}
 		</>
 	);
-	const className = "group flex min-w-0 flex-1 items-center gap-3 px-4 py-3 text-sm";
+	const className = "group flex min-w-0 flex-1 items-center gap-3 py-3 pr-4 text-sm";
+	const hover = `${className} transition-colors hover:bg-muted/50`;
 
 	return (
 		<div>
 			<div className="flex items-center">
-				{a.type === "assignment" && a.instance !== undefined ? (
-					<Link href={`/assignments/${a.instance}`} className={`${className} transition-colors hover:bg-muted/50`} onClick={logView}>
+				<span className="pl-4">
+					{a.manualCompletion && a.completed !== undefined ? (
+						<button
+							type="button"
+							disabled={pending}
+							onClick={toggleDone}
+							aria-label={a.completed ? "Mark as not done" : "Mark as done"}
+							className="rounded-full p-1 -m-1 transition-transform hover:scale-110 focus-visible:outline-2 disabled:opacity-50"
+						>
+							{statusIcon}
+						</button>
+					) : (
+						statusIcon
+					)}
+				</span>
+				{hasViewer(a) ? (
+					<button type="button" className={`${hover} pl-3 text-left`} onClick={() => { setViewing(true); logView(); }}>
+						{content}
+					</button>
+				) : a.type === "assignment" && a.instance !== undefined ? (
+					<Link href={`/assignments/${a.instance}`} className={`${hover} pl-3`} onClick={logView}>
 						{content}
 					</Link>
-				) : isHttpUrl(a.url) ? (
-					<a href={a.url} target="_blank" rel="noopener noreferrer" className={`${className} transition-colors hover:bg-muted/50`} onClick={logView}>
+				) : isHttpUrl(href) ? (
+					<a href={href} target="_blank" rel="noopener noreferrer" className={`${hover} pl-3`} onClick={logView}>
 						{content}
-						<span className="sr-only">(opens in Moodle)</span>
+						<span className="sr-only">({external ? "opens external link" : "opens in Moodle"})</span>
 					</a>
 				) : (
-					<div className={className}>{content}</div>
+					<div className={`${className} pl-3`}>{content}</div>
 				)}
 				{assignment && submittable && (
 					<div className="pr-4">
@@ -76,10 +128,11 @@ function ActivityRow({ activity: a, assignment }: { activity: MoodleActivity; as
 					</div>
 				)}
 			</div>
+			{viewing && <ActivityViewer activity={a} onClose={() => setViewing(false)} />}
 			{a.description && (
 				<RichContent html={a.description} className="line-clamp-3 px-4 pb-3 pl-11 text-xs text-muted-foreground [&_p]:my-1" />
 			)}
-			{a.files && a.files.length > 0 && <FileList files={a.files} onOpen={logView} className="pr-4 pb-3 pl-11" />}
+			{a.files && a.files.length > 0 && !hasViewer(a) && <FileList files={a.files} onOpen={logView} className="pr-4 pb-3 pl-11" />}
 		</div>
 	);
 }

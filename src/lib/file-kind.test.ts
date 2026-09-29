@@ -13,6 +13,16 @@ describe("fileKind", () => {
 		expect(fileKind("a.b.py")).toEqual({ type: "code", lang: "python" });
 	});
 
+	it("detects rich previews", () => {
+		expect(fileKind("a.docx")).toEqual({ type: "docx" });
+		expect(fileKind("README.md")).toEqual({ type: "markdown" });
+		expect(fileKind("d.csv")).toEqual({ type: "csv" });
+		expect(fileKind("n.ipynb")).toEqual({ type: "notebook" });
+		expect(fileKind("s.mp3")).toEqual({ type: "audio" });
+		expect(fileKind("v.MP4")).toEqual({ type: "video" });
+		expect(fileKind("old.doc")).toEqual({ type: "other" });
+	});
+
 	it("falls back to other for unknown or extensionless files", () => {
 		expect(fileKind("slides.pptx")).toEqual({ type: "other" });
 		expect(fileKind("Makefile")).toEqual({ type: "other" });

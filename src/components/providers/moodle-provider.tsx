@@ -74,6 +74,10 @@ function withCache(client: MoodleClient, persist: boolean): MoodleClient {
 			invalidate("courses");
 		},
 		getCourseContents: cached("contents", TTL.contents, (courseId: number) => client.getCourseContents(courseId)),
+		async setActivityCompletion(cmid, completed) {
+			await client.setActivityCompletion(cmid, completed);
+			invalidate("contents");
+		},
 		getCalendarEvents: cached("events", TTL.events, () => client.getCalendarEvents()),
 		getAssignments: cached("assignments", TTL.assignments, (courseIds?: number[]) => client.getAssignments(courseIds)),
 		getAssignment: cached("assignment", TTL.assignments, (id: number) => client.getAssignment(id)),

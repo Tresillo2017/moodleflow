@@ -12,6 +12,8 @@ const VIEW: Partial<Record<MoodleActivity["type"], [string, string]>> = {
 	folder: ["mod_folder_view_folder", "folderid"],
 	quiz: ["mod_quiz_view_quiz", "quizid"],
 	lesson: ["mod_lesson_view_lesson", "lessonid"],
+	book: ["mod_book_view_book", "bookid"],
+	imscp: ["mod_imscp_view_imscp", "imscpid"],
 	feedback: ["mod_feedback_view_feedback", "feedbackid"],
 };
 

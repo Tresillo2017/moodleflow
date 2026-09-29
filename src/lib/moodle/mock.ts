@@ -68,7 +68,22 @@ const courseContents: Record<number, MoodleCourseContent> = {
 						{ name: "lecture-1.pdf", url: "data:application/pdf;base64,JVBERi0xLjEKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBvYmo8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iagozIDAgb2JqPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9NZWRpYUJveFswIDAgMzAwIDEwMF0vQ29udGVudHMgNCAwIFIvUmVzb3VyY2VzPDwvRm9udDw8L0YxIDUgMCBSPj4+Pj4+ZW5kb2JqCjQgMCBvYmo8PC9MZW5ndGggNDQ+PnN0cmVhbQpCVCAvRjEgMTggVGYgMjAgNTAgVGQgKERlbW8gbGVjdHVyZSkgVGogRVQKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqPDwvVHlwZS9Gb250L1N1YnR5cGUvVHlwZTEvQmFzZUZvbnQvSGVsdmV0aWNhPj5lbmRvYmoKdHJhaWxlcjw8L1Jvb3QgMSAwIFI+PgolJUVPRg==", size: 482_000, mimeType: "application/pdf" },
 						{ name: "series.py", url: "data:text/plain,def%20partial_sum(n)%3A%0A%20%20%20%20return%20sum(1%20%2F%20k**2%20for%20k%20in%20range(1%2C%20n%20%2B%201))%0A", size: 74 },
 					] },
-					{ id: 2, courseId: 1, sectionId: 1, type: "url", name: "Video lecture", visible: true, completed: true },
+					{ id: 2, courseId: 1, sectionId: 1, type: "url", name: "Video lecture", externalUrl: "https://example.com/lecture", visible: true, completed: true },
+					{ id: 11, instance: 11, courseId: 1, sectionId: 1, type: "page", name: "Course rules", visible: true, manualCompletion: true, completed: false,
+						files: [{ name: "index.html", url: "data:text/html,%3Ch3%3EGround%20rules%3C%2Fh3%3E%3Cp%3EBe%20on%20time.%20Ask%20questions.%3C%2Fp%3E", size: 80 }] },
+					{ id: 12, instance: 12, courseId: 1, sectionId: 1, type: "folder", name: "Past exams", visible: true, files: [
+						{ name: "2023.md", path: "/2023/", url: "data:text/markdown,%23%20Exam%202023%0A-%20Q1%0A-%20Q2", size: 30 },
+						{ name: "grades.csv", path: "/2023/", url: "data:text/csv,name%2Cscore%0AAna%2C9%0A%22Costa%2C%20J%22%2C8", size: 30 },
+						{ name: "syllabus.docx", url: "data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,UEsDBBQAAAAIAFehPV3MVIwQ4QAAAJwBAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbH2QTU7DMBCFr2J5i2KHLhBCSbqAsgQW5QCWM0ks7BnLMw3h9iht6QIV1u/ne3rNdklRzVA4ELb61tRaAXrqA46tft8/V/d62zX7rwyslhSRWz2J5Adr2U+QHBvKgEuKA5XkhA2V0WbnP9wIdlPXd9YTCqBUsnbornmCwR2iqN0igCdsgchaPZ6MK6vVLucYvJNAaGfsf1GqM8EUiEcPTyHzzZKitlcJq/I34Jx7naGU0IN6c0VeXIJW208qve3JHxKgmP9rruykYQgeLvm1LRfywBxwTNFclOQC/uy3x7u7b1BLAwQUAAAACABXoT1dNlfe3KQAAAAYAQAACwAAAF9yZWxzLy5yZWxzjc+xCsIwFAXQXwlvN2kdRKRpFxG6Sv2AkLy2wSQvJFHr37s4WHFwvVzO5Tbd4h27Y8qWgoSaV8AwaDI2TBIuw2mzh65tzuhUsRTybGNmi3chS5hLiQchsp7Rq8wpYli8Gyl5VTKnNImo9FVNKLZVtRPp04C1yXojIfWmBjY8I/5j0zhajUfSN4+h/Jj4agAbVJqwSHhQMsK8Y754B6JtxOpi+wJQSwMEFAAAAAgAV6E9XWF6jwziAAAAfAEAABEAAAB3b3JkL2RvY3VtZW50LnhtbG1QTWvDMAz9K8b3xekOZYTEvY31MCh0Y2fH0dKAbRlLzce/H07WjkEvTwg9vfek+jB7J0ZINGBo5K4opYBgsRtC38jPj9enF3nQ9VR1aK8eAovZu0DV1MgLc6yUInsBb6jACGH27huTN0wFpl5NmLqY0ALREHrv1HNZ7pU3Q5BZssVuyTWucEprOfPiQEzVaFwj38DkIDupdK3unBVYnxfnTHulPOF1njbWXXMj5sQVRWOhkTEBQRpB6i9wFj0IRvFP4AabVbsZ/3as3w3na3mwJI7HR4usiweB1O1a9fdJ/QNQSwECFAMUAAAACABXoT1dzFSMEOEAAACcAQAAEwAAAAAAAAAAAAAAgAEAAAAAW0NvbnRlbnRfVHlwZXNdLnhtbFBLAQIUAxQAAAAIAFehPV02V97cpAAAABgBAAALAAAAAAAAAAAAAACAARIBAABfcmVscy8ucmVsc1BLAQIUAxQAAAAIAFehPV1heo8M4gAAAHwBAAARAAAAAAAAAAAAAACAAd8BAAB3b3JkL2RvY3VtZW50LnhtbFBLBQYAAAAAAwADALkAAADwAgAAAAA=", size: 1200 },
+					] },
+					{ id: 13, instance: 13, courseId: 1, sectionId: 1, type: "book", name: "Study guide", visible: true,
+						chapters: [{ title: "Limits", href: "1/index.html", level: 0 }, { title: "Epsilon-delta", href: "2/index.html", level: 1 }, { title: "Series", href: "3/index.html", level: 0 }],
+						files: [
+							{ name: "index.html", path: "/1/", url: "data:text/html,%3Ch2%3ELimits%3C%2Fh2%3E%3Cp%3EA%20limit%20describes%20behaviour%20near%20a%20point.%3C%2Fp%3E%3C%21--/1/index.html--%3E", size: 90 },
+							{ name: "index.html", path: "/2/", url: "data:text/html,%3Ch3%3EEpsilon-delta%3C%2Fh3%3E%3Cp%3EFor%20every%20e%3E0...%3C%2Fp%3E%3C%21--/2/index.html--%3E", size: 90 },
+							{ name: "index.html", path: "/3/", url: "data:text/html,%3Ch2%3ESeries%3C%2Fh2%3E%3Cp%3ESums%20of%20sequences.%3C%2Fp%3E%3C%21--/3/index.html--%3E", size: 90 },
+						] },
+					{ id: 14, courseId: 1, sectionId: 1, type: "quiz", name: "Final review (locked)", locked: true, availabilityInfo: "<p>Available from <strong>1 December</strong></p>", visible: true },
 					{ id: 3, courseId: 1, sectionId: 1, type: "quiz", name: "Quiz 1", description: "<p>Ten questions, two attempts allowed.</p>", visible: true, completed: true },
 				],
 			},
@@ -188,6 +203,11 @@ export function createMockMoodleClient(): MoodleClient {
 			delay(
 				courseContents[courseId] ?? { courseId, sections: [] },
 			),
+		setActivityCompletion: (cmid, completed) => {
+			for (const c of Object.values(courseContents))
+				for (const sec of c.sections) for (const a of sec.activities) if (a.id === cmid) a.completed = completed;
+			return delay(undefined);
+		},
 		getCalendarEvents: () => delay(calendarEvents),
 		getAssignments: () => delay(assignments),
 		getAssignment: (id) => delay(assignments.find((a) => a.id === id)),

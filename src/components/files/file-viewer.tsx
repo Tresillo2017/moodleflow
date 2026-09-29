@@ -6,15 +6,21 @@ import { Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
+import { RichContent } from "@/components/content/rich-content";
 import { fileKind } from "@/lib/file-kind";
+import { markdownToHtml, notebookToMarkdown, parseCsv } from "@/lib/preview";
 import type { MoodleFile } from "@/types/moodle";
 
 const MAX_CODE_CHARS = 1_000_000;
+const MAX_DOCX_BYTES = 15 * 1024 * 1024;
+const MAX_CSV_ROWS = 2000;
 
 type Loaded =
 	| { status: "loading" }
 	| { status: "error" }
 	| { status: "blob"; url: string }
+	| { status: "html"; html: string }
+	| { status: "csv"; rows: string[][]; truncated: boolean }
 	| { status: "code"; html: string; truncated: boolean };
 
 function useFileContent(file: MoodleFile): Loaded {
@@ -43,6 +49,19 @@ function useFileContent(file: MoodleFile): Loaded {
 						theme: resolvedTheme === "light" ? "github-light" : "github-dark",
 					});
 					if (!cancelled) setState({ status: "code", html, truncated });
+				} else if (kind.type === "markdown" || kind.type === "notebook") {
+					const text = await res.text();
+					const html = markdownToHtml(kind.type === "notebook" ? notebookToMarkdown(text) : text);
+					if (!cancelled) setState({ status: "html", html });
+				} else if (kind.type === "csv") {
+					const rows = parseCsv(await res.text());
+					if (!cancelled) setState({ status: "csv", rows: rows.slice(0, MAX_CSV_ROWS), truncated: rows.length > MAX_CSV_ROWS });
+				} else if (kind.type === "docx") {
+					const buffer = await res.arrayBuffer();
+					if (buffer.byteLength > MAX_DOCX_BYTES) throw new Error("too large");
+					const mammoth = (await import("mammoth/mammoth.browser")).default;
+					const { value } = await mammoth.convertToHtml({ arrayBuffer: buffer });
+					if (!cancelled) setState({ status: "html", html: value });
 				} else {
 					const blob = await res.blob();
 					// force the right type so the browser's PDF/image viewer kicks in
@@ -93,6 +112,37 @@ function Body({ file, state }: { file: MoodleFile; state: Loaded }) {
 				)}
 			</div>
 		);
+	}
+	if (state.status === "html") {
+		return <RichContent html={state.html} className="h-full overflow-auto p-6" />;
+	}
+	if (state.status === "csv") {
+		return (
+			<div className="h-full overflow-auto">
+				<table className="w-full text-xs">
+					<tbody>
+						{state.rows.map((row, i) => (
+							<tr key={i} className={i === 0 ? "bg-muted/50 font-medium" : "border-t"}>
+								{row.map((cell, j) => (
+									<td key={j} className="px-3 py-1.5 whitespace-nowrap">{cell}</td>
+								))}
+							</tr>
+						))}
+					</tbody>
+				</table>
+				{state.truncated && <p className="border-t px-4 py-2 text-xs text-muted-foreground">Showing the first {MAX_CSV_ROWS} rows.</p>}
+			</div>
+		);
+	}
+	if (kind.type === "audio") {
+		return (
+			<div className="flex h-full items-center justify-center p-6">
+				<audio src={state.url} controls className="w-full max-w-lg" />
+			</div>
+		);
+	}
+	if (kind.type === "video") {
+		return <video src={state.url} controls className="mx-auto h-full max-w-full bg-black" />;
 	}
 	return kind.type === "pdf" ? (
 		<iframe src={state.url} title={file.name} className="h-full w-full border-0" />
