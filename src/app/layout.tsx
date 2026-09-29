@@ -6,6 +6,7 @@ import { PreferencesProvider } from "@/components/providers/preferences-provider
 import { MoodleProvider } from "@/components/providers/moodle-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
+import { UpdatePrompt } from "@/components/update-prompt";
 import { PREFERENCES_SCRIPT } from "@/lib/preferences";
 
 const hanken = Hanken_Grotesk({ variable: "--font-hanken", subsets: ["latin"] });
@@ -37,6 +38,7 @@ export default function RootLayout({
 							<TooltipProvider>
 								{children}
 								<Toaster />
+								<UpdatePrompt />
 							</TooltipProvider>
 						</MoodleProvider>
 					</PreferencesProvider>

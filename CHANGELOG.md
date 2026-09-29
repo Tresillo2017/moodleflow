@@ -7,6 +7,11 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-29
+
+### Added
+- In-app updater: open tabs are prompted to reload when a new version is deployed.
+
 ## [0.4.1] - 2026-09-29
 
 ### Fixed
