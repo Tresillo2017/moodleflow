@@ -23,8 +23,12 @@ const PreferencesContext = createContext<PreferencesContextValue | null>(null);
 export function PreferencesProvider({ children }: { children: React.ReactNode }) {
 	const [prefs, setPrefs] = useState<Preferences>(DEFAULT_PREFERENCES);
 
-	// The <head> script already applied stored appearance; this only syncs React state.
-	useEffect(() => setPrefs(loadPreferences()), []);
+	// The <head> script applies appearance from localStorage; re-apply here in case it was restored from the cookie.
+	useEffect(() => {
+		const stored = loadPreferences();
+		setPrefs(stored);
+		applyAppearance(stored);
+	}, []);
 
 	// The active bleh theme depends on light/dark, which next-themes switches via the <html> class.
 	useEffect(() => {

@@ -120,7 +120,6 @@
 	[data-slot="card"] {
 		background: oklch(var(--b5) / var(--solarium-opacity, 70%));
 		backdrop-filter: var(--solarium);
-		-webkit-backdrop-filter: var(--solarium);
 		border-radius: var(--card-radius);
 		box-shadow: var(--card-border), var(--card-shadow);
 	}
@@ -133,7 +132,6 @@
 		padding: 4px;
 		background-color: oklch(var(--menu-bg) / var(--solarium-opacity, var(--menu-opacity)));
 		backdrop-filter: var(--solarium);
-		-webkit-backdrop-filter: var(--solarium);
 		border: 1px solid var(--menu-border);
 		border-radius: calc(var(--item-med-radius) + 4px);
 		box-shadow: var(--override-full-shadow, var(--menu-shadow));
@@ -203,7 +201,6 @@
 	[data-slot="tooltip-content"] {
 		background-color: oklch(var(--tooltip) / var(--solarium-opacity, 80%));
 		backdrop-filter: var(--solarium);
-		-webkit-backdrop-filter: var(--solarium);
 		border-radius: var(--radius-s);
 		box-shadow: var(--avatar-shadow);
 		color: oklch(var(--c2));
@@ -217,13 +214,11 @@
 	[data-slot="sheet-overlay"] {
 		background: var(--modal-bg);
 		backdrop-filter: none;
-		-webkit-backdrop-filter: none;
 	}
 	[data-slot="dialog-content"],
 	[data-slot="sheet-content"] {
 		background: oklch(var(--b5) / var(--solarium-opacity, 90%));
 		backdrop-filter: var(--solarium);
-		-webkit-backdrop-filter: var(--solarium);
 		border-radius: var(--item-big-radius);
 		box-shadow: var(--override-full-shadow, var(--overlay-shadow));
 		border: 1px solid var(--card-border-base);
@@ -265,7 +260,6 @@
 	[data-slot="sidebar-container"] [data-sidebar="sidebar"] {
 		background: var(--sidebar-bg);
 		backdrop-filter: var(--solarium);
-		-webkit-backdrop-filter: var(--solarium);
 	}
 	[data-slot="sidebar-container"] {
 		border-color: var(--sidebar-border);
@@ -275,6 +269,5 @@
 		background: var(--toolbar-bg);
 		border-bottom: 1px solid var(--toolbar-border);
 		backdrop-filter: var(--solarium);
-		-webkit-backdrop-filter: var(--solarium);
 	}
 }

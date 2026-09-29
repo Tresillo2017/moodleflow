@@ -1,4 +1,5 @@
 import type { MoodleConnection } from "./client";
+import { readPersisted, removePersisted, writePersisted } from "@/lib/persist";
 
 const STORAGE_KEY = "moodleflow.connection";
 
@@ -12,7 +13,7 @@ export interface StoredConnection extends MoodleConnection {
 export function loadConnection(): StoredConnection | null {
 	if (typeof window === "undefined") return null;
 	try {
-		const raw = window.localStorage.getItem(STORAGE_KEY);
+		const raw = readPersisted(STORAGE_KEY);
 		if (!raw) return null;
 		return JSON.parse(raw) as StoredConnection;
 	} catch {
@@ -21,9 +22,9 @@ export function loadConnection(): StoredConnection | null {
 }
 
 export function saveConnection(connection: StoredConnection): void {
-	window.localStorage.setItem(STORAGE_KEY, JSON.stringify(connection));
+	writePersisted(STORAGE_KEY, JSON.stringify(connection));
 }
 
 export function clearConnection(): void {
-	window.localStorage.removeItem(STORAGE_KEY);
+	removePersisted(STORAGE_KEY);
 }

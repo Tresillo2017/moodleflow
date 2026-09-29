@@ -5,6 +5,7 @@
  */
 
 import type { DitherColor } from "@/components/dither-kit/palette";
+import { readPersisted, writePersisted } from "@/lib/persist";
 
 const STORAGE_KEY = "moodleflow.preferences";
 
@@ -203,7 +204,7 @@ export function sanitizePreferences(raw: unknown): Preferences {
 
 export function loadPreferences(): Preferences {
 	try {
-		return sanitizePreferences(JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "{}"));
+		return sanitizePreferences(JSON.parse(readPersisted(STORAGE_KEY, true) ?? "{}"));
 	} catch {
 		return DEFAULT_PREFERENCES;
 	}
@@ -211,7 +212,7 @@ export function loadPreferences(): Preferences {
 
 export function savePreferences(prefs: Preferences): void {
 	try {
-		window.localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+		writePersisted(STORAGE_KEY, JSON.stringify(prefs), true);
 	} catch {
 		// storage full or blocked: preferences still apply for this session
 	}
