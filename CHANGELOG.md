@@ -7,6 +7,11 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.10.4] - 2026-09-29
+
+### Added
+- Right-click a course block to hide it in this course or in all courses; a "Show hidden blocks" button brings them back.
+
 ## [0.10.3] - 2026-09-29
 
 ### Changed

@@ -77,6 +77,8 @@ export type Preferences = { [K in ChoiceKey]: keyof (typeof CHOICES)[K] } & {
 	dashboard: Record<DashboardSection, boolean>;
 	/** Course ids pinned to the top of the sidebar, in display order. */
 	pinnedCourses: number[];
+	/** Hidden course blocks: `course:<courseId>:<blockId>` for one course, `name:<plugin>` for every course. */
+	hiddenBlocks: string[];
 };
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -100,6 +102,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
 	clock: "auto",
 	dashboard: { stats: true, upcoming: true, courses: true, activity: true, calendar: true },
 	pinnedCourses: [],
+	hiddenBlocks: [],
 };
 
 const APPEARANCE_KEYS = ["radius", "font", "scale", "motion", "vibrance", "weight"] as const;
@@ -172,6 +175,24 @@ function sanitizePins(raw: unknown): number[] {
 	return [...new Set(raw.filter((id): id is number => Number.isInteger(id) && id > 0))].slice(0, MAX_PINS);
 }
 
+const MAX_HIDDEN_BLOCKS = 200;
+
+function sanitizeHiddenBlocks(raw: unknown): string[] {
+	if (!Array.isArray(raw)) return [];
+	const valid = raw.filter((k): k is string => typeof k === "string" && /^(course:\d+:\d+|name:[\w-]+)$/.test(k));
+	return [...new Set(valid)].slice(0, MAX_HIDDEN_BLOCKS);
+}
+
+export const blockKeys = (courseId: number, block: { id: number; name: string }) => ({
+	course: `course:${courseId}:${block.id}`,
+	everywhere: `name:${block.name}`,
+});
+
+export function isBlockHidden(hidden: string[], courseId: number, block: { id: number; name: string }): boolean {
+	const keys = blockKeys(courseId, block);
+	return hidden.includes(keys.course) || hidden.includes(keys.everywhere);
+}
+
 /** Adds the id at the end, or removes it when already pinned. */
 export function togglePinned(pins: number[], id: number): number[] {
 	return pins.includes(id) ? pins.filter((p) => p !== id) : [...pins, id].slice(-MAX_PINS);
@@ -191,6 +212,7 @@ export function sanitizePreferences(raw: unknown): Preferences {
 		...DEFAULT_PREFERENCES,
 		...choices,
 		pinnedCourses: sanitizePins(input.pinnedCourses),
+		hiddenBlocks: sanitizeHiddenBlocks(input.hiddenBlocks),
 		hue: sanitizeHue(input.hue),
 		accent: isOption(input.accent, ACCENTS) ? (input.accent as Accent) : DEFAULT_PREFERENCES.accent,
 		dashboard: Object.fromEntries(

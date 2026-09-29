@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_PREFERENCES, activeSeason, hueOf, sanitizePreferences, seasonForDate, togglePinned } from "./preferences";
+import { DEFAULT_PREFERENCES, activeSeason, hueOf, isBlockHidden, sanitizePreferences, seasonForDate, togglePinned } from "./preferences";
 
 describe("sanitizePreferences", () => {
 	it("falls back to defaults for garbage input", () => {
@@ -88,5 +88,15 @@ describe("themes", () => {
 			darkTheme: "rose_pine",
 			lightTheme: "light",
 		});
+	});
+});
+
+describe("hidden blocks", () => {
+	it("keeps only well-formed keys and matches per course or by plugin name", () => {
+		const { hiddenBlocks } = sanitizePreferences({ hiddenBlocks: ["course:1:5", "name:news_items", "bogus", 4, "course:x:1", "course:1:5"] });
+		expect(hiddenBlocks).toEqual(["course:1:5", "name:news_items"]);
+		expect(isBlockHidden(hiddenBlocks, 1, { id: 5, name: "html" })).toBe(true);
+		expect(isBlockHidden(hiddenBlocks, 2, { id: 5, name: "html" })).toBe(false);
+		expect(isBlockHidden(hiddenBlocks, 2, { id: 9, name: "news_items" })).toBe(true);
 	});
 });

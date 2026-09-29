@@ -328,7 +328,7 @@ function CourseDetailContent({ params }: { params: Promise<{ courseId: string }>
 					{(sections.length > 1 || blocks.length > 0) && (
 						<div className="order-2 flex flex-col gap-4 lg:sticky lg:top-20 lg:order-none lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto">
 							{sections.length > 1 && <CourseOutline sections={sections} className="hidden lg:flex" />}
-							<CourseBlocks blocks={blocks} />
+							<CourseBlocks courseId={id} blocks={blocks} />
 						</div>
 					)}
 					<div className="flex min-w-0 flex-col gap-6">
