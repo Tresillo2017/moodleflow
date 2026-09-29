@@ -7,6 +7,15 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-09-29
+
+### Fixed
+- Page transitions never played (the animation referenced a missing keyframe). Pages now fade and rise 6px in 200ms; reduced motion keeps the fade only.
+
+### Changed
+- README rewritten with features, screenshots, Moodle setup, privacy notes, deployment and release steps.
+- Repository description, homepage and topics set on GitHub.
+
 ## [0.5.1] - 2026-09-29
 
 ### Fixed

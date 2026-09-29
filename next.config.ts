@@ -6,6 +6,7 @@ import pkg from "./package.json";
 const build = process.env.WORKERS_CI_COMMIT_SHA?.slice(0, 7);
 
 const nextConfig: NextConfig = {
+	devIndicators: false,
 	env: {
 		NEXT_PUBLIC_APP_VERSION: pkg.version,
 		NEXT_PUBLIC_BUILD_ID: build ? `${pkg.version}+${build}` : pkg.version,

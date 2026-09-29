@@ -219,4 +219,33 @@ html[data-bleh--theme_type="light"] .bg-card {
 
 @utility animate-track-in { animation: var(--motion, track_in 0.3s var(--trans-function) backwards); }
 @utility animate-blur-in { animation: var(--blur-in); }
-@utility animate-page-in { animation: var(--motion, modal_in 0.3s var(--trans-function-ani)); }
+/*
+ * Page enter (app/(app)/template.tsx remounts per navigation). Navigation happens tens of times a day,
+ * so it is a short fade with a 6px rise, strong ease-out, no exit. `--motion: none` (bleh's reduced-motion
+ * setting) turns it off; the OS setting keeps the fade and drops the movement.
+ * ponytail: enter-only, App Router can't hold the old page for an exit without View Transitions.
+ */
+@keyframes page_in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+@keyframes page_in_reduced {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+@utility animate-page-in {
+	animation: var(--motion, page_in 0.2s cubic-bezier(0.23, 1, 0.32, 1));
+	@media (prefers-reduced-motion: reduce) {
+		animation: var(--motion, page_in_reduced 0.15s ease);
+	}
+}
