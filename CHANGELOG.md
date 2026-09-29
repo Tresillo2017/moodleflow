@@ -7,6 +7,16 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-09-29
+
+### Added
+- Forums: read discussions and threaded posts, start discussions, reply, edit, delete and attach files. Subscribe, star, pin and lock per discussion, and rate posts. Course pages open forums inside MoodleFlow.
+- Messages: conversations with live polling, unread badge in the sidebar, people search, contacts, requests and blocking, star, mute and delete.
+- Notification preferences in Settings (per type and channel).
+- Notifications: paging, course and type filters, and links that open the matching MoodleFlow page instead of Moodle.
+- Chat activities: live room with participant list and past sessions.
+- BigBlueButton meetings: join and watch recordings.
+
 ## [0.10.4] - 2026-09-29
 
 ### Added
