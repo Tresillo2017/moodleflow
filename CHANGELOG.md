@@ -7,6 +7,13 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+### Changed
+- Dashboard activity heatmap counts what you did (activities completed, work submitted, items graded) instead of only graded items.
+- Redesigned course cards: taller banner with a readable overlay, "Done" marker for finished courses.
+
+### Fixed
+- Course banners load from your Moodle site (also when the course list omits them) and course images use the authenticated file URL.
+
 ## [0.10.2] - 2026-09-29
 
 ### Changed

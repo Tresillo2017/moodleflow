@@ -74,6 +74,7 @@ function withCache(client: MoodleClient, persist: boolean): MoodleClient {
 			invalidate("courses");
 		},
 		getCourseContents: cached("contents", TTL.contents, (courseId: number) => client.getCourseContents(courseId)),
+		getCompletionDates: cached("completionDates", TTL.grades, (ids: number[]) => client.getCompletionDates(ids)),
 		getCourseNavOptions: cached("navOptions", TTL.contents, (id: number) => client.getCourseNavOptions(id)),
 		getParticipants: cached("participants", TTL.courses, (id: number) => client.getParticipants(id)),
 		getCourseCompletion: cached("courseCompletion", TTL.contents, (id: number) => client.getCourseCompletion(id)),

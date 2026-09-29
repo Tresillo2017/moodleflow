@@ -3,29 +3,38 @@ import type { MoodleAssignment, MoodleCourse, MoodleCourseGrades } from "@/types
 
 const DAY_MS = 86_400_000;
 
-/**
- * Moodle has no single "daily activity log" web service exposed by default,
- * so this approximates a contribution calendar from what MoodleFlow already
- * fetches: graded dates (grading activity) and past assignment due dates
- * (submission activity). It's a proxy, not a true access log.
- */
-export function buildContributions(
-	grades: MoodleCourseGrades[],
-	assignments: MoodleAssignment[],
-	weeks = 53,
-): Contribution[] {
-	const counts = new Map<string, number>();
-	const bump = (iso?: string) => {
-		if (!iso) return;
-		const key = iso.slice(0, 10);
-		counts.set(key, (counts.get(key) ?? 0) + 1);
-	};
+export interface ActivityEvent {
+	courseId: number;
+	/** ISO timestamp */
+	date: string;
+}
 
-	for (const course of grades) {
-		for (const item of course.items) bump(item.gradedDate);
-	}
+/**
+ * Moodle exposes no daily access log through web services, so "activity" is what the student
+ * demonstrably did: activities completed, work submitted and items that got graded.
+ */
+export function collectActivity(
+	completions: ActivityEvent[],
+	assignments: MoodleAssignment[],
+	grades: MoodleCourseGrades[],
+): ActivityEvent[] {
+	const events = [...completions];
 	for (const a of assignments) {
-		if (a.dueDate && new Date(a.dueDate).getTime() <= Date.now()) bump(a.dueDate);
+		if (a.submission?.timeModified) events.push({ courseId: a.courseId, date: a.submission.timeModified });
+	}
+	for (const course of grades) {
+		for (const item of course.items) {
+			if (item.gradedDate) events.push({ courseId: course.courseId, date: item.gradedDate });
+		}
+	}
+	return events;
+}
+
+export function buildContributions(events: ActivityEvent[], weeks = 53): Contribution[] {
+	const counts = new Map<string, number>();
+	for (const e of events) {
+		const key = e.date.slice(0, 10);
+		counts.set(key, (counts.get(key) ?? 0) + 1);
 	}
 
 	const max = Math.max(1, ...counts.values());
@@ -52,29 +61,16 @@ export function buildContributions(
 	});
 }
 
-export function buildTopCourses(
-	courses: MoodleCourse[],
-	grades: MoodleCourseGrades[],
-	assignments: MoodleAssignment[],
-	limit = 3,
-): RepoContribution[] {
+export function buildTopCourses(courses: MoodleCourse[], events: ActivityEvent[], limit = 3): RepoContribution[] {
 	const activity = new Map<number, number>();
-	for (const course of grades) {
-		activity.set(course.courseId, (activity.get(course.courseId) ?? 0) + course.items.length);
-	}
-	for (const a of assignments) {
-		activity.set(a.courseId, (activity.get(a.courseId) ?? 0) + 1);
-	}
+	for (const e of events) activity.set(e.courseId, (activity.get(e.courseId) ?? 0) + 1);
 
 	return [...activity.entries()]
 		.sort(([, a], [, b]) => b - a)
 		.slice(0, limit)
-		.map(([courseId, count]) => {
-			const course = courses.find((c) => c.id === courseId);
-			return {
-				name: course?.fullName ?? `Course ${courseId}`,
-				count,
-				href: `/courses/${courseId}`,
-			};
-		});
+		.map(([courseId, count]) => ({
+			name: courses.find((c) => c.id === courseId)?.fullName ?? `Course ${courseId}`,
+			count,
+			href: `/courses/${courseId}`,
+		}));
 }

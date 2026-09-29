@@ -224,6 +224,10 @@ export function createMockMoodleClient(): MoodleClient {
 			delay(
 				courseContents[courseId] ?? { courseId, sections: [] },
 			),
+		getCompletionDates: (ids) =>
+			delay(
+				Array.from({ length: 140 }, (_, i) => ({ courseId: ids[i % Math.max(ids.length, 1)] ?? 1, date: days(-((i * 7) % 170)) })).filter((_, i) => i % 3 !== 0),
+			),
 		getCourseNavOptions: () => delay(["grades", "participants", "badges"]),
 		getParticipants: () => delay(mockParticipants),
 		getCourseCompletion: () => delay(mockCompletion),

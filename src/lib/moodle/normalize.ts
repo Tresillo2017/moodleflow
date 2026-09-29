@@ -71,6 +71,15 @@ export function normalizeSiteConfig(raw: unknown, info: MoodleSiteInfo): MoodleS
 	};
 }
 
+/** Course images from the timeline API, keyed by course id (it also serves Moodle's generated default images). */
+export function normalizeTimelineImages(raw: unknown): Map<number, string> {
+	const images = new Map<number, string>();
+	for (const c of asArray(asRecord(raw).courses).map(asRecord)) {
+		if (typeof c.courseimage === "string" && c.courseimage) images.set(Number(c.id), c.courseimage);
+	}
+	return images;
+}
+
 /** `courseimage` (timeline/overview APIs) or the first overview file (core_enrol_get_users_courses). */
 function courseImage(course: Record<string, unknown>): string | undefined {
 	if (typeof course.courseimage === "string" && course.courseimage) return course.courseimage;
@@ -372,6 +381,14 @@ export function normalizeActivityCompletion(raw: unknown, cmid: number): MoodleA
 	const rule = details.find((d) => d.rulevalue && Number(asRecord(d.rulevalue).status) === (done ? 1 : 0)) ?? details[0];
 	const label = rule?.rulevalue ? String(asRecord(rule.rulevalue).description ?? "") : "";
 	return { done, label: label || undefined };
+}
+
+// core_completion_get_activities_completion_status: when each activity was completed
+export function normalizeCompletionDates(raw: unknown): string[] {
+	return asArray(asRecord(raw).statuses)
+		.map(asRecord)
+		.filter((s) => Number(s.timecompleted) > 0)
+		.map((s) => new Date(Number(s.timecompleted) * 1000).toISOString());
 }
 
 // core_comment_get_comments

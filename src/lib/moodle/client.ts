@@ -35,11 +35,13 @@ import {
 	normalizeComments,
 	normalizeCalendarEvents,
 	normalizeCourseContent,
+	normalizeCompletionDates,
 	normalizeCourseBlocks,
 	normalizeCourseCompletion,
 	normalizeCourses,
 	normalizeNavOptions,
 	normalizeParticipants,
+	normalizeTimelineImages,
 	normalizeUpdatedModules,
 	normalizeForumDiscussions,
 	normalizeGrades,
@@ -78,6 +80,8 @@ export interface MoodleClient {
 	getCourseBlocks(courseId: number): Promise<CourseBlock[]>;
 	/** Course-module ids changed since the timestamp (seconds); empty when unsupported. */
 	getUpdatedModules(courseId: number, sinceSeconds: number): Promise<number[]>;
+	/** Days the user completed activities in these courses (for the activity heatmap); failed courses are skipped. */
+	getCompletionDates(courseIds: number[]): Promise<{ courseId: number; date: string }[]>;
 	getCalendarEvents(): Promise<MoodleCalendarEvent[]>;
 	/** With courseIds, also fetches each assignment's real submission status; without, status is "unknown". */
 	getAssignments(courseIds?: number[]): Promise<MoodleAssignment[]>;
@@ -237,10 +241,22 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 
 		async getCourses() {
 			const info = await this.getSiteInfo();
-			const raw = await callMoodle(connection, "core_enrol_get_users_courses", {
-				userid: info.userId,
-			});
-			return normalizeCourses(raw);
+			const [raw, images] = await Promise.all([
+				callMoodle(connection, "core_enrol_get_users_courses", { userid: info.userId }),
+				// enrol_get_users_courses often omits banners; the timeline API carries them (and Moodle's generated defaults)
+				callMoodle(connection, "core_course_get_enrolled_courses_by_timeline_classification", { classification: "all", limit: 0 })
+					.then(normalizeTimelineImages)
+					.catch(() => new Map<number, string>()),
+			]);
+			return normalizeCourses(raw).map((c) => (c.imageUrl ? c : { ...c, imageUrl: images.get(c.id) }));
+		},
+
+		async getCompletionDates(courseIds) {
+			const info = await fetchSiteInfo();
+			const results = await callMany(
+				courseIds.map((id) => ({ wsfunction: "core_completion_get_activities_completion_status", params: { courseid: id, userid: info.userId } })),
+			);
+			return results.flatMap((r, i) => ("data" in r ? normalizeCompletionDates(r.data).map((date) => ({ courseId: courseIds[i], date })) : []));
 		},
 
 		async setCourseFavourite(courseId: number, favourite: boolean) {
@@ -429,7 +445,9 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 			const file = new URL(url, connection.siteUrl);
 			// never send the token to a host other than the Moodle site
 			if (file.origin !== new URL(connection.siteUrl).origin) return url;
-			const target = moodleUrl(connection, file.pathname);
+			// the token only works on the webservice/ variant of pluginfile.php
+			const path = file.pathname.replace(/(?<!\/webservice)\/pluginfile\.php\//, "/webservice/pluginfile.php/");
+			const target = moodleUrl(connection, path);
 			file.searchParams.forEach((value, key) => target.searchParams.set(key, value));
 			target.searchParams.set("token", connection.token);
 			if (opts?.download !== false) target.searchParams.set("forcedownload", "1");
