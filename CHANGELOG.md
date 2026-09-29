@@ -7,6 +7,18 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-09-29
+
+### Added
+- Rich-text editor for online-text submissions (bold, italic, lists); existing submissions keep their formatting when edited.
+- Rubric and marking-guide results in "Grade and feedback".
+- Granted extensions become the due date, shown as "extended from …".
+- Group assignments use the shared team submission and say so on the detail page.
+- Assignments list: course filter and due-date sort.
+
+### Fixed
+- Demo mode showed "isn't enabled" on every gated page (Assignments, Grades, …).
+
 ## [0.8.0] - 2026-09-29
 
 ### Added
