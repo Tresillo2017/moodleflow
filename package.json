@@ -1,6 +1,6 @@
 {
 	"name": "moodleflow",
-	"version": "0.10.3",
+	"version": "0.10.4",
 	"description": "A modern, fully client-side web interface for existing Moodle installations.",
 	"dependencies": {
 		"@base-ui/react": "^1.8.0",
