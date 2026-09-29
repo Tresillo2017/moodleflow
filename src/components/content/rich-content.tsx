@@ -15,6 +15,16 @@ export function RichContent({ html, className }: { html: string; className?: str
 	const clean = useMemo(() => {
 		const purify = DOMPurify();
 		purify.addHook("afterSanitizeAttributes", (node) => {
+			// Teacher-pasted colours (e.g. black text) are unreadable on dark themes: let the theme decide.
+			// ponytail: drops intentional colours too; keep only high-contrast ones if that matters.
+			node.removeAttribute("color");
+			node.removeAttribute("bgcolor");
+			if (node instanceof HTMLElement) {
+				for (const property of ["color", "background", "background-color", "background-image"]) {
+					node.style.removeProperty(property);
+				}
+				if (node.getAttribute("style") === "") node.removeAttribute("style");
+			}
 			if (node.tagName === "A") {
 				node.setAttribute("target", "_blank");
 				node.setAttribute("rel", "noopener noreferrer");

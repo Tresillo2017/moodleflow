@@ -7,6 +7,11 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-09-29
+
+### Fixed
+- Course text with hard-coded colours (black on black) is readable again: teacher colours are stripped so the theme decides.
+
 ## [0.5.0] - 2026-09-29
 
 ### Added
