@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -24,10 +24,17 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
 	const [token, setToken] = useState("");
+	const [useProxy, setUseProxy] = useState(false);
 	const [status, setStatus] = useState<"idle" | "checking">("idle");
 	const [error, setError] = useState<string | null>(null);
 	const { connect } = useMoodleConnection();
 	const router = useRouter();
+
+	// after an expired session the provider sends people back here with their site filled in
+	useEffect(() => {
+		const site = new URLSearchParams(window.location.search).get("site");
+		if (site) setSiteUrl(site);
+	}, []);
 
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
@@ -41,12 +48,13 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
 		setStatus("checking");
 		try {
 			const normalizedUrl = normalizeUrl(siteUrl);
-			const resolvedToken = useToken ? token : await fetchMoodleToken(normalizedUrl, username, password);
-			const client = createMoodleClient({ siteUrl: normalizedUrl, token: resolvedToken });
+			const resolvedToken = useToken ? token : await fetchMoodleToken(normalizedUrl, username, password, { proxy: useProxy });
+			const client = createMoodleClient({ siteUrl: normalizedUrl, token: resolvedToken, proxy: useProxy });
 			const info = await client.getSiteInfo();
 			connect({
 				siteUrl: normalizedUrl,
 				token: resolvedToken,
+				proxy: useProxy,
 				siteName: info.siteName,
 				userFullName: info.fullName,
 			});
@@ -90,6 +98,14 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
 						required
 					/>
 				</Field>
+
+				<label className="flex items-start gap-2 text-xs text-muted-foreground">
+					<input type="checkbox" className="mt-0.5" checked={useProxy} onChange={(e) => setUseProxy(e.target.checked)} />
+					<span>
+						My site blocks browser requests (CORS errors). Route traffic through MoodleFlow&apos;s proxy; it forwards requests to your
+						Moodle and stores nothing.
+					</span>
+				</label>
 
 				{useToken ? (
 					<Field>

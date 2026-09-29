@@ -13,6 +13,7 @@ import type {
 	MoodleFile,
 	MoodleForumDiscussion,
 	MoodleNotification,
+	MoodleSiteConfig,
 	MoodleSiteInfo,
 } from "@/types/moodle";
 
@@ -45,9 +46,24 @@ export function normalizeSiteInfo(raw: unknown): MoodleSiteInfo {
 		fullName: String(r.fullname ?? ""),
 		userPictureUrl: r.userpictureurl ? String(r.userpictureurl) : undefined,
 		release: String(r.release ?? ""),
+		maxUploadBytes: Number(r.usermaxuploadfilesize) > 0 ? Number(r.usermaxuploadfilesize) : undefined,
 		functions: asArray(r.functions)
 			.map((f) => asRecord(f).name)
 			.filter((n): n is string => typeof n === "string"),
+	};
+}
+
+/** Merges tool_mobile_get_config (`{settings: [{name, value}]}`, may be null) over what site info already told us. */
+export function normalizeSiteConfig(raw: unknown, info: MoodleSiteInfo): MoodleSiteConfig {
+	const settings = Object.fromEntries(
+		asArray(raw ? asRecord(raw).settings : []).map((s) => [String(asRecord(s).name), String(asRecord(s).value ?? "")]),
+	);
+	return {
+		siteName: settings.sitename || info.siteName,
+		logoUrl: settings.compactlogourl || settings.logourl || undefined,
+		maxUploadBytes: info.maxUploadBytes,
+		registrationEnabled: Boolean(settings.registerauth),
+		policyUrl: settings.sitepolicy || undefined,
 	};
 }
 

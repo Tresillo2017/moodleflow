@@ -7,6 +7,16 @@ export interface MoodleSiteInfo {
 	userPictureUrl?: string;
 	release: string;
 	functions: string[];
+	/** Largest file this user may upload (bytes); 0/undefined means no site limit. */
+	maxUploadBytes?: number;
+}
+
+export interface MoodleSiteConfig {
+	siteName: string;
+	logoUrl?: string;
+	maxUploadBytes?: number;
+	registrationEnabled: boolean;
+	policyUrl?: string;
 }
 
 export interface MoodleUser {
@@ -195,15 +205,20 @@ export type MoodleErrorCode =
 	| "invalid_token"
 	| "site_unavailable"
 	| "unsupported_function"
+	| "access_denied"
+	| "file_too_large"
 	| "malformed_response"
 	| "unknown_error";
 
 export class MoodleError extends Error {
 	code: MoodleErrorCode;
+	/** Moodle's own error code, kept for debugging; never shown to users. */
+	moodleCode?: string;
 
-	constructor(code: MoodleErrorCode, message: string) {
+	constructor(code: MoodleErrorCode, message: string, moodleCode?: string) {
 		super(message);
 		this.name = "MoodleError";
 		this.code = code;
+		this.moodleCode = moodleCode;
 	}
 }

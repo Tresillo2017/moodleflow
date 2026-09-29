@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
 import { PageHeader } from "@/components/layout/page-header";
-import { EmptyState, ErrorState, ListSkeleton } from "@/components/ui/state";
+import { EmptyState, ErrorState, ListSkeleton, FeatureGate } from "@/components/ui/state";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -75,7 +75,7 @@ function NotificationItem({ notification: n, onRead }: { notification: MoodleNot
 	);
 }
 
-export default function NotificationsPage() {
+function NotificationsPageContent() {
 	const { client, refresh } = useMoodleConnection();
 	const notifications = useMoodleQuery(client ? () => client.getNotifications() : null, [client]);
 	const [readIds, setReadIds] = useState<Set<number>>(new Set());
@@ -150,5 +150,13 @@ export default function NotificationsPage() {
 				</div>
 			)}
 		</div>
+	);
+}
+
+export default function NotificationsPage() {
+	return (
+		<FeatureGate feature="Notifications" functions={["message_popup_get_popup_notifications"]}>
+			<NotificationsPageContent />
+		</FeatureGate>
 	);
 }

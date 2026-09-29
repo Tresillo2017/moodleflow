@@ -5,7 +5,7 @@ import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { usePreferences } from "@/components/providers/preferences-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
 import { PageHeader } from "@/components/layout/page-header";
-import { EmptyState, ErrorState, ListSkeleton } from "@/components/ui/state";
+import { EmptyState, ErrorState, ListSkeleton, FeatureGate } from "@/components/ui/state";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { BookOpen, CalendarDays, ChevronLeft, ChevronRight, ClipboardList, FileQuestion, User } from "lucide-react";
@@ -199,7 +199,7 @@ function MonthView({ events, hour12, weekStartsMonday }: { events: MoodleCalenda
 	);
 }
 
-export default function CalendarPage() {
+function CalendarPageContent() {
 	const { client, refresh } = useMoodleConnection();
 	const { prefs } = usePreferences();
 	const events = useMoodleQuery(client ? () => client.getCalendarEvents() : null, [client]);
@@ -248,5 +248,13 @@ export default function CalendarPage() {
 				<MonthView events={events.data} hour12={hour12} weekStartsMonday={prefs.weekStart === "monday"} />
 			)}
 		</div>
+	);
+}
+
+export default function CalendarPage() {
+	return (
+		<FeatureGate feature="Calendar" functions={["core_calendar_get_calendar_upcoming_view"]}>
+			<CalendarPageContent />
+		</FeatureGate>
 	);
 }

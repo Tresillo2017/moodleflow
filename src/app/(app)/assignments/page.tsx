@@ -8,7 +8,7 @@ import { ContextMenuItem } from "@/components/ui/context-menu";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
 import { PageHeader } from "@/components/layout/page-header";
-import { EmptyState, ErrorState, ListSkeleton } from "@/components/ui/state";
+import { EmptyState, ErrorState, ListSkeleton, FeatureGate } from "@/components/ui/state";
 import { SearchInput } from "@/components/ui/search-input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DeadlineBadge } from "@/components/assignments/deadline-badge";
@@ -105,7 +105,7 @@ function AssignmentRow({ assignment: a, onSubmitted }: { assignment: MoodleAssig
 	);
 }
 
-export default function AssignmentsPage() {
+function AssignmentsPageContent() {
 	const { client, refresh } = useMoodleConnection();
 	const assignments = useAssignments();
 	const courses = useMoodleQuery(client ? () => client.getCourses() : null, [client]);
@@ -197,5 +197,13 @@ export default function AssignmentsPage() {
 				</section>
 			))}
 		</div>
+	);
+}
+
+export default function AssignmentsPage() {
+	return (
+		<FeatureGate feature="Assignments" functions={["mod_assign_get_assignments"]}>
+			<AssignmentsPageContent />
+		</FeatureGate>
 	);
 }

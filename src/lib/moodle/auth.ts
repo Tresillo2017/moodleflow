@@ -1,4 +1,6 @@
 import { MoodleError } from "@/types/moodle";
+import { moodleUrl } from "./call";
+import { moodleExceptionToError } from "./errors";
 
 const MOBILE_SERVICE = "moodle_mobile_app";
 
@@ -11,9 +13,9 @@ export async function fetchMoodleToken(
 	siteUrl: string,
 	username: string,
 	password: string,
-	service: string = MOBILE_SERVICE,
+	{ proxy = false, service = MOBILE_SERVICE }: { proxy?: boolean; service?: string } = {},
 ): Promise<string> {
-	const url = new URL("/login/token.php", siteUrl);
+	const url = moodleUrl({ siteUrl, proxy }, "/login/token.php");
 	const body = new URLSearchParams();
 	body.set("username", username);
 	body.set("password", password);
@@ -49,11 +51,11 @@ export async function fetchMoodleToken(
 	}
 	const r = data as { token?: string; error?: string; errorcode?: string };
 
-	if (r.errorcode === "missingparam" || r.errorcode === "servicenotdefined" || r.errorcode === "invalidlogin") {
-		throw new MoodleError("invalid_token", r.error ?? "Incorrect username or password.");
+	if (r.errorcode === "missingparam" || r.errorcode === "servicenotdefined") {
+		throw new MoodleError("invalid_token", "Incorrect username or password.");
 	}
 	if (r.error) {
-		throw new MoodleError("unknown_error", r.error);
+		throw moodleExceptionToError(r.errorcode);
 	}
 	if (!r.token) {
 		throw new MoodleError("malformed_response", "Moodle didn't return a token.");

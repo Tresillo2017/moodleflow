@@ -301,6 +301,13 @@ function AccountSection() {
 					Reset
 				</Button>
 			</Row>
+			{!connection?.mock && connection && (
+				<Row label="Manage tokens" hint="Moodle can't revoke a token from here. Delete the mobile app key in Moodle's Security keys to invalidate it everywhere.">
+					<Button variant="outline" size="sm" nativeButton={false} render={<a href={new URL("/user/managetoken.php", connection.siteUrl).toString()} target="_blank" rel="noopener noreferrer" />}>
+						Open in Moodle
+					</Button>
+				</Row>
+			)}
 			<Row label="Sign out" hint="Removes the saved token from this browser.">
 				<Button
 					variant="destructive"

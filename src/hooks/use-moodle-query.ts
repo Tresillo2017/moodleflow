@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MoodleError } from "@/types/moodle";
+import { CACHE_UPDATED, SESSION_EXPIRED } from "@/components/providers/moodle-provider";
 
 export interface MoodleQueryState<T> {
 	data: T | null;
@@ -24,6 +25,14 @@ export function useMoodleQuery<T>(
 		loading: Boolean(fetcher),
 	});
 
+	// bumped when a background revalidation refreshed the cache; refetching then reads the fresh copy
+	const [revalidations, setRevalidations] = useState(0);
+	useEffect(() => {
+		const onUpdate = () => setRevalidations((n) => n + 1);
+		window.addEventListener(CACHE_UPDATED, onUpdate);
+		return () => window.removeEventListener(CACHE_UPDATED, onUpdate);
+	}, []);
+
 	useEffect(() => {
 		if (!fetcher) {
 			setState({ data: null, error: null, loading: false });
@@ -42,13 +51,14 @@ export function useMoodleQuery<T>(
 					error instanceof MoodleError
 						? error
 						: new MoodleError("unknown_error", "Something went wrong loading this data.");
+				if (moodleError.code === "invalid_token") window.dispatchEvent(new Event(SESSION_EXPIRED));
 				setState({ data: null, error: moodleError, loading: false });
 			});
 		return () => {
 			cancelled = true;
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, deps);
+	}, [...deps, revalidations]);
 
 	return state;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useCallback, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { ArrowLeft, CheckCircle2, Circle, ClipboardX, Loader2, Upload } from "lucide-react";
@@ -151,6 +151,9 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ ass
 	const id = Number(assignmentId);
 	const { client, refresh } = useMoodleConnection();
 	const query = useMoodleQuery(client ? () => client.getAssignment(id) : null, [client, id]);
+	useEffect(() => {
+		void client?.logActivityView({ type: "assignment", instance: id });
+	}, [client, id]);
 	const a = query.data;
 	const timing = a ? submissionTiming(a) : undefined;
 

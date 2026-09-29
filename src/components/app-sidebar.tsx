@@ -117,6 +117,8 @@ function CoursesNav({ pathname }: { pathname: string }) {
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 	const pathname = usePathname();
 	const { setOpenMobile } = useSidebar();
+	const { client } = useMoodleConnection();
+	const siteConfig = useMoodleQuery(client ? () => client.getSiteConfig() : null, [client]);
 
 	// On mobile the sidebar is a sheet; close it once a link has navigated.
 	useEffect(() => setOpenMobile(false), [pathname, setOpenMobile]);
@@ -132,7 +134,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 							</div>
 							<div className="grid flex-1 text-left leading-tight">
 								<span className="truncate font-semibold">MoodleFlow</span>
-								<span className="truncate text-xs text-muted-foreground">Your Moodle, faster</span>
+								<span className="truncate text-xs text-muted-foreground">{siteConfig.data?.siteName || "Your Moodle, faster"}</span>
 							</div>
 						</SidebarMenuButton>
 					</SidebarMenuItem>

@@ -6,7 +6,7 @@ import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { usePreferences } from "@/components/providers/preferences-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
 import { PageHeader } from "@/components/layout/page-header";
-import { EmptyState, ErrorState, ListSkeleton } from "@/components/ui/state";
+import { EmptyState, ErrorState, ListSkeleton, FeatureGate } from "@/components/ui/state";
 import { CheckCheck, GraduationCap, Percent, TrendingDown, Trophy } from "lucide-react";
 import { CourseGrades } from "@/components/grades/course-grades";
 import { SearchInput } from "@/components/ui/search-input";
@@ -68,7 +68,7 @@ function StatTile({
 	);
 }
 
-export default function GradesPage() {
+function GradesPageContent() {
 	const { client, refresh } = useMoodleConnection();
 	const { prefs } = usePreferences();
 	const grades = useMoodleQuery(client ? () => client.getGrades() : null, [client]);
@@ -237,5 +237,13 @@ export default function GradesPage() {
 				</section>
 			)}
 		</div>
+	);
+}
+
+export default function GradesPage() {
+	return (
+		<FeatureGate feature="Grades" functions={["gradereport_user_get_grade_items"]}>
+			<GradesPageContent />
+		</FeatureGate>
 	);
 }

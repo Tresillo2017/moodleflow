@@ -14,7 +14,7 @@ function formatSize(bytes: number): string {
 	return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-export function FileList({ files, className }: { files: MoodleFile[]; className?: string }) {
+export function FileList({ files, className, onOpen }: { files: MoodleFile[]; className?: string; onOpen?: () => void }) {
 	const { client } = useMoodleConnection();
 	const [viewing, setViewing] = useState<MoodleFile | null>(null);
 	if (!client) return null;
@@ -38,11 +38,14 @@ export function FileList({ files, className }: { files: MoodleFile[]; className?
 				return (
 					<li key={f.url}>
 						{previewable ? (
-							<button type="button" onClick={() => setViewing(f)} className={rowClass}>
+							<button type="button" onClick={() => {
+									setViewing(f);
+									onOpen?.();
+								}} className={rowClass}>
 								{inner}
 							</button>
 						) : (
-							<a href={client.fileUrl(f.url)} download={f.name} className={rowClass}>
+							<a href={client.fileUrl(f.url)} download={f.name} className={rowClass} onClick={onOpen}>
 								{inner}
 							</a>
 						)}

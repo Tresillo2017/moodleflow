@@ -166,6 +166,17 @@ function delay<T>(value: T, ms = 250): Promise<T> {
 export function createMockMoodleClient(): MoodleClient {
 	return {
 		getSiteInfo: () => delay(siteInfo),
+		getSiteConfig: () => delay({ siteName: siteInfo.siteName, maxUploadBytes: 10_485_760, registrationEnabled: false }),
+		supports: () => true,
+		logActivityView: () => delay(true, 0),
+		logCourseView: () => delay(true, 0),
+		uploadFiles: async (_files, opts) => {
+			for (const step of [0.3, 0.7, 1]) {
+				await delay(undefined, 120);
+				opts?.onProgress?.(step);
+			}
+			return 1;
+		},
 		getCurrentUser: () => delay(user),
 		getCourses: () => delay(courses),
 		setCourseFavourite: (courseId, favourite) => {

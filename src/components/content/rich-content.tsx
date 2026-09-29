@@ -1,44 +1,25 @@
 "use client";
 
 import { useMemo } from "react";
-import DOMPurify from "dompurify";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
+import { sanitizeMoodleHtml } from "@/lib/sanitize";
 import { cn } from "@/lib/utils";
 
 /**
- * Renders teacher-written Moodle HTML safely: sanitised, links open in a new tab,
- * and pluginfile URLs get the user's token (only for the Moodle host, see client.fileUrl).
+ * Renders teacher-written Moodle HTML safely (see sanitizeMoodleHtml). Pluginfile URLs get the
+ * user's token, but only for the Moodle host (client.fileUrl).
  */
-export function RichContent({ html, className }: { html: string; className?: string }) {
+export function RichContent({ html, className, pluginfileBase }: { html: string; className?: string; pluginfileBase?: string }) {
 	const { client } = useMoodleConnection();
 
-	const clean = useMemo(() => {
-		const purify = DOMPurify();
-		purify.addHook("afterSanitizeAttributes", (node) => {
-			// Teacher-pasted colours (e.g. black text) are unreadable on dark themes: let the theme decide.
-			// ponytail: drops intentional colours too; keep only high-contrast ones if that matters.
-			node.removeAttribute("color");
-			node.removeAttribute("bgcolor");
-			if (node instanceof HTMLElement) {
-				for (const property of ["color", "background", "background-color", "background-image"]) {
-					node.style.removeProperty(property);
-				}
-				if (node.getAttribute("style") === "") node.removeAttribute("style");
-			}
-			if (node.tagName === "A") {
-				node.setAttribute("target", "_blank");
-				node.setAttribute("rel", "noopener noreferrer");
-			}
-			for (const attr of ["src", "href"]) {
-				const value = node.getAttribute(attr);
-				if (client && value?.includes("/pluginfile.php/")) {
-					const withWebservice = value.replace(/(?<!\/webservice)\/pluginfile\.php\//, "/webservice/pluginfile.php/");
-					node.setAttribute(attr, client.fileUrl(withWebservice, { download: false }));
-				}
-			}
-		});
-		return purify.sanitize(html);
-	}, [html, client]);
+	const clean = useMemo(
+		() =>
+			sanitizeMoodleHtml(html, {
+				pluginfileBase,
+				fileUrl: client ? (url) => client.fileUrl(url, { download: false }) : undefined,
+			}),
+		[html, client, pluginfileBase],
+	);
 
 	return (
 		<div

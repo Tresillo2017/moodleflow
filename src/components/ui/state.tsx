@@ -1,6 +1,9 @@
-import { AlertTriangle, Inbox, WifiOff } from "lucide-react";
+"use client";
+
+import { AlertTriangle, Inbox, Lock, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSupports } from "@/hooks/use-supports";
 import type { MoodleError } from "@/types/moodle";
 
 export function EmptyState({
@@ -61,4 +64,20 @@ export function ListSkeleton({ rows = 4 }: { rows?: number }) {
 			))}
 		</div>
 	);
+}
+
+export function NotEnabled({ feature }: { feature: string }) {
+	return (
+		<EmptyState
+			icon={Lock}
+			title={`${feature} isn't enabled on your Moodle`}
+			description="Your site's administrator hasn't turned this on for the mobile web service. You can still use it in Moodle itself."
+		/>
+	);
+}
+
+/** Renders its page only when the site exposes every listed web service function. */
+export function FeatureGate({ feature, functions, children }: { feature: string; functions: string[]; children: React.ReactNode }) {
+	const supported = useSupports(...functions);
+	return supported ? children : <NotEnabled feature={feature} />;
 }

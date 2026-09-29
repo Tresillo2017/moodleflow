@@ -1,5 +1,16 @@
 import { MoodleError } from "@/types/moodle";
 import { uploadDraftFiles } from "./upload";
+import {
+	BATCH_FUNCTION,
+	callMoodle,
+	callMoodleBatch,
+	moodleUrl,
+	type BatchCall,
+	type CallResult,
+	type MoodleConnection,
+	type MoodleParams,
+} from "./call";
+import { viewCall, type ViewTarget } from "./views";
 import type {
 	MoodleAssignment,
 	MoodleCalendarEvent,
@@ -10,6 +21,7 @@ import type {
 	MoodleFile,
 	MoodleForumDiscussion,
 	MoodleNotification,
+	MoodleSiteConfig,
 	MoodleSiteInfo,
 	MoodleUser,
 } from "@/types/moodle";
@@ -24,11 +36,24 @@ import {
 	normalizeForumDiscussions,
 	normalizeGrades,
 	normalizeNotifications,
+	normalizeSiteConfig,
 	normalizeSiteInfo,
 } from "./normalize";
 
 export interface MoodleClient {
 	getSiteInfo(): Promise<MoodleSiteInfo>;
+	/** Site name, logo, upload limit and registration/policy flags; falls back to site info when the site lacks tool_mobile. */
+	getSiteConfig(): Promise<MoodleSiteConfig>;
+	/**
+	 * Whether the site exposes this web service function. Optimistic (true) until the site info has loaded,
+	 * so gate UI after `await getSiteInfo()` (see useSupports).
+	 */
+	supports(wsfunction: string): boolean;
+	/** Tells Moodle the user opened this activity/course so view-based completion updates. Best effort, once per session. */
+	logActivityView(target: ViewTarget): Promise<boolean>;
+	logCourseView(courseId: number): Promise<boolean>;
+	/** Uploads files to a new draft area and returns its itemid (for save_submission, forum posts, private files). */
+	uploadFiles(files: File[], opts?: { maxBytes?: number; onProgress?: (fraction: number) => void }): Promise<number>;
 	getCurrentUser(): Promise<MoodleUser>;
 	getCourses(): Promise<MoodleCourse[]>;
 	setCourseFavourite(courseId: number, favourite: boolean): Promise<void>;
@@ -56,99 +81,10 @@ export interface MoodleClient {
 export interface SubmissionInput {
 	text?: string;
 	files?: (File | MoodleFile)[];
+	onProgress?: (fraction: number) => void;
 }
 
-export interface MoodleConnection {
-	siteUrl: string;
-	token: string;
-}
-
-/**
- * Calls Moodle's REST web service endpoint directly from the browser.
- * Requires the Moodle site to allow cross-origin requests from this app's
- * origin (Site administration > Server > HTTP > "Allowed CORS origins"),
- * since there is no server-side proxy in this architecture.
- */
-type MoodleParamValue = string | number | boolean | MoodleParams;
-type MoodleParams = { [key: string]: MoodleParamValue };
-
-/** Flattens nested params into Moodle's REST bracket notation, e.g. {a: {b: 1}} -> "a[b]=1". */
-function flattenParams(params: MoodleParams, prefix = ""): [string, string][] {
-	const entries: [string, string][] = [];
-	for (const [key, value] of Object.entries(params)) {
-		const name = prefix ? `${prefix}[${key}]` : key;
-		if (value && typeof value === "object") {
-			entries.push(...flattenParams(value, name));
-		} else {
-			entries.push([name, String(value)]);
-		}
-	}
-	return entries;
-}
-
-async function callMoodle<T>(
-	connection: MoodleConnection,
-	wsfunction: string,
-	params: MoodleParams = {},
-	method: "GET" | "POST" = "GET",
-): Promise<T> {
-	const url = new URL("/webservice/rest/server.php", connection.siteUrl);
-	url.searchParams.set("wstoken", connection.token);
-	url.searchParams.set("wsfunction", wsfunction);
-	url.searchParams.set("moodlewsrestformat", "json");
-
-	let response: Response;
-	try {
-		if (method === "GET") {
-			for (const [key, value] of flattenParams(params)) {
-				url.searchParams.set(key, value);
-			}
-			response = await fetch(url.toString(), { method: "GET" });
-		} else {
-			const body = new URLSearchParams(flattenParams(params));
-			response = await fetch(url.toString(), {
-				method: "POST",
-				headers: { "Content-Type": "application/x-www-form-urlencoded" },
-				body,
-			});
-		}
-	} catch {
-		throw new MoodleError(
-			"network_error",
-			"Couldn't reach the Moodle server. Check the site URL and your connection.",
-		);
-	}
-
-	if (!response.ok) {
-		throw new MoodleError(
-			"site_unavailable",
-			`Moodle responded with status ${response.status}.`,
-		);
-	}
-
-	let data: unknown;
-	try {
-		data = await response.json();
-	} catch {
-		throw new MoodleError(
-			"malformed_response",
-			"Moodle returned a response that couldn't be parsed.",
-		);
-	}
-
-	if (data && typeof data === "object" && "exception" in data) {
-		const err = data as { errorcode?: string; message?: string };
-		if (err.errorcode === "invalidtoken") {
-			throw new MoodleError("invalid_token", "This Moodle token is invalid or has expired.");
-		}
-		throw new MoodleError(
-			"unknown_error",
-			err.message ?? "Moodle rejected this request.",
-		);
-	}
-
-	return data as T;
-}
+export type { MoodleConnection };
 
 const STATUS_CONCURRENCY = 6;
 
@@ -169,14 +105,55 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
 export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 	// Most calls need the user id first; fetch site info once per client instead of per call.
 	let siteInfo: Promise<MoodleSiteInfo> | null = null;
+	let siteFunctions: Set<string> | null = null;
+	const viewed = new Set<string>();
 
-	/** A failed status lookup degrades to status "unknown" instead of breaking the whole list. */
-	async function withStatus(assignment: MoodleAssignment): Promise<MoodleAssignment> {
+	const fetchSiteInfo = () =>
+		(siteInfo ??= callMoodle(connection, "core_webservice_get_site_info")
+			.then(normalizeSiteInfo)
+			.then((info) => {
+				siteFunctions = new Set(info.functions);
+				return info;
+			})
+			.catch((error: unknown) => {
+				siteInfo = null;
+				throw error;
+			}));
+
+	/**
+	 * Several calls in one round trip when the site has tool_mobile_call_external_functions,
+	 * otherwise (or if the batch request itself fails) parallel single calls. Results keep call order.
+	 */
+	async function callMany(calls: BatchCall[]): Promise<CallResult[]> {
+		const single = (c: BatchCall): Promise<CallResult> =>
+			callMoodle(connection, c.wsfunction, c.params).then(
+				(data) => ({ data }),
+				(error: unknown) => ({ error: error instanceof MoodleError ? error : new MoodleError("unknown_error", "Moodle couldn't complete that request.") }),
+			);
+		if (calls.length > 1) {
+			await fetchSiteInfo().catch(() => {});
+			if (siteFunctions?.has(BATCH_FUNCTION)) {
+				try {
+					return await callMoodleBatch(connection, calls);
+				} catch {
+					// fall through to single calls
+				}
+			}
+		}
+		return mapLimit(calls, STATUS_CONCURRENCY, single);
+	}
+
+	async function quietView(key: string, wsfunction: string, params: MoodleParams): Promise<boolean> {
+		if (viewed.has(key)) return false;
+		await fetchSiteInfo().catch(() => {});
+		if (siteFunctions && !siteFunctions.has(wsfunction)) return false;
+		viewed.add(key);
 		try {
-			const raw = await callMoodle(connection, "mod_assign_get_submission_status", { assignid: assignment.id });
-			return applySubmissionStatus(assignment, raw);
+			await callMoodle(connection, wsfunction, params, "POST");
+			return true;
 		} catch {
-			return assignment;
+			viewed.delete(key); // retry on the next open
+			return false;
 		}
 	}
 
@@ -184,7 +161,7 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 	async function completionOf(assignment: MoodleAssignment): Promise<MoodleAssignment["completion"]> {
 		if (assignment.cmid === undefined) return undefined;
 		try {
-			const info = await (siteInfo ??= callMoodle(connection, "core_webservice_get_site_info").then(normalizeSiteInfo));
+			const info = await fetchSiteInfo();
 			const raw = await callMoodle(connection, "core_completion_get_activities_completion_status", {
 				courseid: assignment.courseId,
 				userid: info.userId,
@@ -204,14 +181,28 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 	});
 
 	return {
-		getSiteInfo() {
-			siteInfo ??= callMoodle(connection, "core_webservice_get_site_info")
-				.then(normalizeSiteInfo)
-				.catch((error: unknown) => {
-					siteInfo = null;
-					throw error;
-				});
-			return siteInfo;
+		getSiteInfo: fetchSiteInfo,
+
+		supports: (wsfunction) => siteFunctions?.has(wsfunction) ?? true,
+
+		async getSiteConfig() {
+			const info = await fetchSiteInfo();
+			const config = siteFunctions?.has("tool_mobile_get_config")
+				? await callMoodle(connection, "tool_mobile_get_config").catch(() => null)
+				: null;
+			return normalizeSiteConfig(config, info);
+		},
+
+		async logActivityView(target: ViewTarget) {
+			const call = viewCall(target);
+			return call ? quietView(`${target.type}:${target.instance}`, call.wsfunction, call.params) : false;
+		},
+
+		logCourseView: (courseId) => quietView(`course:${courseId}`, "core_course_view_course", { courseid: courseId }),
+
+		async uploadFiles(files, opts) {
+			const info = await fetchSiteInfo();
+			return uploadDraftFiles(connection, files, { maxBytes: opts?.maxBytes ?? info.maxUploadBytes, onProgress: opts?.onProgress });
 		},
 
 		async getCurrentUser() {
@@ -261,14 +252,17 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 			);
 			const assignments = normalizeAssignments(raw);
 			if (!courseIds) return assignments;
-			return mapLimit(assignments, STATUS_CONCURRENCY, (a) => withStatus(a));
+			// A failed status lookup degrades to status "unknown" instead of breaking the whole list.
+			const statuses = await callMany(assignments.map((a) => ({ wsfunction: "mod_assign_get_submission_status", params: { assignid: a.id } })));
+			return assignments.map((a, i) => ("data" in statuses[i] ? applySubmissionStatus(a, statuses[i].data) : a));
 		},
 
 		async getAssignment(assignmentId: number) {
 			const raw = await callMoodle(connection, "mod_assign_get_assignments");
 			const found = normalizeAssignments(raw).find((a) => a.id === assignmentId);
 			if (!found) return undefined;
-			const withDetails = await withStatus(found);
+			const [status] = await callMany([{ wsfunction: "mod_assign_get_submission_status", params: { assignid: found.id } }]);
+			const withDetails = "data" in status ? applySubmissionStatus(found, status.data) : found;
 			return { ...withDetails, completion: await completionOf(withDetails) };
 		},
 
@@ -286,7 +280,9 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 						return new File([await res.blob()], f.name, { type: f.mimeType });
 					}),
 				);
-				plugindata.files_filemanager = files.length ? await uploadDraftFiles(connection, files) : 0;
+				plugindata.files_filemanager = files.length
+					? await this.uploadFiles(files, { maxBytes: assignment.config?.maxFileBytes, onProgress: input.onProgress })
+					: 0;
 			}
 			await callMoodle(
 				connection,
@@ -362,9 +358,11 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 			const file = new URL(url, connection.siteUrl);
 			// never send the token to a host other than the Moodle site
 			if (file.origin !== new URL(connection.siteUrl).origin) return url;
-			file.searchParams.set("token", connection.token);
-			if (opts?.download !== false) file.searchParams.set("forcedownload", "1");
-			return file.toString();
+			const target = moodleUrl(connection, file.pathname);
+			file.searchParams.forEach((value, key) => target.searchParams.set(key, value));
+			target.searchParams.set("token", connection.token);
+			if (opts?.download !== false) target.searchParams.set("forcedownload", "1");
+			return target.toString();
 		},
 
 		async getNotifications() {

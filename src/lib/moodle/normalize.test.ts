@@ -8,6 +8,7 @@ import {
 	normalizeCourses,
 	normalizeForumDiscussions,
 	normalizeGrades,
+	normalizeSiteConfig,
 	normalizeSiteInfo,
 } from "./normalize";
 
@@ -261,5 +262,18 @@ describe("normalizeCourses banner", () => {
 		expect(a.imageUrl).toBe("https://m/a.jpg");
 		expect(b.imageUrl).toBe("https://m/webservice/pluginfile.php/1/b.png");
 		expect(c.imageUrl).toBeUndefined();
+	});
+});
+
+describe("normalizeSiteConfig", () => {
+	const info = { siteName: "Info Name", siteUrl: "", userId: 1, username: "u", fullName: "U", release: "4.3", functions: [], maxUploadBytes: 5000 };
+
+	it("prefers tool_mobile settings and reads registration and policy flags", () => {
+		const raw = { settings: [{ name: "sitename", value: "My School" }, { name: "compactlogourl", value: "https://x/logo.png" }, { name: "registerauth", value: "email" }, { name: "sitepolicy", value: "https://x/policy" }] };
+		expect(normalizeSiteConfig(raw, info)).toEqual({ siteName: "My School", logoUrl: "https://x/logo.png", maxUploadBytes: 5000, registrationEnabled: true, policyUrl: "https://x/policy" });
+	});
+
+	it("falls back to site info when the config call is unavailable", () => {
+		expect(normalizeSiteConfig(null, info)).toEqual({ siteName: "Info Name", logoUrl: undefined, maxUploadBytes: 5000, registrationEnabled: false, policyUrl: undefined });
 	});
 });

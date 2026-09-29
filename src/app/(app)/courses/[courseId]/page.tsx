@@ -1,11 +1,11 @@
 "use client";
 
-import { use, useMemo } from "react";
+import { use, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
 import { PageHeader } from "@/components/layout/page-header";
-import { EmptyState, ErrorState, ListSkeleton } from "@/components/ui/state";
+import { EmptyState, ErrorState, FeatureGate, ListSkeleton } from "@/components/ui/state";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -26,7 +26,8 @@ import { isHttpUrl } from "@/lib/utils";
 import type { MoodleActivity, MoodleAssignment, MoodleSection } from "@/types/moodle";
 
 function ActivityRow({ activity: a, assignment }: { activity: MoodleActivity; assignment?: MoodleAssignment }) {
-	const { refresh } = useMoodleConnection();
+	const { client, refresh } = useMoodleConnection();
+	const logView = () => void client?.logActivityView(a);
 	const submittable = assignment ? canSubmit(assignment) : false;
 	// Moodle "text and media" blocks carry their content in the description; the name is a truncated copy.
 	if (a.type === "label") {
@@ -58,11 +59,11 @@ function ActivityRow({ activity: a, assignment }: { activity: MoodleActivity; as
 		<div>
 			<div className="flex items-center">
 				{a.type === "assignment" && a.instance !== undefined ? (
-					<Link href={`/assignments/${a.instance}`} className={`${className} transition-colors hover:bg-muted/50`}>
+					<Link href={`/assignments/${a.instance}`} className={`${className} transition-colors hover:bg-muted/50`} onClick={logView}>
 						{content}
 					</Link>
 				) : isHttpUrl(a.url) ? (
-					<a href={a.url} target="_blank" rel="noopener noreferrer" className={`${className} transition-colors hover:bg-muted/50`}>
+					<a href={a.url} target="_blank" rel="noopener noreferrer" className={`${className} transition-colors hover:bg-muted/50`} onClick={logView}>
 						{content}
 						<span className="sr-only">(opens in Moodle)</span>
 					</a>
@@ -78,7 +79,7 @@ function ActivityRow({ activity: a, assignment }: { activity: MoodleActivity; as
 			{a.description && (
 				<RichContent html={a.description} className="line-clamp-3 px-4 pb-3 pl-11 text-xs text-muted-foreground [&_p]:my-1" />
 			)}
-			{a.files && a.files.length > 0 && <FileList files={a.files} className="pr-4 pb-3 pl-11" />}
+			{a.files && a.files.length > 0 && <FileList files={a.files} onOpen={logView} className="pr-4 pb-3 pl-11" />}
 		</div>
 	);
 }
@@ -183,10 +184,13 @@ function ForumBlock({ forum }: { forum: MoodleActivity }) {
 	);
 }
 
-export default function CourseDetailPage({ params }: { params: Promise<{ courseId: string }> }) {
+function CourseDetailContent({ params }: { params: Promise<{ courseId: string }> }) {
 	const { courseId } = use(params);
 	const id = Number(courseId);
 	const { client, refresh } = useMoodleConnection();
+	useEffect(() => {
+		void client?.logCourseView(id);
+	}, [client, id]);
 
 	const courses = useMoodleQuery(client ? () => client.getCourses() : null, [client]);
 	const content = useMoodleQuery(client ? () => client.getCourseContents(id) : null, [client, id]);
@@ -290,5 +294,13 @@ export default function CourseDetailPage({ params }: { params: Promise<{ courseI
 				</TabsContent>
 			</Tabs>
 		</div>
+	);
+}
+
+export default function CourseDetailPage(props: { params: Promise<{ courseId: string }> }) {
+	return (
+		<FeatureGate feature="Course content" functions={["core_course_get_contents"]}>
+			<CourseDetailContent {...props} />
+		</FeatureGate>
 	);
 }

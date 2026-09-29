@@ -2,8 +2,11 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createMoodleClient, type MoodleClient } from "@/lib/moodle/client";
 import { createMockMoodleClient } from "@/lib/moodle/mock";
+import { idbStore } from "@/lib/idb-store";
+import { createSwrCache } from "@/lib/swr-cache";
 import {
 	clearConnection,
 	loadConnection,
@@ -26,31 +29,24 @@ interface MoodleContextValue {
 
 const MoodleContext = createContext<MoodleContextValue | null>(null);
 
+const MINUTE = 60_000;
+/** How long each resource counts as fresh; older data is shown instantly and refetched in the background. */
+const TTL = { siteInfo: 24 * 60 * MINUTE, courses: 10 * MINUTE, contents: 10 * MINUTE, events: 5 * MINUTE, assignments: 2 * MINUTE, grades: 10 * MINUTE, forum: 2 * MINUTE, notifications: MINUTE };
+
+/** Fired on window when a query fails with an invalid/expired token; the provider then signs out and asks to log in again. */
+export const SESSION_EXPIRED = "moodleflow:session-expired";
+
+/** Fired on window when a background revalidation replaced cached data, so mounted queries re-read it. */
+export const CACHE_UPDATED = "moodleflow:cache-updated";
+
 /**
- * Shares read results across pages so navigating doesn't refetch; mutations
- * invalidate what they touch. Failed reads aren't cached.
- * ponytail: no TTL, data lives until refresh() or reload; add one if stale data bites.
+ * Stale-while-revalidate cache (persisted in IndexedDB unless demo mode) so pages show instantly, even offline;
+ * mutations invalidate what they touch. Failed reads aren't cached.
  */
-function withCache(client: MoodleClient): MoodleClient {
-	const cache = new Map<string, Promise<unknown>>();
-
-	function cached<A extends unknown[], T>(name: string, fn: (...args: A) => Promise<T>) {
-		return (...args: A): Promise<T> => {
-			const key = `${name}:${JSON.stringify(args)}`;
-			const hit = cache.get(key) as Promise<T> | undefined;
-			if (hit) return hit;
-			const request = fn(...args).catch((error: unknown) => {
-				cache.delete(key);
-				throw error;
-			});
-			cache.set(key, request);
-			return request;
-		};
-	}
-
-	function invalidate(name: string) {
-		for (const key of cache.keys()) if (key.startsWith(`${name}:`)) cache.delete(key);
-	}
+function withCache(client: MoodleClient, persist: boolean): MoodleClient {
+	const { cached, invalidate } = createSwrCache(persist ? idbStore : null, () => window.dispatchEvent(new Event(CACHE_UPDATED)));
+	let functions: Set<string> | null = null;
+	const siteInfo = cached("siteInfo", TTL.siteInfo, () => client.getSiteInfo());
 
 	function invalidateAssignments() {
 		invalidate("assignments");
@@ -63,21 +59,27 @@ function withCache(client: MoodleClient): MoodleClient {
 	}
 
 	return {
-		getSiteInfo: cached("siteInfo", () => client.getSiteInfo()),
-		getCurrentUser: cached("user", () => client.getCurrentUser()),
-		getCourses: cached("courses", () => client.getCourses()),
+		async getSiteInfo() {
+			const info = await siteInfo();
+			functions = new Set(info.functions);
+			return info;
+		},
+		getSiteConfig: cached("siteConfig", TTL.siteInfo, () => client.getSiteConfig()),
+		supports: (fn) => functions?.has(fn) ?? client.supports(fn),
+		getCurrentUser: cached("user", TTL.siteInfo, () => client.getCurrentUser()),
+		getCourses: cached("courses", TTL.courses, () => client.getCourses()),
 		async setCourseFavourite(courseId, favourite) {
 			await client.setCourseFavourite(courseId, favourite);
 			invalidate("courses");
 		},
-		getCourseContents: cached("contents", (courseId: number) => client.getCourseContents(courseId)),
-		getCalendarEvents: cached("events", () => client.getCalendarEvents()),
-		getAssignments: cached("assignments", (courseIds?: number[]) => client.getAssignments(courseIds)),
-		getAssignment: cached("assignment", (id: number) => client.getAssignment(id)),
-		getGrades: cached("grades", (courseId?: number) => client.getGrades(courseId)),
-		getForumDiscussions: cached("forum", (forumId: number) => client.getForumDiscussions(forumId)),
+		getCourseContents: cached("contents", TTL.contents, (courseId: number) => client.getCourseContents(courseId)),
+		getCalendarEvents: cached("events", TTL.events, () => client.getCalendarEvents()),
+		getAssignments: cached("assignments", TTL.assignments, (courseIds?: number[]) => client.getAssignments(courseIds)),
+		getAssignment: cached("assignment", TTL.assignments, (id: number) => client.getAssignment(id)),
+		getGrades: cached("grades", TTL.grades, (courseId?: number) => client.getGrades(courseId)),
+		getForumDiscussions: cached("forum", TTL.forum, (forumId: number) => client.getForumDiscussions(forumId)),
 		fileUrl: (url, opts) => client.fileUrl(url, opts),
-		getNotifications: cached("notifications", () => client.getNotifications()),
+		getNotifications: cached("notifications", TTL.notifications, () => client.getNotifications()),
 		async markNotificationRead(id) {
 			await client.markNotificationRead(id);
 			notificationsChanged();
@@ -102,6 +104,17 @@ function withCache(client: MoodleClient): MoodleClient {
 			await client.submitAssignmentForGrading(id);
 			invalidateAssignments();
 		},
+		uploadFiles: (files, opts) => client.uploadFiles(files, opts),
+		async logActivityView(target) {
+			const logged = await client.logActivityView(target);
+			if (logged) invalidate("contents"); // completion may have changed
+			return logged;
+		},
+		async logCourseView(courseId) {
+			const logged = await client.logCourseView(courseId);
+			if (logged) invalidate("contents");
+			return logged;
+		},
 	};
 }
 
@@ -117,24 +130,44 @@ export function MoodleProvider({ children }: { children: React.ReactNode }) {
 
 	const client = useMemo<MoodleClient | null>(() => {
 		if (!connection) return null;
-		return withCache(connection.mock ? createMockMoodleClient() : createMoodleClient(connection));
+		return withCache(connection.mock ? createMockMoodleClient() : createMoodleClient(connection), !connection.mock);
 		// generation is a deliberate cache-buster
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [connection, generation]);
+
+	const router = useRouter();
+	useEffect(() => {
+		const onExpired = () => {
+			if (!connection || connection.mock) return;
+			void idbStore.clear().catch(() => {});
+			clearConnection();
+			setConnection(null);
+			toast.error("Your Moodle session expired. Sign in again.");
+			router.replace(`/connect?site=${encodeURIComponent(connection.siteUrl)}`);
+		};
+		window.addEventListener(SESSION_EXPIRED, onExpired);
+		return () => window.removeEventListener(SESSION_EXPIRED, onExpired);
+	}, [connection, router]);
 
 	const value: MoodleContextValue = {
 		connection,
 		client,
 		loading,
 		connect: (next) => {
+			// cached data belongs to whoever was signed in before
+			void idbStore.clear().catch(() => {});
 			saveConnection(next);
 			setConnection(next);
 		},
 		disconnect: () => {
+			void idbStore.clear().catch(() => {});
 			clearConnection();
 			setConnection(null);
 		},
-		refresh: () => setGeneration((g) => g + 1),
+		refresh: () => {
+			// wait for the persisted copy to go, or the new client would serve it as "stale" data
+			void idbStore.clear().catch(() => {}).finally(() => setGeneration((g) => g + 1));
+		},
 	};
 
 	return <MoodleContext.Provider value={value}>{children}</MoodleContext.Provider>;

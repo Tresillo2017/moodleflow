@@ -54,6 +54,7 @@ export function SubmitDialog({ assignment, onSubmitted, droppedFiles, onDroppedH
 	const editing = Boolean(existing && existing.status !== "new");
 
 	const [open, setOpen] = useState(false);
+	const [progress, setProgress] = useState<number | null>(null);
 	const [text, setText] = useState("");
 	const [files, setFiles] = useState<Attachment[]>([]);
 	const [statement, setStatement] = useState(false);
@@ -89,6 +90,7 @@ export function SubmitDialog({ assignment, onSubmitted, droppedFiles, onDroppedH
 			await client.saveAssignmentSubmission(assignment, {
 				...(acceptsText ? { text } : {}),
 				...(acceptsFiles ? { files } : {}),
+				onProgress: setProgress,
 			});
 			if (finalize) await client.submitAssignmentForGrading(assignment.id);
 			const submitted = finalize || !draftMode;
@@ -100,6 +102,7 @@ export function SubmitDialog({ assignment, onSubmitted, droppedFiles, onDroppedH
 			toast.error(error instanceof Error && error.message ? error.message : "Couldn't submit. Check your connection and try again.");
 		} finally {
 			setBusy(false);
+			setProgress(null);
 		}
 	}
 
@@ -193,7 +196,9 @@ export function SubmitDialog({ assignment, onSubmitted, droppedFiles, onDroppedH
 							disabled={busy || !hasContent || Boolean(fileError) || (needsStatement && !statement)}
 						>
 							{busy && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-							{draftMode ? "Submit for grading" : editing ? "Save changes" : "Submit assignment"}
+							{busy && progress !== null && progress < 1
+								? `Uploading ${Math.round(progress * 100)}%`
+								: draftMode ? "Submit for grading" : editing ? "Save changes" : "Submit assignment"}
 						</Button>
 					</div>
 				</DialogFooter>
