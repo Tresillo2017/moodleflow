@@ -1,6 +1,6 @@
 {
 	"name": "moodleflow",
-	"version": "0.4.0",
+	"version": "0.4.1",
 	"description": "A modern, fully client-side web interface for existing Moodle installations.",
 	"dependencies": {
 		"@base-ui/react": "^1.8.0",
@@ -43,7 +43,7 @@
 	},
 	"private": true,
 	"scripts": {
-		"build": "next build",
+		"build": "opennextjs-cloudflare build",
 		"cf-typegen": "wrangler types --env-interface CloudflareEnv env.d.ts",
 		"check": "bun run build && tsc",
 		"deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",

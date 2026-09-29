@@ -7,6 +7,11 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-09-29
+
+### Fixed
+- Cloudflare builds failing at deploy: `bun run build` now runs the full OpenNext build, not just `next build`.
+
 ## [0.4.0] - 2026-09-29
 
 ### Added
