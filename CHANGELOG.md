@@ -7,6 +7,24 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-29
+
+### Added
+- Pages that need a web service function your Moodle hasn't enabled now say so instead of failing (`client.supports()`).
+- Stale-while-revalidate cache persisted in IndexedDB: pages show instantly on reload, even offline, and refresh in the background.
+- Opening a course, assignment or activity in MoodleFlow now tells Moodle, so view-based completion updates.
+- File uploads show progress and check the site's size limit before sending.
+- Site name from Moodle shown in the sidebar; several requests are batched into one when the site supports it.
+- Optional CORS proxy for Moodle sites without CORS headers, and a Manage tokens link to revoke tokens in Moodle. See `docs/security.md`.
+- Expired tokens sign you out and return to the login page with your site pre-filled.
+
+### Changed
+- Moodle error text no longer reaches the UI; errors map to friendly messages, and failed reads are retried.
+
+### Security
+- Files served through the CORS proxy can no longer run script on the app's origin: responses get `nosniff`, and HTML/SVG/XML are forced to download under a sandboxed CSP.
+- Moodle rich content drops `<form>` and its controls, so teacher HTML can't post your input to another site.
+
 ## [0.5.2] - 2026-09-29
 
 ### Fixed
