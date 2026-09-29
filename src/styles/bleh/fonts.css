@@ -1,0 +1,59 @@
+/* From bleh: fm/src/styles/fonts.css (GPL-3.0), variables only; families come from next/font */
+html {
+	--font-head: var(--font-instrument), Instrument Serif, var(--font);
+	--font-choice: var(--font-hanken), Hanken Grotesk;
+	--font: var(--font-choice), Inter, Ubuntu Sans, Spline Sans, Roboto,
+		var(--font-symbols), var(--font-i18n),
+		Lucida Grande, Verdana, -apple-system, BlinkMacSystemFont,
+		Segoe UI Emoji, sans-serif, -system-font;
+
+	--font-symbols: Apple Color Emoji, var(--font_emoji_name, ""), Apple Symbols, Iosevka Charon;
+	--font-i18n: Noto Sans, Noto Sans JP, Noto Sans KR, Noto Sans TC;
+
+	--font-code:
+		var(--font-inconsolata), Inconsolata, JetBrains Mono, Roboto Mono, monospace,
+		var(--font);
+	--font-brand: Darumadrop One, var(--font);
+	--font-size: 14px;
+	--line-height: calc(var(--font-size) + 4px);
+	--font-size-sm: 12px;
+	--line-height-sm: calc(var(--font-size-sm) + 4px);
+
+	--font-size-head: 22px;
+	--line-height-head: 17px;
+
+	--font-weight-head: 300;
+
+	--font-size-head-2: 24px;
+	--line-height-head-2: 28px;
+
+	--font-size-head-3: 26px;
+	--line-height-head-3: 34px;
+
+	--font-style-head: italic;
+
+	&[data-bleh--font_choice="font_2025"] {
+		--font-choice: Funnel Sans;
+	}
+
+	&[data-bleh--font_choice="hyperlegible"] {
+		--font-choice: Atkinson Hyperlegible Next;
+	}
+
+	&[data-bleh--font_choice="custom"] {
+		--font-choice: var(--custom_font, "");
+	}
+
+	&[data-bleh--font_serif="false"] {
+		--font-head: var(--font);
+		--font-size-head: 16px;
+		--line-height-head: 20px;
+		--font-size-head-2: 16px;
+		--line-height-head-2: 20px;
+		--font-weight-head: var(--font-weight-medium);
+		--font-size-head-3: 18px;
+		--line-height-head-3: 22px;
+		--font-style-head: normal;
+	}
+}
+

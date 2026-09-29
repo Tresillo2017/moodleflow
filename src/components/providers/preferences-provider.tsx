@@ -26,6 +26,20 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
 	// The <head> script already applied stored appearance; this only syncs React state.
 	useEffect(() => setPrefs(loadPreferences()), []);
 
+	// The active bleh theme depends on light/dark, which next-themes switches via the <html> class.
+	useEffect(() => {
+		let last = document.documentElement.classList.contains("dark");
+		const observer = new MutationObserver(() => {
+			const dark = document.documentElement.classList.contains("dark");
+			if (dark !== last) {
+				last = dark;
+				applyAppearance(loadPreferences());
+			}
+		});
+		observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+		return () => observer.disconnect();
+	}, []);
+
 	function commit(next: Preferences) {
 		setPrefs(next);
 		savePreferences(next);

@@ -343,20 +343,18 @@ export default function SettingsPage() {
 				<div className="flex max-w-3xl flex-col gap-10">
 					<Section id="appearance" title="Appearance" description="Colors, shapes and type.">
 						<ThemePicker />
-						{resolvedTheme === "dark" && (
-							<ChoiceRow name="darkStyle" label="Dark style" hint="Black is easiest on OLED screens; Dim is softer." />
-						)}
-						<ChoiceRow name="palette" label="Color theme" hint="Named palettes have light and dark versions. bleh follows your accent." />
-						{prefs.palette === "bleh" && (
-							<>
-								<AccentPicker />
-								<HueSlider />
-								<ChoiceRow name="vibrance" label="Vibrance" hint="How saturated surfaces and accents are." />
-								<ChoiceRow name="season" label="Season" hint="Tints the theme for a holiday. Automatic follows the calendar." />
-								<ChoiceRow name="particles" label="Seasonal particles" hint="Falling snow, leaves and more while a season is active." />
-							</>
-						)}
+						<ChoiceRow
+							name={resolvedTheme === "dark" ? "darkTheme" : "lightTheme"}
+							label="Color theme"
+							hint="Named themes come from bleh. Each mode keeps its own choice."
+						/>
+						<AccentPicker />
+						<HueSlider />
+						<ChoiceRow name="vibrance" label="Vibrance" hint="How saturated surfaces and accents are." />
 						<ChoiceRow name="glass" label="Glass blur" hint="Frosted, translucent panels. Off makes them solid." />
+						<ChoiceRow name="season" label="Season" hint="Tints the theme for a holiday. Automatic follows bleh's calendar." />
+						<ChoiceRow name="overlays" label="Seasonal overlays" hint="Icicles and other decoration at the top of cards." />
+						<ChoiceRow name="particles" label="Seasonal particles" hint="Falling snow while a season with snow is active." />
 						<ChoiceRow name="radius" label="Corner radius" />
 						<ChoiceRow name="font" label="Font" preview />
 						<ChoiceRow name="weight" label="Font weight" />

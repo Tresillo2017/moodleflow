@@ -25,7 +25,7 @@ function ContextMenuContent({ className, ...props }: ContextMenuPrimitive.Popup.
         <ContextMenuPrimitive.Popup
           data-slot="context-menu-content"
           className={cn(
-            "z-50 max-h-(--available-height) min-w-48 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg glass-pop pop-menu p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-none data-closed:overflow-hidden",
+            "z-50 max-h-(--available-height) min-w-48 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg  p-1 text-popover-foreground outline-none data-closed:overflow-hidden",
             className
           )}
           {...props}

@@ -52,19 +52,21 @@ describe("custom hue and glass", () => {
 	});
 
 	it("validates glass, vibrance and weight", () => {
-		const prefs = sanitizePreferences({ glass: "strong", vibrance: "neon", weight: "medium" });
-		expect(prefs.glass).toBe("strong");
+		const prefs = sanitizePreferences({ glass: "off", vibrance: "neon", weight: "medium" });
+		expect(prefs.glass).toBe("off");
 		expect(prefs.vibrance).toBe(DEFAULT_PREFERENCES.vibrance);
 		expect(prefs.weight).toBe("medium");
 	});
 });
 
 describe("seasons", () => {
-	it("maps dates to bleh-style seasons", () => {
+	it("maps dates to bleh's seasons", () => {
 		expect(seasonForDate(new Date(2026, 11, 25))).toBe("christmas");
 		expect(seasonForDate(new Date(2026, 9, 31))).toBe("halloween");
 		expect(seasonForDate(new Date(2026, 0, 1))).toBe("new_years");
 		expect(seasonForDate(new Date(2026, 4, 10))).toBeNull();
+		expect(seasonForDate(new Date(2026, 10, 1, 8))).toBe("halloween");
+		expect(seasonForDate(new Date(2026, 10, 2))).toBe("pre_fall");
 	});
 
 	it("activeSeason honours off, a forced season and rejects unknown values", () => {
@@ -77,5 +79,14 @@ describe("seasons", () => {
 	it("a season shifts the hue unless a custom hue is set", () => {
 		expect(hueOf({ accent: "violet", hue: null, season: "halloween" })).toBe(35);
 		expect(hueOf({ accent: "violet", hue: 200, season: "halloween" })).toBe(200);
+	});
+});
+
+describe("themes", () => {
+	it("validates dark and light theme choices", () => {
+		expect(sanitizePreferences({ darkTheme: "rose_pine", lightTheme: "nope" })).toMatchObject({
+			darkTheme: "rose_pine",
+			lightTheme: "light",
+		});
 	});
 });

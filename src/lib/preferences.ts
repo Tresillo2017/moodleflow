@@ -15,7 +15,7 @@ const STORAGE_KEY = "moodleflow.preferences";
 export const ACCENTS = {
 	indigo: { label: "Indigo", hue: 264, ditherHue: 235, chart: "purple" },
 	blue: { label: "Blue", hue: 245, ditherHue: 212, chart: "blue" },
-	violet: { label: "Violet", hue: 295, ditherHue: 268, chart: "purple" },
+	violet: { label: "Violet", hue: 298, ditherHue: 268, chart: "purple" },
 	pink: { label: "Pink", hue: 350, ditherHue: 325, chart: "pink" },
 	rose: { label: "Rose", hue: 15, ditherHue: 352, chart: "red" },
 	orange: { label: "Orange", hue: 50, ditherHue: 24, chart: "orange" },
@@ -28,10 +28,10 @@ export type Accent = keyof typeof ACCENTS;
 
 /** Every single-choice preference with its options (value → label). Also the source of truth for validation. */
 export const CHOICES = {
-	darkStyle: { black: "Black", dim: "Dim" },
+	darkTheme: { dark: "Dark", darker: "Darker", oled: "OLED", rose_pine: "Rosé Pine", kanagawa_dragon: "Kanagawa Dragon" },
+	lightTheme: { light: "Light", ink: "Ink", rose_pine_dawn: "Rosé Pine Dawn" },
 	radius: { none: "None", sm: "Small", md: "Medium", lg: "Large" },
 	font: { bleh: "Hanken Grotesk", system: "System", serif: "Serif", mono: "Mono" },
-	palette: { bleh: "bleh", rose_pine: "Rosé Pine", kanagawa: "Kanagawa", ink: "Ink" },
 	season: {
 		none: "Off",
 		auto: "Automatic",
@@ -39,13 +39,14 @@ export const CHOICES = {
 		easter: "Easter",
 		pride: "Pride",
 		summer: "Summer",
-		pre_fall: "Late summer",
-		fall: "Fall",
 		halloween: "Halloween",
+		pre_fall: "Early fall",
+		fall: "Fall",
 		christmas: "Christmas",
 	},
-	particles: { on: "On", off: "Off" },
-	glass: { off: "Off", soft: "Soft", strong: "Strong" },
+	overlays: { on: "On", off: "Off" },
+	particles: { none: "None", less: "Less", normal: "Normal" },
+	glass: { on: "On", off: "Off" },
 	vibrance: { muted: "Muted", normal: "Normal", vivid: "Vivid" },
 	weight: { light: "Light", normal: "Regular", medium: "Medium" },
 	scale: { sm: "Small", md: "Default", lg: "Large", xl: "Larger" },
@@ -80,13 +81,14 @@ export type Preferences = { [K in ChoiceKey]: keyof (typeof CHOICES)[K] } & {
 export const DEFAULT_PREFERENCES: Preferences = {
 	accent: "violet",
 	hue: null,
-	palette: "bleh",
 	season: "none",
-	particles: "on",
-	glass: "soft",
+	overlays: "on",
+	particles: "normal",
+	glass: "on",
 	vibrance: "normal",
 	weight: "normal",
-	darkStyle: "black",
+	darkTheme: "dark",
+	lightTheme: "light",
 	radius: "md",
 	font: "bleh",
 	scale: "md",
@@ -99,7 +101,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
 	pinnedCourses: [],
 };
 
-const APPEARANCE_KEYS = ["darkStyle", "radius", "font", "scale", "motion", "glass", "vibrance", "weight", "palette", "particles"] as const;
+const APPEARANCE_KEYS = ["radius", "font", "scale", "motion", "vibrance", "weight"] as const;
 
 const HUES = Object.fromEntries(Object.entries(ACCENTS).map(([key, a]) => [key, a.hue]));
 
@@ -107,32 +109,30 @@ function sanitizeHue(raw: unknown): number | null {
 	return typeof raw === "number" && Number.isFinite(raw) ? ((Math.round(raw) % 360) + 360) % 360 : null;
 }
 
-/** Seasonal looks, after bleh: `sat` scales vibrance, `emoji` is what the particle overlay drops. */
+/**
+ * Seasons and their date windows, from bleh (fm/src/build/seasonal.js, GPL-3.0). `snow` is how many
+ * flakes fall (0 for none). `hue` mirrors --hue-seasonal in styles/bleh/theme.css, for JS-side consumers.
+ */
 export const SEASONS = {
-	new_years: { hue: 324, sat: 1.88, emoji: "✦" },
-	easter: { hue: 114, sat: 1.16, emoji: "🌷" },
-	pride: { hue: 276, sat: 1.58, emoji: "" },
-	summer: { hue: 43, sat: 2.39, emoji: "☀️" },
-	pre_fall: { hue: 43, sat: 1.65, emoji: "🌻" },
-	fall: { hue: 256, sat: 0.92, emoji: "🍂" },
-	halloween: { hue: 35, sat: 1.75, emoji: "🎃" },
-	christmas: { hue: 19, sat: 2.36, emoji: "❄️" },
+	new_years: { hue: 324, start: [1, 1], end: [1, 14], snow: 90 },
+	easter: { hue: 114, start: [4, 2], end: [4, 30], snow: 0 },
+	pride: { hue: 276, start: [6, 1], end: [6, 30], snow: 0 },
+	summer: { hue: 43, start: [7, 1], end: [9, 10], snow: 0 },
+	halloween: { hue: 35, start: [9, 28], end: [11, 1], snow: 0 },
+	pre_fall: { hue: 43, start: [11, 1.5], end: [11, 12], snow: 12 },
+	fall: { hue: 256, start: [11, 13], end: [11, 22], snow: 80 },
+	christmas: { hue: 19, start: [11, 23], end: [12, 31], snow: 160 },
 } as const;
 
 export type SeasonName = keyof typeof SEASONS;
 
-/** Self-contained (serialized into PREFERENCES_SCRIPT). Approximate calendar windows; Easter is fixed to Mar 20 - Apr 25. */
-export function seasonForDate(d: Date): string | null {
-	const md = (d.getMonth() + 1) * 100 + d.getDate();
-	if (md >= 1231 || md <= 102) return "new_years";
-	if (md >= 1201) return "christmas";
-	if (md >= 1015 && md <= 1101) return "halloween";
-	if (md >= 922 && md < 1015) return "fall";
-	if (md >= 815 && md < 922) return "pre_fall";
-	if (md >= 701 && md < 815) return "summer";
-	if (md >= 601 && md < 701) return "pride";
-	if (md >= 320 && md <= 425) return "easter";
-	return null;
+/** Self-contained (serialized into PREFERENCES_SCRIPT). Day `d.5` means noon, as bleh's pre_fall starts at 12:00. */
+export function seasonForDate(d: Date, seasons: Record<string, { start: readonly number[]; end: readonly number[] }> = SEASONS): string | null {
+	const at = (month: number, day: number, end: boolean) => {
+		const whole = Math.floor(day);
+		return new Date(d.getFullYear(), month - 1, whole, end ? 23 : day > whole ? 12 : 0, end ? 59 : 0, end ? 59 : 0);
+	};
+	return Object.keys(seasons).find((id) => d >= at(seasons[id].start[0], seasons[id].start[1], false) && d <= at(seasons[id].end[0], seasons[id].end[1], true)) ?? null;
 }
 
 /** The season in effect (null when off or out of season). */
@@ -217,22 +217,49 @@ export function savePreferences(prefs: Preferences): void {
 	}
 }
 
-/** Self-contained (no outer references) so it can be serialized into PREFERENCES_SCRIPT. */
+/**
+ * Self-contained (no outer references) so it can be serialized into PREFERENCES_SCRIPT.
+ * Sets the same html attributes and variables bleh sets on <body> (data-bleh--theme, --season, --solarium...),
+ * which styles/bleh/theme.css keys off.
+ */
 function applyAppearanceWith(
 	prefs: Record<string, string | number | null>,
 	hues: Record<string, number>,
 	keys: readonly string[],
-	seasons: Record<string, { hue: number; sat: number }>,
 	current: string | null,
 ) {
 	const root = document.documentElement;
+	const set = (key: string, value: string | null) =>
+		value === null ? root.removeAttribute("data-bleh--" + key) : root.setAttribute("data-bleh--" + key, value);
+
+	let stored: string | null = null;
+	try {
+		stored = localStorage.getItem("theme");
+	} catch {
+		// storage blocked: follow the system
+	}
+	const dark = root.classList.contains("dark") || stored === "dark" || (stored !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+	set("theme", String(dark ? prefs.darkTheme : prefs.lightTheme));
+	set("theme_type", dark ? "dark" : "light");
+	set("solarium", String(prefs.glass === "on"));
+	set("seasonal_overlays", String(prefs.overlays === "on"));
+	set("reduced_motion", String(prefs.motion === "reduced"));
+
 	const name = prefs.season === "auto" ? current : prefs.season === "none" ? null : (prefs.season as string);
-	const season = name ? seasons[name] : undefined;
-	root.style.setProperty("--hue", String(prefs.hue ?? season?.hue ?? hues[prefs.accent as string] ?? 264));
-	// bleh's seasonal saturation is relative to its own base; ~1.5 is neutral here.
-	root.style.setProperty("--season-sat", String(season ? season.sat / 1.5 : 1));
-	if (name && season) root.dataset.season = name;
-	else delete root.dataset.season;
+	set("season", name);
+	const style = root.style;
+	if (prefs.hue !== null) style.setProperty("--hue-over", String(prefs.hue));
+	else style.removeProperty("--hue-over");
+	// A season supplies the hue itself; otherwise the accent preset is the "user" hue.
+	if (!name && prefs.hue === null) style.setProperty("--hue-user", String(hues[prefs.accent as string] ?? 298));
+	else style.removeProperty("--hue-user");
+	const sat = { muted: "0.5", vivid: "2.6" }[prefs.vibrance as string];
+	if (sat) style.setProperty("--sat-over", sat);
+	else style.removeProperty("--sat-over");
+	const weight = { light: 340, normal: 400, medium: 500 }[prefs.weight as string] ?? 400;
+	style.setProperty("--custom_font_weight", String(weight));
+	style.setProperty("--custom_font_weight_medium", String(weight + 100));
+
 	for (const key of keys) root.dataset[key] = String(prefs[key]);
 }
 
@@ -241,7 +268,6 @@ export function applyAppearance(prefs: Preferences): void {
 		prefs as unknown as Record<string, string | number | null>,
 		HUES,
 		APPEARANCE_KEYS,
-		SEASONS,
 		seasonForDate(new Date()),
 	);
 }
@@ -251,7 +277,7 @@ export const PREFERENCES_SCRIPT = `try{(${applyAppearanceWith.toString()})(Objec
 	DEFAULT_PREFERENCES,
 )},JSON.parse(localStorage.getItem(${JSON.stringify(STORAGE_KEY)})||"{}")),${JSON.stringify(HUES)},${JSON.stringify(
 	APPEARANCE_KEYS,
-)},${JSON.stringify(SEASONS)},(${seasonForDate.toString()})(new Date()))}catch(e){}`;
+)},(${seasonForDate.toString()})(new Date(),${JSON.stringify(SEASONS)}))}catch(e){}`;
 
 /** `undefined` lets Intl pick the locale default. */
 export function hour12Of(clock: Preferences["clock"]): boolean | undefined {

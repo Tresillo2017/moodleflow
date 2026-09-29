@@ -1,32 +1,56 @@
 "use client";
 
+import { useMemo } from "react";
 import { usePreferences } from "@/components/providers/preferences-provider";
 import { SEASONS, activeSeason } from "@/lib/preferences";
 
-const COUNT = 18;
+const LESS = 0.45;
+const MOBILE = 0.5;
 
-/** Slow falling emoji for the current season, like bleh's snow. Decorative only. */
+/** Falling snow for seasons that have it. Flake maths follows bleh's begin_snowflakes (fm/src/components/seasonal.ts, GPL-3.0). */
 export function SeasonParticles() {
 	const { prefs } = usePreferences();
 	const season = activeSeason(prefs);
-	const emoji = season ? SEASONS[season].emoji : "";
-	if (!emoji || prefs.particles === "off" || prefs.motion === "reduced") return null;
+	const base = season ? SEASONS[season].snow : 0;
+	const enabled = base > 0 && prefs.particles !== "none" && prefs.motion !== "reduced";
 
+	const flakes = useMemo(() => {
+		if (!enabled) return [];
+		let count = base;
+		if (prefs.particles === "less" && count > 10) count *= LESS;
+		if (window.matchMedia("(max-width: 980px)").matches && count > 10) count *= MOBILE;
+		return Array.from({ length: Math.floor(count * 0.7) }, () => {
+			const scale = Math.random() * 0.9 + 0.4;
+			return {
+				x: (Math.random() * 100).toFixed(1),
+				drift: (Math.random() * 40 - 10).toFixed(1),
+				scale: scale.toFixed(1),
+				size: 8 * scale,
+				duration: (Math.random() * 64 + 20).toFixed(1),
+				delay: (Math.random() * -30).toFixed(1),
+				opacity: (Math.random() * 0.7 + 0.2).toFixed(1),
+			};
+		});
+	}, [enabled, base, prefs.particles]);
+
+	if (!flakes.length) return null;
 	return (
-		<div aria-hidden="true" className="pointer-events-none fixed inset-0 z-40 overflow-hidden motion-reduce:hidden">
-			{Array.from({ length: COUNT }, (_, i) => (
-				<span
+		<div className="snow-container" aria-hidden="true">
+			{flakes.map((f, i) => (
+				<div
 					key={i}
-					className="absolute top-0 opacity-60"
+					className="snow"
 					style={{
-						left: `${(i * 97) % 100}%`,
-						fontSize: `${12 + ((i * 7) % 10)}px`,
-						animation: `season-fall ${14 + ((i * 5) % 12)}s linear ${-((i * 3) % 14)}s infinite`,
-						["--drift" as string]: `${((i * 41) % 90) - 45}px`,
+						width: f.size,
+						height: f.size,
+						["--x" as string]: `${f.x}vw`,
+						["--x-end" as string]: `calc(${f.x}vw + ${f.drift}vw)`,
+						["--s" as string]: f.scale,
+						animationDuration: `${f.duration}s`,
+						animationDelay: `${f.delay}s`,
+						opacity: f.opacity,
 					}}
-				>
-					{emoji}
-				</span>
+				/>
 			))}
 		</div>
 	);

@@ -1,0 +1,280 @@
+/*
+ * Component styles adapted from bleh (https://github.com/katelyynn/bleh, GPL-3.0).
+ * Declarations are copied from fm/src/styles/{interactable/button,interactable/menu,settings/input,
+ * shared/tooltip,dialog/dialog,page/card,tab/tab}.css; only the selectors changed, from Last.fm's
+ * classes to this app's data-slot attributes. Layered so explicit utility classes still win.
+ */
+@layer components {
+	/*     BUTTONS  (interactable/button.css)     */
+	[data-slot="button"] {
+		--bg: oklch(var(--b3));
+		--bg-hov: color-mix(in oklch, oklch(var(--b6)), oklch(var(--b3)) 90%);
+		--bg-atv: color-mix(in oklch, oklch(var(--b6)), oklch(var(--b3)) 80%);
+		--col: oklch(var(--c2));
+		--shadow: var(--normal-shadow), var(--interact-shadow);
+		background: var(--cards-overlay-image-subtlest, none), var(--bg);
+		background-repeat: repeat-x;
+		color: var(--col);
+		box-shadow: var(--shadow);
+		border: unset;
+		text-decoration: var(--force-underline, none);
+		font-family: var(--font);
+		font-weight: var(--force-font-weight, var(--font-weight));
+		transition-property: background-color, transform, box-shadow, color, opacity, padding, font-weight;
+		transition-duration: var(--trans);
+		transition-timing-function: var(--trans-function);
+		cursor: pointer;
+		position: relative;
+	}
+	[data-slot="button"]:hover,
+	[data-slot="button"][aria-expanded="true"] {
+		background: var(--cards-overlay-image-subtlest, none), var(--bg-hov);
+	}
+	[data-slot="button"]:active {
+		background: var(--cards-overlay-image-subtlest, none), var(--bg-atv);
+		transform: scale(0.98);
+	}
+	[data-slot="button"][disabled],
+	[data-slot="button"][data-disabled] {
+		opacity: 0.65;
+		--col: oklch(var(--c3));
+		--bg-hov: var(--bg);
+		--bg-atv: var(--bg);
+		transform: none;
+		cursor: default;
+	}
+
+	/* primary */
+	[data-slot="button"][data-variant="default"] {
+		--bg: oklch(var(--h3));
+		--bg-hov: color-mix(in oklch, oklch(var(--h4)), oklch(var(--h3)) 80%);
+		--bg-atv: color-mix(in oklch, oklch(var(--h4)), oklch(var(--h3)) 60%);
+		--col: oklch(var(--b7));
+		--force-font-weight: var(--font-weight-bold);
+		--shadow: var(--primary-shadow), 0 3px 12px oklch(var(--h4) / 32%), var(--interactable-outer);
+	}
+	/* subtle (.subtle) */
+	[data-slot="button"][data-variant="ghost"] {
+		--bg: transparent;
+		--bg-hov: oklch(var(--b4) / 40%);
+		--bg-atv: oklch(var(--b4) / 60%);
+		--shadow: none;
+		--col: oklch(var(--c2) / 80%);
+	}
+	/* danger (.danger-subtle) */
+	[data-slot="button"][data-variant="destructive"] {
+		--hue-over: var(--hue-neg);
+		--sat-over: var(--sat-neg);
+		--lit-over: var(--lit-neg);
+		--bg: transparent;
+		--bg-hov: var(--menu-item-accent-hov);
+		--bg-atv: var(--menu-item-accent-atv);
+		--col: oklch(var(--l3-c));
+	}
+	[data-slot="button"][data-variant="link"] {
+		--bg: transparent;
+		--bg-hov: transparent;
+		--bg-atv: transparent;
+		--shadow: none;
+		--col: oklch(var(--l3-c));
+	}
+
+	/*     INPUTS  (settings/input.css)     */
+	[data-slot="input"],
+	[data-slot="textarea"] {
+		--bg: var(--textarea);
+		--bg-hov: var(--textarea-hov);
+		background-color: var(--bg);
+		color: oklch(var(--c2));
+		font-size: var(--font-size);
+		font-weight: var(--font-weight);
+		border: unset;
+		box-shadow: var(--input-shadow);
+		outline: none;
+		transition-property: background-color, transform, box-shadow, color, border, filter;
+		transition-duration: var(--trans);
+		transition-timing-function: var(--trans-function);
+	}
+	[data-slot="input"]:hover,
+	[data-slot="textarea"]:hover,
+	[data-slot="input"]:focus-visible,
+	[data-slot="textarea"]:focus-visible {
+		background-color: var(--bg-hov);
+	}
+	[data-slot="input"]:focus-visible:not([readonly]),
+	[data-slot="textarea"]:focus-visible:not([readonly]) {
+		box-shadow: var(--focused-input-shadow);
+		outline: none;
+	}
+	[data-slot="input"]::placeholder,
+	[data-slot="textarea"]::placeholder {
+		color: oklch(var(--c3));
+		opacity: 1;
+	}
+	[data-slot="input"][disabled],
+	[data-slot="textarea"][disabled] {
+		opacity: 0.7;
+	}
+
+	/*     CARDS  (page/card.css .sour, dialog blur)     */
+	[data-slot="card"] {
+		background: oklch(var(--b5) / var(--solarium-opacity, 70%));
+		backdrop-filter: var(--solarium);
+		-webkit-backdrop-filter: var(--solarium);
+		border-radius: var(--card-radius);
+		box-shadow: var(--card-border), var(--card-shadow);
+	}
+
+	/*     MENUS  (interactable/menu.css, shared/tooltip.css)     */
+	[data-slot="dropdown-menu-content"],
+	[data-slot="dropdown-menu-sub-content"],
+	[data-slot="context-menu-content"],
+	[data-slot="popover-content"] {
+		padding: 4px;
+		background-color: oklch(var(--menu-bg) / var(--solarium-opacity, var(--menu-opacity)));
+		backdrop-filter: var(--solarium);
+		-webkit-backdrop-filter: var(--solarium);
+		border: 1px solid var(--menu-border);
+		border-radius: calc(var(--item-med-radius) + 4px);
+		box-shadow: var(--override-full-shadow, var(--menu-shadow));
+		color: oklch(var(--c2));
+		font-size: var(--font-size);
+		transform-origin: top;
+		background-image: var(--cards-overlay-image-subtle, unset), var(--cards-overlay-mini);
+		background-repeat: repeat-x;
+		background-position: 0 0;
+		gap: var(--menu-gap);
+	}
+	[data-slot="dropdown-menu-content"][data-open],
+	[data-slot="dropdown-menu-sub-content"][data-open],
+	[data-slot="context-menu-content"][data-open],
+	[data-slot="popover-content"][data-open] {
+		animation: var(--motion, solarium_menu 0.25s var(--trans-function));
+	}
+	[data-slot="dropdown-menu-content"][data-closed],
+	[data-slot="dropdown-menu-sub-content"][data-closed],
+	[data-slot="context-menu-content"][data-closed],
+	[data-slot="popover-content"][data-closed] {
+		animation: var(--motion, fade_popup_reverse_reduced 0.12s var(--trans-function) forwards);
+	}
+
+	[data-slot="dropdown-menu-item"],
+	[data-slot="dropdown-menu-checkbox-item"],
+	[data-slot="dropdown-menu-radio-item"],
+	[data-slot="dropdown-menu-sub-trigger"],
+	[data-slot="context-menu-item"],
+	[data-slot="command-item"] {
+		--bg: transparent;
+		--bg-hov: var(--menu-item-hov);
+		--bg-atv: var(--menu-item-atv);
+		border-radius: var(--item-med-radius);
+		font-weight: var(--font-weight);
+		transition-property: background-color, color;
+		transition-duration: var(--trans);
+		transition-timing-function: var(--trans-function);
+	}
+	[data-slot="dropdown-menu-item"]:is([data-highlighted], :hover),
+	[data-slot="dropdown-menu-checkbox-item"]:is([data-highlighted], :hover),
+	[data-slot="dropdown-menu-radio-item"]:is([data-highlighted], :hover),
+	[data-slot="dropdown-menu-sub-trigger"]:is([data-highlighted], :hover),
+	[data-slot="context-menu-item"]:is([data-highlighted], :hover),
+	[data-slot="command-item"][data-selected="true"] {
+		background-color: var(--bg-hov);
+		color: oklch(var(--c2));
+	}
+	[data-slot="dropdown-menu-item"]:active,
+	[data-slot="context-menu-item"]:active {
+		background-color: var(--bg-atv);
+	}
+	[data-slot="dropdown-menu-item"][data-variant="destructive"],
+	[data-slot="context-menu-item"][data-variant="destructive"] {
+		--hue-over: var(--hue-neg);
+		--sat-over: var(--sat-neg);
+		--lit-over: var(--lit-neg);
+		--bg-hov: var(--menu-item-accent-hov);
+		--bg-atv: var(--menu-item-accent-atv);
+		color: oklch(var(--l3-c));
+	}
+	[data-slot="dropdown-menu-separator"] {
+		background: var(--separator-base);
+	}
+
+	/*     TOOLTIP  (shared/tooltip.css)     */
+	[data-slot="tooltip-content"] {
+		background-color: oklch(var(--tooltip) / var(--solarium-opacity, 80%));
+		backdrop-filter: var(--solarium);
+		-webkit-backdrop-filter: var(--solarium);
+		border-radius: var(--radius-s);
+		box-shadow: var(--avatar-shadow);
+		color: oklch(var(--c2));
+		font-size: calc(var(--font-size) - 1px);
+		font-weight: var(--font-weight);
+		max-width: var(--max-tooltip-width);
+	}
+
+	/*     DIALOG / SHEET  (dialog/dialog.css .bleh-modal)     */
+	[data-slot="dialog-overlay"],
+	[data-slot="sheet-overlay"] {
+		background: var(--modal-bg);
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
+	}
+	[data-slot="dialog-content"],
+	[data-slot="sheet-content"] {
+		background: oklch(var(--b5) / var(--solarium-opacity, 90%));
+		backdrop-filter: var(--solarium);
+		-webkit-backdrop-filter: var(--solarium);
+		border-radius: var(--item-big-radius);
+		box-shadow: var(--override-full-shadow, var(--overlay-shadow));
+		border: 1px solid var(--card-border-base);
+		color: oklch(var(--c2));
+	}
+	[data-slot="dialog-content"][data-open] {
+		animation: var(--motion, modal_in 0.3s var(--trans-function-ani));
+	}
+	[data-slot="dialog-content"][data-closed] {
+		animation: var(--motion, modal_out 0.15s var(--trans-function) forwards);
+	}
+	[data-slot="command"] {
+		background: transparent;
+	}
+
+	/*     TABS  (tab/tab.css, view buttons)     */
+	[data-slot="tabs-list"][data-variant="default"] {
+		background: var(--view-buttons);
+		box-shadow: var(--view-buttons-shadow);
+		border-radius: var(--button-radius);
+	}
+	[data-slot="tabs-trigger"] {
+		border-radius: calc(var(--button-radius) - 2px);
+		transition-duration: var(--trans);
+		transition-timing-function: var(--trans-function);
+	}
+	[data-slot="tabs-trigger"]:hover {
+		background: var(--view-buttons-hov);
+	}
+	[data-slot="tabs-trigger"][data-active] {
+		background: oklch(var(--h3));
+		color: oklch(var(--b7));
+		font-weight: var(--font-weight-bold);
+		box-shadow: var(--primary-shadow), 0 3px 12px oklch(var(--h4) / 32%);
+	}
+
+	/*     SIDEBAR / TOOLBAR  (--sidebar-*, --toolbar-*)     */
+	[data-slot="sidebar-inner"],
+	[data-slot="sidebar-container"] [data-sidebar="sidebar"] {
+		background: var(--sidebar-bg);
+		backdrop-filter: var(--solarium);
+		-webkit-backdrop-filter: var(--solarium);
+	}
+	[data-slot="sidebar-container"] {
+		border-color: var(--sidebar-border);
+		box-shadow: var(--sidebar-shadow);
+	}
+	.bleh-toolbar {
+		background: var(--toolbar-bg);
+		border-bottom: 1px solid var(--toolbar-border);
+		backdrop-filter: var(--solarium);
+		-webkit-backdrop-filter: var(--solarium);
+	}
+}
