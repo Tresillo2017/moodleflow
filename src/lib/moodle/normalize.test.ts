@@ -250,3 +250,16 @@ describe("applySubmissionStatus", () => {
 		expect(graded).toMatchObject({ status: "graded", grade: 87, feedback: "Nice" });
 	});
 });
+
+describe("normalizeCourses banner", () => {
+	it("prefers courseimage, falls back to the first image overview file", () => {
+		const [a, b, c] = normalizeCourses([
+			{ id: 1, shortname: "A", courseimage: "https://m/a.jpg" },
+			{ id: 2, shortname: "B", overviewfiles: [{ fileurl: "https://m/webservice/pluginfile.php/1/b.png", mimetype: "image/png" }] },
+			{ id: 3, shortname: "C", overviewfiles: [{ fileurl: "https://m/doc.pdf", mimetype: "application/pdf" }] },
+		]);
+		expect(a.imageUrl).toBe("https://m/a.jpg");
+		expect(b.imageUrl).toBe("https://m/webservice/pluginfile.php/1/b.png");
+		expect(c.imageUrl).toBeUndefined();
+	});
+});

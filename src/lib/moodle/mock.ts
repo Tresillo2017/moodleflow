@@ -16,7 +16,7 @@ const now = Date.now();
 const days = (n: number) => new Date(now + n * 86_400_000).toISOString();
 
 const courses: MoodleCourse[] = [
-	{ id: 1, shortName: "MATH201", fullName: "Mathematics II", progress: 72, isFavourite: true, visible: true },
+	{ id: 1, shortName: "MATH201", fullName: "Mathematics II", imageUrl: "data:image/svg+xml;utf8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 400 120\'%3E%3Crect width=\'400\' height=\'120\' fill=\'%23234\'/%3E%3Ccircle cx=\'320\' cy=\'40\' r=\'60\' fill=\'%23e94\' opacity=\'.6\'/%3E%3C/svg%3E", progress: 72, isFavourite: true, visible: true },
 	{ id: 2, shortName: "PHYS101", fullName: "Physics Fundamentals", progress: 41, isFavourite: true, visible: true },
 	{ id: 3, shortName: "HIST150", fullName: "Modern History", progress: 93, isFavourite: false, visible: true },
 	{ id: 4, shortName: "CS210", fullName: "Data Structures", progress: 58, isFavourite: false, visible: true },

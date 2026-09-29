@@ -14,6 +14,7 @@ import { DeadlineBadge } from "@/components/assignments/deadline-badge";
 import { SubmitDialog } from "@/components/assignments/submit-dialog";
 import { FileViewer } from "@/components/files/file-viewer";
 import { canSubmit } from "@/lib/moodle/assignment";
+import { CourseBanner } from "@/components/courses/course-banner";
 import { FileList } from "@/components/files/file-list";
 import { fileKind } from "@/lib/file-kind";
 import { CourseGrades } from "@/components/grades/course-grades";
@@ -184,6 +185,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ courseI
 
 			{course ? (
 				<div className="flex flex-col gap-4">
+					{course.imageUrl && <CourseBanner course={course} className="h-32 rounded-xl sm:h-40" />}
 					<PageHeader
 						eyebrow={
 							<span className="flex items-center gap-2">

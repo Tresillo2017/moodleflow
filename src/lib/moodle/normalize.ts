@@ -50,6 +50,15 @@ export function normalizeSiteInfo(raw: unknown): MoodleSiteInfo {
 	};
 }
 
+/** `courseimage` (timeline/overview APIs) or the first overview file (core_enrol_get_users_courses). */
+function courseImage(course: Record<string, unknown>): string | undefined {
+	if (typeof course.courseimage === "string" && course.courseimage) return course.courseimage;
+	const file = asArray(course.overviewfiles)
+		.map(asRecord)
+		.find((f) => typeof f.fileurl === "string" && (!f.mimetype || String(f.mimetype).startsWith("image/")));
+	return file ? String(file.fileurl) : undefined;
+}
+
 // core_enrol_get_users_courses
 export function normalizeCourses(raw: unknown): MoodleCourse[] {
 	return asArray(raw).map((c) => {
@@ -59,7 +68,7 @@ export function normalizeCourses(raw: unknown): MoodleCourse[] {
 			shortName: String(r.shortname ?? ""),
 			fullName: String(r.fullname ?? r.shortname ?? ""),
 			summary: r.summary ? String(r.summary) : undefined,
-			imageUrl: typeof r.courseimage === "string" ? r.courseimage : undefined,
+			imageUrl: courseImage(r),
 			progress: typeof r.progress === "number" ? r.progress : undefined,
 			startDate: r.startdate ? new Date(Number(r.startdate) * 1000).toISOString() : undefined,
 			endDate: r.enddate ? new Date(Number(r.enddate) * 1000).toISOString() : undefined,
