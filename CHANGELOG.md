@@ -7,6 +7,11 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.11.2] - 2026-09-29
+
+### Security
+- Upgraded Next.js to 16.3.x and the OpenNext Cloudflare adapter to 1.20.x, fixing all open dependency advisories.
+
 ## [0.11.1] - 2026-09-29
 
 ### Fixed
