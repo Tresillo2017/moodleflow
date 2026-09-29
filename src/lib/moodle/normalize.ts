@@ -506,14 +506,18 @@ export function normalizeCourseCompletion(raw: unknown): CourseCompletion {
 	};
 }
 
-/** Blocks worth showing in-app; navigation, timeline, notes, third-party stats etc. are skipped (they duplicate MoodleFlow or don't render as plain HTML). */
-const SUPPORTED_BLOCKS = new Set(["news_items", "calendar_upcoming", "recent_activity", "html", "online_users"]);
+/** Blocks that duplicate MoodleFlow's own pages or are only useful inside Moodle's UI. */
+const HIDDEN_BLOCKS = new Set([
+	"navigation", "settings", "myoverview", "timeline", "private_files", "completionstatus", "selfcompletion", "mentees",
+	"course_list", "mycourses", "starredcourses", "recentlyaccessedcourses", "recentlyaccesseditems", "calendar_month",
+	"admin_bookmarks", "badges", "lp", "comments", "tags", "search_forums", "notes",
+]);
 
 // core_block_get_course_blocks
 export function normalizeCourseBlocks(raw: unknown): CourseBlock[] {
 	return asArray(asRecord(raw).blocks)
 		.map(asRecord)
-		.filter((b) => SUPPORTED_BLOCKS.has(String(b.name)))
+		.filter((b) => !HIDDEN_BLOCKS.has(String(b.name)))
 		.map((b) => {
 			const contents = b.contents && typeof b.contents === "object" ? (b.contents as Record<string, unknown>) : {};
 			return {
@@ -523,7 +527,8 @@ export function normalizeCourseBlocks(raw: unknown): CourseBlock[] {
 				html: String(contents.content ?? ""),
 			};
 		})
-		.filter((b) => b.html.trim() !== "");
+		// some plugins return escaped markup (shows as literal "<div ...>"), which is unreadable
+		.filter((b) => b.html.trim() !== "" && !/&lt;\/?[a-z]/i.test(b.html));
 }
 
 // core_course_get_updates_since: ids of course modules changed since the timestamp

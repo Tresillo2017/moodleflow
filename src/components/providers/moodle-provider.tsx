@@ -83,7 +83,7 @@ function withCache(client: MoodleClient, persist: boolean): MoodleClient {
 			invalidate("courseCompletion");
 			invalidate("courses");
 		},
-		getCourseBlocks: cached("blocks", TTL.contents, (id: number) => client.getCourseBlocks(id)),
+		getCourseBlocks: cached("blocks2", TTL.contents, (id: number) => client.getCourseBlocks(id)),
 		getUpdatedModules: (id, since) => client.getUpdatedModules(id, since), // depends on "since", so uncached
 		async setActivityCompletion(cmid, completed) {
 			await client.setActivityCompletion(cmid, completed);

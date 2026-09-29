@@ -353,9 +353,11 @@ describe("course extras", () => {
 					{ instanceid: 2, name: "html", contents: { content: " " } },
 					{ instanceid: 3, name: "navigation", contents: { title: "Navigation", content: "<ul></ul>" } },
 					{ instanceid: 4, name: "timeline", contents: { title: "Timeline", content: "<p>x</p>" } },
+					{ instanceid: 5, name: "dashboard_stats", contents: { title: "Stats", content: "&lt;div class=zoom&gt;" } },
+					{ instanceid: 6, name: "custom_plugin", contents: { title: "Custom", content: "<p>y</p>" } },
 				],
 			}),
-		).toHaveLength(1);
+		).toHaveLength(2);
 		expect(normalizeUpdatedModules({ instances: [{ contextlevel: "module", id: 5 }, { contextlevel: "course", id: 1 }] })).toEqual([5]);
 	});
 });
