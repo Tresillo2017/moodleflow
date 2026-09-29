@@ -267,6 +267,7 @@ function CourseDetailContent({ params }: { params: Promise<{ courseId: string }>
 	const navOptions = useMoodleQuery(client ? () => client.getCourseNavOptions(id) : null, [client, id]).data;
 	// null = the site can't say, so show every tab
 	const canOpen = (name: string) => !navOptions || navOptions.includes(name);
+	const blocks = useMoodleQuery(client ? () => client.getCourseBlocks(id) : null, [client, id]).data ?? [];
 	const updatedModules = useUpdatedModules(id);
 	const course = courses.data?.find((c) => c.id === id);
 	const sections = content.data?.sections.filter((s) => s.activities.length > 0) ?? [];
@@ -323,16 +324,15 @@ function CourseDetailContent({ params }: { params: Promise<{ courseId: string }>
 					{forums.length > 0 && <TabsTrigger value="forums">Forums</TabsTrigger>}
 				</TabsList>
 
-				<TabsContent value="content" className={`grid gap-6 pt-2 ${sections.length > 1 ? "lg:grid-cols-[14rem_minmax(0,1fr)]" : ""}`}>
-					{sections.length > 1 && (
-						<CourseOutline
-							sections={sections}
-							className="hidden lg:sticky lg:top-20 lg:flex lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto"
-						/>
+				<TabsContent value="content" className={`grid gap-6 pt-2 ${sections.length > 1 || blocks.length > 0 ? "lg:grid-cols-[16rem_minmax(0,1fr)]" : ""}`}>
+					{(sections.length > 1 || blocks.length > 0) && (
+						<div className="order-2 flex flex-col gap-4 lg:sticky lg:top-20 lg:order-none lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto">
+							{sections.length > 1 && <CourseOutline sections={sections} className="hidden lg:flex" />}
+							<CourseBlocks blocks={blocks} />
+						</div>
 					)}
 					<div className="flex min-w-0 flex-col gap-6">
 					<CourseCompletionCard courseId={id} />
-					<CourseBlocks courseId={id} className="flex flex-col gap-3" />
 					{content.loading && <ListSkeleton rows={4} />}
 					{content.error && <ErrorState error={content.error} onRetry={refresh} />}
 					{content.data && sections.length === 0 && (

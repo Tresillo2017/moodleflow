@@ -7,6 +7,9 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+### Changed
+- Course blocks now live in the sidebar under the section list (below the content on small screens) instead of above the sections.
+
 ## [0.10.1] - 2026-09-29
 
 ### Fixed
