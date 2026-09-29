@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import type { ChangelogRelease } from "@/lib/changelog";
+import { releases } from "@/lib/releases";
 import { toast } from "@/lib/toast";
 import { notesToShow, PENDING_VERSION_KEY } from "@/lib/whats-new";
 
@@ -24,8 +24,7 @@ export function WhatsNew() {
 		if (!pending) return;
 
 		const running = process.env.NEXT_PUBLIC_APP_VERSION ?? "";
-		const raw = process.env.NEXT_PUBLIC_LATEST_RELEASE;
-		const release = notesToShow(pending, running, raw ? (JSON.parse(raw) as ChangelogRelease) : null);
+		const release = notesToShow(pending, running, releases.find((r) => r.version === running) ?? null);
 
 		// Deferred so the toaster has mounted, and so React's dev double-run cancels the first timer instead of losing the marker.
 		const timer = setTimeout(() => {

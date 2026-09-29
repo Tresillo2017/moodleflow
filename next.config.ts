@@ -7,14 +7,14 @@ import { parseChangelog } from "./src/lib/changelog";
 // Cloudflare Workers Builds sets the commit sha; a redeploy of the same version still counts as an update.
 const build = process.env.WORKERS_CI_COMMIT_SHA?.slice(0, 7);
 
-// Notes for the running version, shown once after an in-app update (see WhatsNew).
-const release = parseChangelog(readFileSync(path.resolve(__dirname, "CHANGELOG.md"), "utf8")).find((r) => r.version === pkg.version);
+// Parsed at build time and inlined: the Worker has no filesystem to read CHANGELOG.md from at runtime.
+const releases = parseChangelog(readFileSync(path.resolve(__dirname, "CHANGELOG.md"), "utf8"));
 
 const nextConfig: NextConfig = {
 	devIndicators: false,
 	env: {
 		NEXT_PUBLIC_APP_VERSION: pkg.version,
-		NEXT_PUBLIC_LATEST_RELEASE: JSON.stringify(release ?? null),
+		NEXT_PUBLIC_RELEASES: JSON.stringify(releases),
 		NEXT_PUBLIC_BUILD_ID: build ? `${pkg.version}+${build}` : pkg.version,
 	},
 	turbopack: {

@@ -1,12 +1,7 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { PageHeader } from "@/components/layout/page-header";
-import { parseChangelog } from "@/lib/changelog";
+import { releases } from "@/lib/releases";
 
 export const metadata = { title: "What's new" };
-
-// Read at build time: the page is static, so the Worker never touches the filesystem.
-const releases = parseChangelog(readFileSync(join(process.cwd(), "CHANGELOG.md"), "utf8"));
 
 export default function ChangelogPage() {
 	return (

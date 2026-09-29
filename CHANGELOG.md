@@ -7,6 +7,11 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-09-29
+
+### Fixed
+- The changelog page returned an internal server error in production; releases are now built into the app instead of read from disk.
+
 ## [0.7.0] - 2026-09-29
 
 ### Added
