@@ -334,11 +334,21 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 
 		async getGrades(courseId?: number) {
 			const info = await this.getSiteInfo();
-			const raw = await callMoodle(connection, "gradereport_user_get_grade_items", {
-				userid: info.userId,
-				...(courseId ? { courseid: courseId } : {}),
-			});
-			return normalizeGrades(raw);
+			const fetchCourse = async (id: number) =>
+				normalizeGrades(await callMoodle(connection, "gradereport_user_get_grade_items", { userid: info.userId, courseid: id }));
+			if (courseId) return fetchCourse(courseId);
+			// courseid is required on many Moodle sites ("Invalid parameter value"), so fetch per course.
+			// A course that hides its gradebook fails alone; only throw when every course fails.
+			const courses = await this.getCourses();
+			const results = await mapLimit(courses, STATUS_CONCURRENCY, (c) =>
+				fetchCourse(c.id).then(
+					(grades) => ({ grades }),
+					(error: unknown) => ({ error }),
+				),
+			);
+			const failed = results.filter((r): r is { error: unknown } => "error" in r);
+			if (failed.length && failed.length === results.length) throw failed[0].error;
+			return results.flatMap((r) => ("grades" in r ? r.grades : []));
 		},
 
 		async getForumDiscussions(forumId: number) {

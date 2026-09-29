@@ -89,6 +89,7 @@ const MODNAME_TO_TYPE: Record<string, ActivityType> = {
 	lesson: "lesson",
 	feedback: "feedback",
 	folder: "folder",
+	label: "label",
 };
 
 function normalizeFiles(contents: unknown): MoodleFile[] {

@@ -114,3 +114,7 @@ src/
 - Moodle tokens never leave the browser and are never logged.
 - All Moodle API calls happen client-side over HTTPS to the URL you provide; MoodleFlow has no server component that stores or proxies your data.
 - Disconnecting (Settings → Disconnect) clears the stored connection from `localStorage`.
+
+## Versioning and changelog
+
+Versions follow [SemVer](https://semver.org/) and live in `package.json`; the changelog is `CHANGELOG.md` (rendered in-app at `/changelog`). To release: add entries under `Unreleased`, rename it to the new version, then `bun pm version <patch|minor|major>` and deploy. A test fails if the newest changelog entry and `package.json` disagree.

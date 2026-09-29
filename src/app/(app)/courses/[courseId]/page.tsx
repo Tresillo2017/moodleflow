@@ -18,6 +18,8 @@ import { CourseBanner } from "@/components/courses/course-banner";
 import { FileList } from "@/components/files/file-list";
 import { fileKind } from "@/lib/file-kind";
 import { CourseGrades } from "@/components/grades/course-grades";
+import { CourseOutline, sectionAnchor } from "@/components/courses/course-outline";
+import { RichContent } from "@/components/content/rich-content";
 import { ArrowLeft, CheckCircle2, ChevronDown, Circle, ExternalLink, FolderOpen, GraduationCap, MessageSquare, Pin, Star } from "lucide-react";
 import { courseHue, formatDistanceToNow } from "@/lib/format";
 import { isHttpUrl } from "@/lib/utils";
@@ -26,6 +28,10 @@ import type { MoodleActivity, MoodleAssignment, MoodleSection } from "@/types/mo
 function ActivityRow({ activity: a, assignment }: { activity: MoodleActivity; assignment?: MoodleAssignment }) {
 	const { refresh } = useMoodleConnection();
 	const submittable = assignment ? canSubmit(assignment) : false;
+	// Moodle "text and media" blocks carry their content in the description; the name is a truncated copy.
+	if (a.type === "label") {
+		return <RichContent html={a.description ?? a.name} className="px-4 py-3" />;
+	}
 	const content = (
 		<>
 			{a.completed === undefined ? (
@@ -69,6 +75,9 @@ function ActivityRow({ activity: a, assignment }: { activity: MoodleActivity; as
 					</div>
 				)}
 			</div>
+			{a.description && (
+				<RichContent html={a.description} className="line-clamp-3 px-4 pb-3 pl-11 text-xs text-muted-foreground [&_p]:my-1" />
+			)}
 			{a.files && a.files.length > 0 && <FileList files={a.files} className="pr-4 pb-3 pl-11" />}
 		</div>
 	);
@@ -77,15 +86,33 @@ function ActivityRow({ activity: a, assignment }: { activity: MoodleActivity; as
 function SectionBlock({ section, assignments }: { section: MoodleSection; assignments: Map<number, MoodleAssignment> }) {
 	const tracked = section.activities.filter((a) => a.completed !== undefined);
 	const done = tracked.filter((a) => a.completed).length;
+	const items = section.activities.filter((a) => a.type !== "label");
+	const files = items.reduce((n, a) => n + (a.files?.length ?? 0), 0);
+	const now = Date.now();
+	const nextDue = items
+		.map((a) => {
+			const assignment = a.type === "assignment" && a.instance !== undefined ? assignments.get(a.instance) : undefined;
+			return assignment && isDone(assignment) ? undefined : (a.dueDate ?? assignment?.dueDate);
+		})
+		.filter((d): d is string => d !== undefined && new Date(d).getTime() > now)
+		.sort()[0];
+	const meta = [
+		`${items.length} ${items.length === 1 ? "item" : "items"}`,
+		files > 0 && `${files} ${files === 1 ? "file" : "files"}`,
+		nextDue && `next due ${formatDistanceToNow(nextDue)}`,
+	].filter(Boolean);
 
 	return (
-		<Collapsible defaultOpen className="overflow-hidden rounded-xl border bg-card">
+		<Collapsible defaultOpen id={sectionAnchor(section.id)} className="scroll-mt-20 overflow-hidden rounded-xl border bg-card">
 			<CollapsibleTrigger className="group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none">
 				<ChevronDown
 					className="size-4 shrink-0 -rotate-90 text-muted-foreground transition-transform duration-200 group-data-panel-open:rotate-0"
 					aria-hidden="true"
 				/>
-				<span className="flex-1 truncate text-sm font-medium">{section.name}</span>
+				<span className="min-w-0 flex-1">
+					<span className="block truncate text-sm font-medium">{section.name}</span>
+					<span className="block truncate text-xs text-muted-foreground">{meta.join(" · ")}</span>
+				</span>
 				{tracked.length > 0 && (
 					<span className="text-xs text-muted-foreground tabular-nums">
 						{done}/{tracked.length} done
@@ -93,6 +120,7 @@ function SectionBlock({ section, assignments }: { section: MoodleSection; assign
 				)}
 			</CollapsibleTrigger>
 			<CollapsibleContent className="h-(--collapsible-panel-height) overflow-hidden transition-[height] duration-200 ease-out data-ending-style:h-0 data-starting-style:h-0">
+				{section.summary && <RichContent html={section.summary} className="border-t px-4 py-3 text-muted-foreground" />}
 				<div className="flex flex-col divide-y border-t">
 					{section.activities.map((a) => (
 						<ActivityRow
@@ -218,7 +246,14 @@ export default function CourseDetailPage({ params }: { params: Promise<{ courseI
 					{forums.length > 0 && <TabsTrigger value="forums">Forums</TabsTrigger>}
 				</TabsList>
 
-				<TabsContent value="content" className="flex flex-col gap-6 pt-2">
+				<TabsContent value="content" className={`grid gap-6 pt-2 ${sections.length > 1 ? "lg:grid-cols-[14rem_minmax(0,1fr)]" : ""}`}>
+					{sections.length > 1 && (
+						<CourseOutline
+							sections={sections}
+							className="hidden lg:sticky lg:top-20 lg:flex lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto"
+						/>
+					)}
+					<div className="flex min-w-0 flex-col gap-6">
 					{content.loading && <ListSkeleton rows={4} />}
 					{content.error && <ErrorState error={content.error} onRetry={refresh} />}
 					{content.data && sections.length === 0 && (
@@ -235,6 +270,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ courseI
 								<SectionBlock section={section} assignments={assignmentsById} />
 							</div>
 						))}
+					</div>
 					</div>
 				</TabsContent>
 

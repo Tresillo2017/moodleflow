@@ -3,6 +3,7 @@ import {
 	FileQuestion,
 	FileText,
 	Folder,
+	AlignLeft,
 	Link as LinkIcon,
 	MessageSquare,
 	Notebook,
@@ -21,6 +22,7 @@ const ICONS: Record<ActivityType, React.ComponentType<{ className?: string }>> =
 	lesson: Notebook,
 	feedback: Star,
 	folder: Folder,
+	label: AlignLeft,
 	unknown: File,
 };
 

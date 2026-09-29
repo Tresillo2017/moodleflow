@@ -41,6 +41,7 @@ export type ActivityType =
 	| "lesson"
 	| "feedback"
 	| "folder"
+	| "label"
 	| "unknown";
 
 export interface MoodleFile {

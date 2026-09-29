@@ -1,6 +1,7 @@
 "use client";
 
 import { useId } from "react";
+import Link from "next/link";
 import { useTheme } from "next-themes";
 import { motion } from "motion/react";
 import { toast } from "sonner";
@@ -29,6 +30,7 @@ const SECTIONS = [
 	{ id: "dashboard", label: "Dashboard" },
 	{ id: "datetime", label: "Date & time" },
 	{ id: "account", label: "Account" },
+	{ id: "about", label: "About" },
 ] as const;
 
 function Section({ id, title, description, children }: { id: string; title: string; description: string; children: React.ReactNode }) {
@@ -377,6 +379,14 @@ export default function SettingsPage() {
 					</Section>
 
 					<AccountSection />
+
+					<Section id="about" title="About" description="Which version you're running.">
+						<Row label={`MoodleFlow v${process.env.NEXT_PUBLIC_APP_VERSION}`} hint="See what changed in each release.">
+							<Button variant="outline" size="sm" nativeButton={false} render={<Link href="/changelog" />}>
+								What&apos;s new
+							</Button>
+						</Row>
+					</Section>
 				</div>
 			</div>
 		</div>
