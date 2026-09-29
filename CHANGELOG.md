@@ -7,6 +7,11 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-09-29
+
+### Fixed
+- Settings rows squeezing their label into a narrow column next to wide controls (Season).
+
 ## [0.3.0] - 2026-09-29
 
 ### Added

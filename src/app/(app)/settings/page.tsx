@@ -50,14 +50,14 @@ function Section({ id, title, description, children }: { id: string; title: stri
 /** One setting: label + hint on the left, control on the right (stacked on small screens). */
 function Row({ label, hint, labelId, children }: { label: string; hint?: string; labelId?: string; children: React.ReactNode }) {
 	return (
-		<div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-			<div className="min-w-0">
+		<div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-4">
+			<div className="min-w-48 flex-1 basis-56">
 				<p id={labelId} className="text-sm font-medium">
 					{label}
 				</p>
 				{hint && <p className="text-xs text-muted-foreground text-pretty">{hint}</p>}
 			</div>
-			<div className="shrink-0">{children}</div>
+			<div className="max-w-full">{children}</div>
 		</div>
 	);
 }
