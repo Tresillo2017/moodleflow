@@ -4,6 +4,7 @@ import {
 	ClipboardList,
 	GraduationCap,
 	LayoutDashboard,
+	MessagesSquare,
 	NotebookText,
 	Settings,
 	User,
@@ -15,6 +16,7 @@ export const NAV_ITEMS = [
 	{ href: "/calendar", label: "Calendar", icon: Calendar },
 	{ href: "/assignments", label: "Assignments", icon: ClipboardList },
 	{ href: "/grades", label: "Grades", icon: GraduationCap },
+	{ href: "/messages", label: "Messages", icon: MessagesSquare },
 ] as const;
 
 export const SETTINGS_ITEM = { href: "/settings", label: "Settings", icon: Settings } as const;

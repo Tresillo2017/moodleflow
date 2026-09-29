@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Bell, BellOff, CheckCheck, Trash2, X } from "lucide-react";
 import { NOTIFICATIONS_CHANGED, useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
+import { useMoodleLinkOpener } from "@/hooks/use-moodle-link";
 import { useDismissedNotifications } from "@/hooks/use-dismissed-notifications";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -23,9 +24,12 @@ interface ItemProps {
 	n: MoodleNotification;
 	onRead: (id: number) => void;
 	onDismiss: (id: number) => void;
+	/** Called after the notification's link was followed inside the app. */
+	onNavigate: () => void;
 }
 
-function Item({ n, onRead, onDismiss }: ItemProps) {
+function Item({ n, onRead, onDismiss, onNavigate }: ItemProps) {
+	const open = useMoodleLinkOpener();
 	const body = n.body ? toPlainText(n.body) : "";
 	const rowClass = cn(
 		"flex min-w-0 flex-1 items-start gap-3 rounded-[inherit] px-2.5 py-2 text-left text-sm outline-none",
@@ -54,7 +58,20 @@ function Item({ n, onRead, onDismiss }: ItemProps) {
 	return (
 		<li className="group/item relative flex rounded-xl transition-colors hover:bg-muted/50 motion-safe:animate-track-in">
 			{isHttpUrl(n.url) ? (
-				<a href={n.url} target="_blank" rel="noopener noreferrer" onClick={() => !n.read && onRead(n.id)} className={rowClass}>
+				<a
+					href={n.url}
+					target="_blank"
+					rel="noopener noreferrer"
+					onClick={(e) => {
+						if (!n.read) onRead(n.id);
+						// plain clicks open the matching MoodleFlow page; modified clicks keep the browser's behaviour
+						if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+						e.preventDefault();
+						void open(n.url!);
+						onNavigate();
+					}}
+					className={rowClass}
+				>
 					{content}
 				</a>
 			) : (
@@ -78,6 +95,7 @@ export function NotificationsMenu() {
 	const { client } = useMoodleConnection();
 	const { dismissed, dismiss } = useDismissedNotifications();
 	const [version, setVersion] = useState(0);
+	const [open, setOpen] = useState(false);
 
 	useEffect(() => {
 		const bump = () => setVersion((v) => v + 1);
@@ -99,7 +117,7 @@ export function NotificationsMenu() {
 	};
 
 	return (
-		<Popover>
+		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger render={<Button variant="ghost" size="icon" aria-label={label} title={label} className="relative" />}>
 				<Bell aria-hidden="true" />
 				{unread > 0 && (
@@ -140,7 +158,7 @@ export function NotificationsMenu() {
 				) : (
 					<ul className="flex max-h-[26rem] flex-col gap-0.5 overflow-y-auto p-1.5">
 						{items.slice(0, MAX_SHOWN).map((n) => (
-							<Item key={n.id} n={n} onRead={markRead} onDismiss={(id) => dismiss([id])} />
+							<Item key={n.id} n={n} onRead={markRead} onDismiss={(id) => dismiss([id])} onNavigate={() => setOpen(false)} />
 						))}
 					</ul>
 				)}

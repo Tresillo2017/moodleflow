@@ -1,5 +1,6 @@
 import type { MoodleClient } from "./client";
 import { deriveSubmissionStatus } from "./normalize";
+import { createMockSocialApi } from "./mock-social";
 import type {
 	AssignmentConfig,
 	MoodleAssignment,
@@ -98,6 +99,8 @@ const courseContents: Record<number, MoodleCourseContent> = {
 				activities: [
 					{ id: 4, instance: 101, courseId: 1, sectionId: 2, type: "assignment", name: "Problem Set 4", dueDate: days(1), visible: true, completed: false },
 					{ id: 5, instance: 1, courseId: 1, sectionId: 2, type: "forum", name: "Discussion: Series convergence", visible: true, completed: false },
+						{ id: 7, instance: 1, courseId: 1, sectionId: 2, type: "chat", name: "Study room", description: "<p>Drop in to work through problems together.</p>", visible: true },
+						{ id: 8, instance: 1, courseId: 1, sectionId: 2, type: "bigbluebuttonbn", name: "Weekly live session", description: "<p>Thursdays at 14:00.</p>", visible: true },
 				],
 			},
 			{
@@ -190,9 +193,12 @@ const user: MoodleUser = {
 };
 
 const notifications: MoodleNotification[] = [
-	{ id: 1, subject: "Problem Set 4 has been posted", read: false, timeCreated: days(-0.5), courseId: 1 },
-	{ id: 2, subject: "New grade: Problem Set 3", body: "You scored 87/100.", read: false, timeCreated: days(-2) },
+	{ id: 1, subject: "Problem Set 4 has been posted", read: false, timeCreated: days(-0.5), courseId: 1, component: "mod_assign", url: "https://demo.moodleflow.dev/mod/assign/view.php?id=1101" },
+	{ id: 2, subject: "New grade: Problem Set 3", body: "You scored 87/100.", read: false, timeCreated: days(-2), component: "mod_assign" },
 	{ id: 3, subject: "Physics Lecture starting soon", read: true, timeCreated: days(-3), courseId: 2 },
+	{ id: 4, subject: "Ana Costa replied: Does the ratio test always work?", body: "No. It's inconclusive at 1.", read: false, timeCreated: days(-0.2), courseId: 1, component: "mod_forum", url: "https://demo.moodleflow.dev/mod/forum/discuss.php?d=1" },
+	{ id: 5, subject: "New message from Ana Costa", read: false, timeCreated: days(-0.1), component: "moodle", eventType: "instantmessage", url: "https://demo.moodleflow.dev/message/index.php?id=2" },
+	...Array.from({ length: 24 }, (_, i): MoodleNotification => ({ id: 10 + i, subject: `Reminder: reading ${i + 1}`, read: true, timeCreated: days(-4 - i), courseId: (i % 3) + 1, component: "mod_forum" })),
 ];
 
 function delay<T>(value: T, ms = 250): Promise<T> {
@@ -201,6 +207,7 @@ function delay<T>(value: T, ms = 250): Promise<T> {
 
 export function createMockMoodleClient(): MoodleClient {
 	return {
+		...createMockSocialApi(),
 		getSiteInfo: () => delay(siteInfo),
 		getSiteConfig: () => delay({ siteName: siteInfo.siteName, maxUploadBytes: 10_485_760, registrationEnabled: false }),
 		supports: () => true,
@@ -284,13 +291,8 @@ export function createMockMoodleClient(): MoodleClient {
 		},
 		getGrades: (courseId) =>
 			delay(courseId ? gradesWithHistory.filter((g) => g.courseId === courseId) : gradesWithHistory),
-		getForumDiscussions: () =>
-			delay([
-				{ id: 1, subject: "Does the ratio test always work?", author: "Ana Costa", timeModified: days(-1), replies: 4, pinned: false },
-				{ id: 2, subject: "Welcome to the course", author: "Prof. Silva", timeModified: days(-20), replies: 0, pinned: true },
-			]),
 		fileUrl: (url) => url,
-		getNotifications: () => delay(notifications),
+		getNotifications: (opts) => delay(opts?.limit ? notifications.slice(opts.offset ?? 0, (opts.offset ?? 0) + opts.limit) : notifications),
 		markNotificationRead: (notificationId) => {
 			const n = notifications.find((n) => n.id === notificationId);
 			if (n) n.read = true;

@@ -12,6 +12,7 @@ import { Pin, PinOff, ChevronRight } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { CourseContextMenu } from "@/components/courses/course-context-menu";
 import { usePinnedCourses } from "@/hooks/use-pinned-courses";
+import { useUnreadMessages } from "@/hooks/use-unread-messages";
 import type { MoodleCourse } from "@/types/moodle";
 import { isCurrentCourse } from "@/lib/moodle/course-filter";
 import { courseHue } from "@/lib/format";
@@ -25,6 +26,7 @@ import {
 	SidebarHeader,
 	SidebarMenu,
 	SidebarMenuAction,
+	SidebarMenuBadge,
 	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarRail,
@@ -119,6 +121,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 	const { setOpenMobile } = useSidebar();
 	const { client } = useMoodleConnection();
 	const siteConfig = useMoodleQuery(client ? () => client.getSiteConfig() : null, [client]);
+	const unreadMessages = useUnreadMessages();
 
 	// On mobile the sidebar is a sheet; close it once a link has navigated.
 	useEffect(() => setOpenMobile(false), [pathname, setOpenMobile]);
@@ -157,6 +160,9 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 											<item.icon />
 											<span>{item.label}</span>
 										</SidebarMenuButton>
+										{item.href === "/messages" && unreadMessages > 0 && (
+											<SidebarMenuBadge aria-label={`${unreadMessages} unread messages`}>{unreadMessages > 99 ? "99+" : unreadMessages}</SidebarMenuBadge>
+										)}
 									</SidebarMenuItem>
 								);
 							})}

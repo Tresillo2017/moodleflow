@@ -11,7 +11,6 @@ import {
 	normalizeParticipants,
 	normalizeUpdatedModules,
 	normalizeCourses,
-	normalizeForumDiscussions,
 	normalizeGrades,
 	normalizeSiteConfig,
 	normalizeSiteInfo,
@@ -197,18 +196,6 @@ describe("normalizeGrades percentage", () => {
 			usergrades: [{ courseid: 1, coursename: "X", gradeitems: [{ id: 1, itemname: "A", percentageformatted: "85.50 %" }] }],
 		});
 		expect(course.items[0].percentage).toBe(85.5);
-	});
-});
-
-describe("normalizeForumDiscussions", () => {
-	it("maps discussions and tolerates an empty response", () => {
-		const list = normalizeForumDiscussions({
-			discussions: [{ discussion: 9, subject: "Hi", userfullname: "Ana", timemodified: 1_700_000_000, numreplies: 3, pinned: true }],
-		});
-		expect(list).toEqual([
-			{ id: 9, subject: "Hi", author: "Ana", timeModified: new Date(1_700_000_000 * 1000).toISOString(), replies: 3, pinned: true },
-		]);
-		expect(normalizeForumDiscussions({})).toEqual([]);
 	});
 });
 

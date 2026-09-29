@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { NotificationPreferencesRows } from "@/components/settings/notification-preferences";
 import { cn } from "@/lib/utils";
 import {
 	ACCENTS,
@@ -30,6 +31,7 @@ const SECTIONS = [
 	{ id: "appearance", label: "Appearance" },
 	{ id: "layout", label: "Layout" },
 	{ id: "dashboard", label: "Dashboard" },
+	{ id: "notifications", label: "Notifications" },
 	{ id: "datetime", label: "Date & time" },
 	{ id: "account", label: "Account" },
 	{ id: "about", label: "About" },
@@ -437,6 +439,10 @@ export default function SettingsPage() {
 
 					<Section id="dashboard" title="Dashboard" description="Choose which sections appear on your dashboard.">
 						<DashboardToggles />
+					</Section>
+
+					<Section id="notifications" title="Notifications" description="Where Moodle sends each kind of notification.">
+						<NotificationPreferencesRows />
 					</Section>
 
 					<Section id="datetime" title="Date & time" description="How dates and times are shown.">

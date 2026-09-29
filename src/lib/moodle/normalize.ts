@@ -15,7 +15,6 @@ import type {
 	MoodleComment,
 	MoodleCourseGrades,
 	MoodleFile,
-	MoodleForumDiscussion,
 	MoodleNotification,
 	MoodleSiteConfig,
 	MoodleSiteInfo,
@@ -27,14 +26,14 @@ import type {
  * types. Keep raw Moodle field names contained to this file.
  */
 
-function asRecord(value: unknown): Record<string, unknown> {
+export function asRecord(value: unknown): Record<string, unknown> {
 	if (!value || typeof value !== "object") {
 		throw new MoodleError("malformed_response", "Expected a Moodle object response.");
 	}
 	return value as Record<string, unknown>;
 }
 
-function asArray(value: unknown): unknown[] {
+export function asArray(value: unknown): unknown[] {
 	if (!Array.isArray(value)) return [];
 	return value;
 }
@@ -121,6 +120,8 @@ const MODNAME_TO_TYPE: Record<string, ActivityType> = {
 	label: "label",
 	book: "book",
 	imscp: "imscp",
+	chat: "chat",
+	bigbluebuttonbn: "bigbluebuttonbn",
 };
 
 function normalizeFiles(contents: unknown): MoodleFile[] {
@@ -404,21 +405,6 @@ export function normalizeComments(raw: unknown): MoodleComment[] {
 	});
 }
 
-// mod_forum_get_forum_discussions
-export function normalizeForumDiscussions(raw: unknown): MoodleForumDiscussion[] {
-	return asArray(asRecord(raw).discussions).map((d) => {
-		const disc = asRecord(d);
-		return {
-			id: Number(disc.discussion ?? disc.id),
-			subject: String(disc.subject ?? disc.name ?? ""),
-			author: String(disc.userfullname ?? ""),
-			timeModified: new Date(Number(disc.timemodified ?? 0) * 1000).toISOString(),
-			replies: Number(disc.numreplies ?? 0),
-			pinned: Boolean(disc.pinned),
-		};
-	});
-}
-
 // message_popup_get_popup_notifications
 export function normalizeNotifications(raw: unknown): MoodleNotification[] {
 	const r = asRecord(raw);
@@ -432,6 +418,8 @@ export function normalizeNotifications(raw: unknown): MoodleNotification[] {
 			timeCreated: new Date(Number(notif.timecreated ?? 0) * 1000).toISOString(),
 			courseId: notif.courseid ? Number(notif.courseid) : undefined,
 			url: typeof notif.contexturl === "string" && notif.contexturl ? notif.contexturl : undefined,
+			component: typeof notif.component === "string" && notif.component ? notif.component : undefined,
+			eventType: typeof notif.eventtype === "string" && notif.eventtype ? notif.eventtype : undefined,
 		};
 	});
 }

@@ -28,8 +28,17 @@ import { RichContent } from "@/components/content/rich-content";
 import { ArrowLeft, CheckCircle2, ChevronDown, Circle, ExternalLink, FolderOpen, GraduationCap, Lock, MessageSquare, Pin, Star } from "lucide-react";
 import { courseHue, formatDistanceToNow } from "@/lib/format";
 import { toast } from "@/lib/toast";
+import { modulePath } from "@/lib/moodle/links";
 import { isHttpUrl } from "@/lib/utils";
 import type { MoodleActivity, MoodleAssignment, MoodleSection } from "@/types/moodle";
+
+/** Activity types that open a MoodleFlow page instead of Moodle. */
+const APP_MODULES: Partial<Record<MoodleActivity["type"], string>> = {
+	assignment: "assign",
+	forum: "forum",
+	chat: "chat",
+	bigbluebuttonbn: "bigbluebuttonbn",
+};
 
 function ActivityRow({ activity: a, assignment, updated }: { activity: MoodleActivity; assignment?: MoodleAssignment; updated?: boolean }) {
 	const { client, refresh } = useMoodleConnection();
@@ -42,6 +51,7 @@ function ActivityRow({ activity: a, assignment, updated }: { activity: MoodleAct
 	const [viewing, setViewing] = useState(false);
 	const [pending, setPending] = useState(false);
 	const external = a.type === "url" && isHttpUrl(a.externalUrl) ? a.externalUrl : undefined;
+	const appPath = a.instance === undefined ? undefined : APP_MODULES[a.type] && modulePath(APP_MODULES[a.type]!, a.instance, a.courseId);
 	const href = external ?? a.url;
 
 	if (a.locked) {
@@ -115,8 +125,8 @@ function ActivityRow({ activity: a, assignment, updated }: { activity: MoodleAct
 					<button type="button" className={`${hover} pl-3 text-left`} onClick={() => { setViewing(true); logView(); }}>
 						{content}
 					</button>
-				) : a.type === "assignment" && a.instance !== undefined ? (
-					<Link href={`/assignments/${a.instance}`} className={`${hover} pl-3`} onClick={logView}>
+				) : appPath ? (
+					<Link href={appPath} className={`${hover} pl-3`} onClick={logView}>
 						{content}
 					</Link>
 				) : isHttpUrl(href) ? (
@@ -215,17 +225,9 @@ function ForumBlock({ forum }: { forum: MoodleActivity }) {
 		<section className="overflow-hidden rounded-xl border bg-card">
 			<h2 className="flex items-center gap-2 px-4 py-3 text-xl">
 				<MessageSquare className="size-4 text-muted-foreground" aria-hidden="true" />
-				<span className="flex-1 truncate">{forum.name}</span>
-				{isHttpUrl(forum.url) && (
-					<a
-						href={forum.url}
-						target="_blank"
-						rel="noopener noreferrer"
-						className="text-xs font-normal text-muted-foreground hover:text-foreground"
-					>
-						Open in Moodle<span className="sr-only"> (opens in a new tab)</span>
-					</a>
-				)}
+				<Link href={`/forums/${forum.instance}?course=${forum.courseId}`} className="flex-1 truncate outline-none hover:underline focus-visible:underline">
+					{forum.name}
+				</Link>
 			</h2>
 			<div className="border-t">
 				{discussions.loading && <ListSkeleton rows={2} />}
@@ -235,12 +237,12 @@ function ForumBlock({ forum }: { forum: MoodleActivity }) {
 					{discussions.data?.map((d) => (
 						<li key={d.id} className="flex items-center gap-3 px-4 py-3 text-sm">
 							{d.pinned && <Pin className="size-3.5 shrink-0 text-muted-foreground" aria-label="Pinned" />}
-							<div className="min-w-0 flex-1">
+							<Link href={`/discussions/${d.id}`} className="min-w-0 flex-1 outline-none focus-visible:underline">
 								<p className="truncate font-medium">{d.subject}</p>
 								<p className="truncate text-xs text-muted-foreground">
 									{d.author} · {formatDistanceToNow(d.timeModified)}
 								</p>
-							</div>
+							</Link>
 							<span className="text-xs text-muted-foreground tabular-nums">
 								{d.replies} {d.replies === 1 ? "reply" : "replies"}
 							</span>

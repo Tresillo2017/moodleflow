@@ -59,6 +59,7 @@ function withCache(client: MoodleClient, persist: boolean): MoodleClient {
 	}
 
 	return {
+		...client, // messaging, chat, meetings and other live reads pass straight through
 		async getSiteInfo() {
 			const info = await siteInfo();
 			// A real site always lists some functions; an empty list (demo mode) means "unknown, assume supported".
@@ -94,9 +95,19 @@ function withCache(client: MoodleClient, persist: boolean): MoodleClient {
 		getAssignments: cached("assignments", TTL.assignments, (courseIds?: number[]) => client.getAssignments(courseIds)),
 		getAssignment: cached("assignment", TTL.assignments, (id: number) => client.getAssignment(id)),
 		getGrades: cached("grades", TTL.grades, (courseId?: number) => client.getGrades(courseId)),
-		getForumDiscussions: cached("forum", TTL.forum, (forumId: number) => client.getForumDiscussions(forumId)),
+		getForums: cached("forums", TTL.forum, (courseId: number) => client.getForums(courseId)),
+		getForumDiscussions: cached("forum", TTL.forum, (forumId: number, page?: number) => client.getForumDiscussions(forumId, page)),
+		async addForumDiscussion(forumId, input) {
+			const id = await client.addForumDiscussion(forumId, input);
+			invalidate("forum");
+			return id;
+		},
+		async setDiscussionState(discussionId, forumId, toggle, value) {
+			await client.setDiscussionState(discussionId, forumId, toggle, value);
+			invalidate("forum");
+		},
 		fileUrl: (url, opts) => client.fileUrl(url, opts),
-		getNotifications: cached("notifications", TTL.notifications, () => client.getNotifications()),
+		getNotifications: cached("notifications", TTL.notifications, (opts?: { limit?: number; offset?: number }) => client.getNotifications(opts)),
 		async markNotificationRead(id) {
 			await client.markNotificationRead(id);
 			notificationsChanged();

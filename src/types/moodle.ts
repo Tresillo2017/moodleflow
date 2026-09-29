@@ -54,6 +54,8 @@ export type ActivityType =
 	| "label"
 	| "book"
 	| "imscp"
+	| "chat"
+	| "bigbluebuttonbn"
 	| "unknown";
 
 export interface MoodleFile {
@@ -180,13 +182,184 @@ export interface MoodleComment {
 	time: string;
 }
 
+export interface MoodleForum {
+	id: number;
+	/** Course-module id. */
+	cmid: number;
+	courseId: number;
+	name: string;
+	/** Moodle forum type: general, news, qanda, single, eachuser, blog. */
+	type: string;
+	intro?: string;
+	canCreateDiscussions: boolean;
+	/** Moodle's rating aggregate type (0 = ratings off). */
+	assessed: number;
+	maxAttachments: number;
+	maxBytes?: number;
+	unread?: number;
+}
+
 export interface MoodleForumDiscussion {
 	id: number;
 	subject: string;
 	author: string;
+	authorImageUrl?: string;
 	timeModified: string;
 	replies: number;
+	unread: number;
 	pinned: boolean;
+	locked: boolean;
+	starred: boolean;
+	subscribed: boolean;
+	canReply: boolean;
+	canPin: boolean;
+	canLock: boolean;
+	canFavourite: boolean;
+}
+
+export interface ForumRating {
+	scaleId: number;
+	/** Selectable values, e.g. 1..5 or a custom scale. */
+	options: { value: number; label: string }[];
+	canRate: boolean;
+	/** Current user's rating. */
+	mine?: number;
+	aggregate?: string;
+	count: number;
+}
+
+export interface ForumPost {
+	id: number;
+	discussionId: number;
+	/** 0 for the opening post. */
+	parentId: number;
+	subject: string;
+	/** Moodle HTML */
+	message: string;
+	authorId: number;
+	author: string;
+	authorImageUrl?: string;
+	timeCreated: string;
+	unread: boolean;
+	deleted: boolean;
+	privateReply: boolean;
+	attachments: MoodleFile[];
+	canReply: boolean;
+	canEdit: boolean;
+	canDelete: boolean;
+	rating?: ForumRating;
+}
+
+export interface ForumThread {
+	discussionId: number;
+	forumId: number;
+	courseId: number;
+	posts: ForumPost[];
+}
+
+export interface ForumPostInput {
+	subject: string;
+	message: string;
+	files?: File[];
+}
+
+export interface MoodleContact {
+	id: number;
+	fullName: string;
+	imageUrl?: string;
+	isOnline?: boolean;
+	isBlocked?: boolean;
+	isContact?: boolean;
+}
+
+export interface ConversationMessage {
+	id: number;
+	fromUserId: number;
+	/** Plain text (Moodle strips markup from messages). */
+	text: string;
+	time: string;
+}
+
+export interface MoodleConversation {
+	id: number;
+	name: string;
+	imageUrl?: string;
+	/** 1 = private, 2 = group, 3 = self. */
+	type: 1 | 2 | 3;
+	memberCount: number;
+	muted: boolean;
+	favourite: boolean;
+	unread: number;
+	members: MoodleContact[];
+	lastMessage?: ConversationMessage;
+	canDeleteForAll: boolean;
+}
+
+export interface ConversationThread {
+	id: number;
+	members: MoodleContact[];
+	messages: ConversationMessage[];
+}
+
+export interface PeopleSearchResult {
+	contacts: MoodleContact[];
+	others: MoodleContact[];
+}
+
+export interface NotificationPreferenceRow {
+	/** Moodle's preference key prefix, e.g. message_provider_moodle_instantmessage. */
+	key: string;
+	label: string;
+	component: string;
+	channels: { name: string; label: string; enabled: boolean; locked: boolean }[];
+}
+
+export interface NotificationPreferences {
+	rows: NotificationPreferenceRow[];
+	/** Pre-4.0 sites store separate logged-in/logged-off lists. */
+	legacy: boolean;
+}
+
+export interface ChatMessage {
+	id: number;
+	userId: number;
+	system: boolean;
+	text: string;
+	time: string;
+}
+
+export interface ChatSession {
+	start: number;
+	end: number;
+	complete: boolean;
+	users: { userId: number; messageCount: number }[];
+}
+
+export interface ChatPoll {
+	messages: ChatMessage[];
+	lastTime: number;
+}
+
+export interface ChatRoom {
+	/** Session token used for polling and sending. */
+	sid: string;
+}
+
+export interface MeetingInfo {
+	running: boolean;
+	participantCount: number;
+	canJoin: boolean;
+	/** Why joining isn't possible right now. */
+	message?: string;
+	openingTime?: string;
+	closingTime?: string;
+}
+
+export interface MeetingRecording {
+	id: string;
+	name: string;
+	date?: string;
+	playbacks: { type: string; url: string }[];
 }
 
 export interface MoodleCalendarEvent {
@@ -228,6 +401,9 @@ export interface MoodleNotification {
 	timeCreated: string;
 	courseId?: number;
 	url?: string;
+	/** Moodle component that sent it, e.g. mod_forum. */
+	component?: string;
+	eventType?: string;
 }
 
 export type MoodleErrorCode =

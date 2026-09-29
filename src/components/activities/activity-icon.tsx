@@ -11,6 +11,8 @@ import {
 	File,
 	BookOpen,
 	Package,
+	MessagesSquare,
+	Video,
 } from "lucide-react";
 import type { ActivityType } from "@/types/moodle";
 
@@ -27,6 +29,8 @@ const ICONS: Record<ActivityType, React.ComponentType<{ className?: string }>> =
 	label: AlignLeft,
 	book: BookOpen,
 	imscp: Package,
+	chat: MessagesSquare,
+	bigbluebuttonbn: Video,
 	unknown: File,
 };
 

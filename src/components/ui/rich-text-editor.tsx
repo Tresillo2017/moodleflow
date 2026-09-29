@@ -19,10 +19,12 @@ interface RichTextEditorProps {
 	placeholder?: string;
 	minRows?: number;
 	onSubmitShortcut?: () => void;
+	/** Accessible name of the text area. */
+	label?: string;
 }
 
 // ponytail: contentEditable + execCommand (deprecated but universal); swap for Tiptap if tables/images are needed.
-export function RichTextEditor({ initialHtml, onChange, placeholder, minRows = 6, onSubmitShortcut }: RichTextEditorProps) {
+export function RichTextEditor({ initialHtml, onChange, placeholder, minRows = 6, onSubmitShortcut, label = "Submission text" }: RichTextEditorProps) {
 	const ref = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
@@ -63,7 +65,7 @@ export function RichTextEditor({ initialHtml, onChange, placeholder, minRows = 6
 				contentEditable
 				role="textbox"
 				aria-multiline="true"
-				aria-label="Submission text"
+				aria-label={label}
 				data-placeholder={placeholder}
 				onInput={(e) => onChange(sanitizeMoodleHtml(e.currentTarget.innerHTML))}
 				onKeyDown={(e) => {

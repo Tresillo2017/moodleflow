@@ -11,6 +11,7 @@ import {
 	type MoodleParams,
 } from "./call";
 import { viewCall, type ViewTarget } from "./views";
+import { createSocialApi, type SocialApi } from "./client-social";
 import type {
 	CourseBlock,
 	CourseCompletion,
@@ -43,14 +44,13 @@ import {
 	normalizeParticipants,
 	normalizeTimelineImages,
 	normalizeUpdatedModules,
-	normalizeForumDiscussions,
 	normalizeGrades,
 	normalizeNotifications,
 	normalizeSiteConfig,
 	normalizeSiteInfo,
 } from "./normalize";
 
-export interface MoodleClient {
+export interface MoodleClient extends SocialApi {
 	getSiteInfo(): Promise<MoodleSiteInfo>;
 	/** Site name, logo, upload limit and registration/policy flags; falls back to site info when the site lacks tool_mobile. */
 	getSiteConfig(): Promise<MoodleSiteConfig>;
@@ -94,10 +94,10 @@ export interface MoodleClient {
 	getSubmissionComments(assignment: MoodleAssignment): Promise<MoodleComment[]>;
 	addSubmissionComment(assignment: MoodleAssignment, content: string): Promise<void>;
 	getGrades(courseId?: number): Promise<MoodleCourseGrades[]>;
-	getForumDiscussions(forumId: number): Promise<MoodleForumDiscussion[]>;
 	/** Adds the auth token to a Moodle file URL so the browser can download it. */
 	fileUrl(url: string, opts?: { download?: boolean }): string;
-	getNotifications(): Promise<MoodleNotification[]>;
+	/** Newest first; with a limit, pages through `offset`. */
+	getNotifications(opts?: { limit?: number; offset?: number }): Promise<MoodleNotification[]>;
 	markNotificationRead(notificationId: number): Promise<void>;
 	markAllNotificationsRead(): Promise<void>;
 }
@@ -204,7 +204,19 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 		area: "submission_comments",
 	});
 
+	const social = createSocialApi({
+		connection,
+		userId: () => fetchSiteInfo().then((info) => info.userId),
+		uploadFiles: (files) => uploadFiles(files),
+	});
+
+	async function uploadFiles(files: File[], opts?: { maxBytes?: number; onProgress?: (fraction: number) => void }) {
+		const info = await fetchSiteInfo();
+		return uploadDraftFiles(connection, files, { maxBytes: opts?.maxBytes ?? info.maxUploadBytes, onProgress: opts?.onProgress });
+	}
+
 	return {
+		...social,
 		getSiteInfo: fetchSiteInfo,
 
 		supports: (wsfunction) => siteFunctions?.has(wsfunction) ?? true,
@@ -224,10 +236,7 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 
 		logCourseView: (courseId) => quietView(`course:${courseId}`, "core_course_view_course", { courseid: courseId }),
 
-		async uploadFiles(files, opts) {
-			const info = await fetchSiteInfo();
-			return uploadDraftFiles(connection, files, { maxBytes: opts?.maxBytes ?? info.maxUploadBytes, onProgress: opts?.onProgress });
-		},
+		uploadFiles,
 
 		async getCurrentUser() {
 			const info = await this.getSiteInfo();
@@ -434,13 +443,6 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 			return results.flatMap((r) => ("grades" in r ? r.grades : []));
 		},
 
-		async getForumDiscussions(forumId: number) {
-			const raw = await callMoodle(connection, "mod_forum_get_forum_discussions", {
-				forumid: forumId,
-			});
-			return normalizeForumDiscussions(raw);
-		},
-
 		fileUrl(url: string, opts?: { download?: boolean }) {
 			const file = new URL(url, connection.siteUrl);
 			// never send the token to a host other than the Moodle site
@@ -454,10 +456,11 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 			return target.toString();
 		},
 
-		async getNotifications() {
+		async getNotifications(opts) {
 			const info = await this.getSiteInfo();
 			const raw = await callMoodle(connection, "message_popup_get_popup_notifications", {
 				useridto: info.userId,
+				...(opts?.limit ? { limit: opts.limit, offset: opts.offset ?? 0 } : {}),
 			});
 			return normalizeNotifications(raw);
 		},
