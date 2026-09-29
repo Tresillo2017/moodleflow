@@ -6,6 +6,7 @@ import type {
 	MoodleCourse,
 	MoodleCourseContent,
 	MoodleCourseGrades,
+	MoodleNotification,
 	MoodleSiteInfo,
 } from "@/types/moodle";
 
@@ -154,6 +155,23 @@ export function normalizeAssignments(raw: unknown): MoodleAssignment[] {
 	return assignments;
 }
 
+// message_popup_get_popup_notifications
+export function normalizeNotifications(raw: unknown): MoodleNotification[] {
+	const r = asRecord(raw);
+	return asArray(r.notifications).map((n) => {
+		const notif = asRecord(n);
+		return {
+			id: Number(notif.id),
+			subject: String(notif.subject ?? ""),
+			body: notif.fullmessagehtml ? String(notif.fullmessagehtml) : undefined,
+			read: Boolean(notif.read),
+			timeCreated: new Date(Number(notif.timecreated ?? 0) * 1000).toISOString(),
+			courseId: notif.courseid ? Number(notif.courseid) : undefined,
+			url: typeof notif.contexturl === "string" && notif.contexturl ? notif.contexturl : undefined,
+		};
+	});
+}
+
 // gradereport_user_get_grade_items
 export function normalizeGrades(raw: unknown): MoodleCourseGrades[] {
 	const r = asRecord(raw);
@@ -170,6 +188,10 @@ export function normalizeGrades(raw: unknown): MoodleCourseGrades[] {
 					item.gradepercentage !== undefined ? Number(item.gradepercentage) : undefined,
 				letterGrade: item.gradeletter ? String(item.gradeletter) : undefined,
 				feedback: item.feedback ? String(item.feedback) : undefined,
+				gradedDate:
+					typeof item.dategraded === "number" && item.dategraded > 0
+						? new Date(item.dategraded * 1000).toISOString()
+						: undefined,
 			};
 		});
 		return {

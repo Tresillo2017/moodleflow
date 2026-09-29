@@ -5,6 +5,7 @@ import type {
 	MoodleCourse,
 	MoodleCourseContent,
 	MoodleCourseGrades,
+	MoodleNotification,
 	MoodleSiteInfo,
 	MoodleUser,
 } from "@/types/moodle";
@@ -14,6 +15,7 @@ import {
 	normalizeCourseContent,
 	normalizeCourses,
 	normalizeGrades,
+	normalizeNotifications,
 	normalizeSiteInfo,
 } from "./normalize";
 
@@ -25,6 +27,10 @@ export interface MoodleClient {
 	getCalendarEvents(): Promise<MoodleCalendarEvent[]>;
 	getAssignments(): Promise<MoodleAssignment[]>;
 	getGrades(courseId?: number): Promise<MoodleCourseGrades[]>;
+	getNotifications(): Promise<MoodleNotification[]>;
+	markNotificationRead(notificationId: number): Promise<void>;
+	markAllNotificationsRead(): Promise<void>;
+	submitAssignmentText(assignmentId: number, text: string): Promise<void>;
 }
 
 export interface MoodleConnection {
@@ -38,22 +44,49 @@ export interface MoodleConnection {
  * origin (Site administration > Server > HTTP > "Allowed CORS origins"),
  * since there is no server-side proxy in this architecture.
  */
+type MoodleParamValue = string | number | boolean | MoodleParams;
+type MoodleParams = { [key: string]: MoodleParamValue };
+
+/** Flattens nested params into Moodle's REST bracket notation, e.g. {a: {b: 1}} -> "a[b]=1". */
+function flattenParams(params: MoodleParams, prefix = ""): [string, string][] {
+	const entries: [string, string][] = [];
+	for (const [key, value] of Object.entries(params)) {
+		const name = prefix ? `${prefix}[${key}]` : key;
+		if (value && typeof value === "object") {
+			entries.push(...flattenParams(value, name));
+		} else {
+			entries.push([name, String(value)]);
+		}
+	}
+	return entries;
+}
+
 async function callMoodle<T>(
 	connection: MoodleConnection,
 	wsfunction: string,
-	params: Record<string, string | number> = {},
+	params: MoodleParams = {},
+	method: "GET" | "POST" = "GET",
 ): Promise<T> {
 	const url = new URL("/webservice/rest/server.php", connection.siteUrl);
 	url.searchParams.set("wstoken", connection.token);
 	url.searchParams.set("wsfunction", wsfunction);
 	url.searchParams.set("moodlewsrestformat", "json");
-	for (const [key, value] of Object.entries(params)) {
-		url.searchParams.set(key, String(value));
-	}
 
 	let response: Response;
 	try {
-		response = await fetch(url.toString(), { method: "GET" });
+		if (method === "GET") {
+			for (const [key, value] of flattenParams(params)) {
+				url.searchParams.set(key, value);
+			}
+			response = await fetch(url.toString(), { method: "GET" });
+		} else {
+			const body = new URLSearchParams(flattenParams(params));
+			response = await fetch(url.toString(), {
+				method: "POST",
+				headers: { "Content-Type": "application/x-www-form-urlencoded" },
+				body,
+			});
+		}
 	} catch {
 		throw new MoodleError(
 			"network_error",
@@ -93,10 +126,18 @@ async function callMoodle<T>(
 }
 
 export function createMoodleClient(connection: MoodleConnection): MoodleClient {
+	// Most calls need the user id first; fetch site info once per client instead of per call.
+	let siteInfo: Promise<MoodleSiteInfo> | null = null;
+
 	return {
-		async getSiteInfo() {
-			const raw = await callMoodle(connection, "core_webservice_get_site_info");
-			return normalizeSiteInfo(raw);
+		getSiteInfo() {
+			siteInfo ??= callMoodle(connection, "core_webservice_get_site_info")
+				.then(normalizeSiteInfo)
+				.catch((error: unknown) => {
+					siteInfo = null;
+					throw error;
+				});
+			return siteInfo;
 		},
 
 		async getCurrentUser() {
@@ -141,6 +182,45 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 				...(courseId ? { courseid: courseId } : {}),
 			});
 			return normalizeGrades(raw);
+		},
+
+		async getNotifications() {
+			const info = await this.getSiteInfo();
+			const raw = await callMoodle(connection, "message_popup_get_popup_notifications", {
+				useridto: info.userId,
+			});
+			return normalizeNotifications(raw);
+		},
+
+		async markNotificationRead(notificationId: number) {
+			await callMoodle(
+				connection,
+				"core_message_mark_notification_read",
+				{ notificationid: notificationId },
+				"POST",
+			);
+		},
+
+		async markAllNotificationsRead() {
+			const info = await this.getSiteInfo();
+			await callMoodle(
+				connection,
+				"core_message_mark_all_notifications_as_read",
+				{ useridto: info.userId },
+				"POST",
+			);
+		},
+
+		async submitAssignmentText(assignmentId: number, text: string) {
+			await callMoodle(
+				connection,
+				"mod_assign_save_submission",
+				{
+					assignmentid: assignmentId,
+					plugindata: { onlinetext_editor: { text, format: 1, itemid: 0 } },
+				},
+				"POST",
+			);
 		},
 	};
 }

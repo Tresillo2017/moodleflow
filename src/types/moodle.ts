@@ -109,6 +109,7 @@ export interface MoodleGradeItem {
 	percentage?: number;
 	letterGrade?: string;
 	feedback?: string;
+	gradedDate?: string;
 }
 
 export interface MoodleCourseGrades {

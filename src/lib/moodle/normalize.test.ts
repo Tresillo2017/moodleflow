@@ -103,7 +103,9 @@ describe("normalizeGrades", () => {
 				{
 					courseid: 3,
 					coursename: "History",
-					gradeitems: [{ id: 30, itemname: "Essay", graderaw: 88, grademax: 100, gradeletter: "B+" }],
+					gradeitems: [
+						{ id: 30, itemname: "Essay", graderaw: 88, grademax: 100, gradeletter: "B+", dategraded: 1_700_000_000 },
+					],
 				},
 			],
 		});
@@ -111,7 +113,15 @@ describe("normalizeGrades", () => {
 			expect.objectContaining({
 				courseId: 3,
 				courseName: "History",
-				items: [expect.objectContaining({ itemName: "Essay", grade: 88, maxGrade: 100, letterGrade: "B+" })],
+				items: [
+					expect.objectContaining({
+						itemName: "Essay",
+						grade: 88,
+						maxGrade: 100,
+						letterGrade: "B+",
+						gradedDate: new Date(1_700_000_000 * 1000).toISOString(),
+					}),
+				],
 			}),
 		]);
 	});

@@ -5,6 +5,7 @@ import type {
 	MoodleCourse,
 	MoodleCourseContent,
 	MoodleCourseGrades,
+	MoodleNotification,
 	MoodleSiteInfo,
 	MoodleUser,
 } from "@/types/moodle";
@@ -70,6 +71,41 @@ const grades: MoodleCourseGrades[] = courses.map((c) => ({
 	courseMaxTotal: 100,
 }));
 
+/** A year of graded-item history, biased toward weekdays and term time, so demo mode's activity heatmap looks lived-in. */
+function seededActivityGrades(): MoodleCourseGrades[] {
+	let seed = 42;
+	const rand = () => {
+		seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+		return seed / 0x7fffffff;
+	};
+
+	return courses.map((c) => {
+		const items = Array.from({ length: 45 }, (_, i) => {
+			const daysAgo = Math.floor(rand() * 364);
+			const date = new Date(now - daysAgo * 86_400_000);
+			const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+			// term breaks: skip most of a ~3-week window around 100 and 250 days ago
+			const inBreak = (daysAgo > 95 && daysAgo < 116) || (daysAgo > 245 && daysAgo < 266);
+			if ((isWeekend && rand() > 0.3) || (inBreak && rand() > 0.15)) return null;
+			return {
+				id: c.id * 1000 + i,
+				itemName: `Activity ${i + 1}`,
+				grade: Math.round(60 + rand() * 40),
+				maxGrade: 100,
+				gradedDate: date.toISOString(),
+			};
+		}).filter((item): item is NonNullable<typeof item> => item !== null);
+
+		return { courseId: c.id, courseName: c.fullName, items, courseTotal: 81.5, courseMaxTotal: 100 };
+	});
+}
+
+const activityGrades = seededActivityGrades();
+const gradesWithHistory: MoodleCourseGrades[] = grades.map((course) => ({
+	...course,
+	items: [...course.items, ...(activityGrades.find((g) => g.courseId === course.courseId)?.items ?? [])],
+}));
+
 const siteInfo: MoodleSiteInfo = {
 	siteName: "Demo University",
 	siteUrl: "https://demo.moodleflow.dev",
@@ -85,6 +121,12 @@ const user: MoodleUser = {
 	username: "demo.student",
 	fullName: "Tomas",
 };
+
+const notifications: MoodleNotification[] = [
+	{ id: 1, subject: "Problem Set 4 has been posted", read: false, timeCreated: days(-0.5), courseId: 1 },
+	{ id: 2, subject: "New grade: Problem Set 3", body: "You scored 87/100.", read: false, timeCreated: days(-2) },
+	{ id: 3, subject: "Physics Lecture starting soon", read: true, timeCreated: days(-3), courseId: 2 },
+];
 
 function delay<T>(value: T, ms = 250): Promise<T> {
 	return new Promise((resolve) => setTimeout(() => resolve(value), ms));
@@ -102,6 +144,17 @@ export function createMockMoodleClient(): MoodleClient {
 		getCalendarEvents: () => delay(calendarEvents),
 		getAssignments: () => delay(assignments),
 		getGrades: (courseId) =>
-			delay(courseId ? grades.filter((g) => g.courseId === courseId) : grades),
+			delay(courseId ? gradesWithHistory.filter((g) => g.courseId === courseId) : gradesWithHistory),
+		getNotifications: () => delay(notifications),
+		markNotificationRead: (notificationId) => {
+			const n = notifications.find((n) => n.id === notificationId);
+			if (n) n.read = true;
+			return delay(undefined);
+		},
+		markAllNotificationsRead: () => {
+			for (const n of notifications) n.read = true;
+			return delay(undefined);
+		},
+		submitAssignmentText: () => delay(undefined),
 	};
 }
