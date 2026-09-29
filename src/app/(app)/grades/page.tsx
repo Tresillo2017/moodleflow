@@ -15,7 +15,7 @@ import { XAxis } from "@/components/dither-kit/x-axis";
 import { YAxis } from "@/components/dither-kit/y-axis";
 import { buildGradeTrend } from "@/lib/moodle/grade-trend";
 import { isCurrentCourse } from "@/lib/moodle/course-filter";
-import { ACCENTS } from "@/lib/preferences";
+import { chartOf } from "@/lib/preferences";
 
 export default function GradesPage() {
 	const { client, refresh } = useMoodleConnection();
@@ -51,11 +51,11 @@ export default function GradesPage() {
 			{trend.length > 1 && (
 				<section className="flex flex-col gap-3 rounded-xl border bg-card p-4">
 					<div className="flex items-baseline justify-between">
-						<h2 className="text-sm font-medium">Weekly average</h2>
+						<h2 className="text-xl">Weekly average</h2>
 						<span className="text-xs text-muted-foreground">Last {trend.length} weeks with grades</span>
 					</div>
 					<div className="h-48">
-						<AreaChart data={trend} config={{ average: { label: "Weekly average", color: ACCENTS[prefs.accent].chart } }}>
+						<AreaChart data={trend} config={{ average: { label: "Weekly average", color: chartOf(prefs) } }}>
 							<Grid />
 							<XAxis
 								dataKey="week"
@@ -73,7 +73,7 @@ export default function GradesPage() {
 					{currentGrades.map((course, i) => (
 						<div
 							key={course.courseId}
-							className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 fill-mode-backwards duration-300 ease-out"
+							className="animate-track-in"
 							style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
 						>
 							<CourseGrades course={course} />

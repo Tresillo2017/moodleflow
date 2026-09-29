@@ -13,6 +13,8 @@ import {
 interface PreferencesContextValue {
 	prefs: Preferences;
 	setPref: <K extends keyof Preferences>(key: K, value: Preferences[K]) => void;
+	/** Changes several preferences in one commit. */
+	setPrefs: (patch: Partial<Preferences>) => void;
 	reset: () => void;
 }
 
@@ -33,6 +35,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
 	const value: PreferencesContextValue = {
 		prefs,
 		setPref: (key, value) => commit({ ...prefs, [key]: value }),
+		setPrefs: (patch) => commit({ ...prefs, ...patch }),
 		reset: () => commit(DEFAULT_PREFERENCES),
 	};
 

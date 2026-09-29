@@ -8,7 +8,6 @@ import { Logo } from "@/components/layout/logo";
 import { NavUser } from "@/components/nav-user";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
-import { useUnreadCount } from "@/hooks/use-unread-count";
 import { Pin, PinOff, ChevronRight } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { CourseContextMenu } from "@/components/courses/course-context-menu";
@@ -26,7 +25,6 @@ import {
 	SidebarHeader,
 	SidebarMenu,
 	SidebarMenuAction,
-	SidebarMenuBadge,
 	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarRail,
@@ -118,7 +116,6 @@ function CoursesNav({ pathname }: { pathname: string }) {
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 	const pathname = usePathname();
-	const unread = useUnreadCount();
 	const { setOpenMobile } = useSidebar();
 
 	// On mobile the sidebar is a sheet; close it once a link has navigated.
@@ -148,20 +145,16 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 						<SidebarMenu>
 							{NAV_ITEMS.map((item) => {
 								const active = pathname.startsWith(item.href);
-								const badge = item.href === "/notifications" && unread > 0 ? unread : null;
 								return (
 									<SidebarMenuItem key={item.href}>
 										<SidebarMenuButton
-											tooltip={badge ? `${item.label} (${badge})` : item.label}
+											tooltip={item.label}
 											isActive={active}
 											render={<Link href={item.href} aria-current={active ? "page" : undefined} />}
 										>
 											<item.icon />
 											<span>{item.label}</span>
 										</SidebarMenuButton>
-										{badge && (
-											<SidebarMenuBadge className="bg-primary/15 text-primary tabular-nums">{badge}</SidebarMenuBadge>
-										)}
 									</SidebarMenuItem>
 								);
 							})}

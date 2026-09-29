@@ -99,7 +99,7 @@ function MonthView({ events, hour12, weekStartsMonday }: { events: MoodleCalenda
 		<div className="flex flex-col gap-6">
 			<div className="flex flex-col gap-3 rounded-xl border bg-card p-3 sm:p-4">
 				<div className="flex items-center justify-between gap-2">
-					<h2 className="text-sm font-semibold" aria-live="polite">
+					<h2 className="text-xl" aria-live="polite">
 						{cursor.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
 					</h2>
 					<div className="flex items-center gap-1">
@@ -184,7 +184,7 @@ function MonthView({ events, hour12, weekStartsMonday }: { events: MoodleCalenda
 			</div>
 
 			<section className="flex flex-col gap-2">
-				<h2 className="text-sm font-medium text-muted-foreground">
+				<h2 className="text-xl text-muted-foreground">
 					{selectedDate ? formatDayLabel(selectedDate.toISOString()) : "Selected day"}
 				</h2>
 				{selectedEvents.length > 0 ? (
@@ -233,10 +233,10 @@ export default function CalendarPage() {
 						{grouped.map((dayEvents, i) => (
 							<section
 								key={dayEvents[0].id}
-								className="flex flex-col gap-2 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 fill-mode-backwards duration-300 ease-out"
+								className="flex flex-col gap-2 animate-track-in"
 								style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
 							>
-								<h2 className="text-sm font-medium text-muted-foreground">{formatDayLabel(dayEvents[0].startDate)}</h2>
+								<h2 className="text-xl text-muted-foreground">{formatDayLabel(dayEvents[0].startDate)}</h2>
 								<EventList events={dayEvents} hour12={hour12} />
 							</section>
 						))}

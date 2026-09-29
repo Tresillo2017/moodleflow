@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { DitherGradient } from "@/components/dither-kit/gradient";
 import { usePreferences } from "@/components/providers/preferences-provider";
 import { isCurrentCourse } from "@/lib/moodle/course-filter";
-import { ACCENTS } from "@/lib/preferences";
+import { ditherHueOf } from "@/lib/preferences";
 import { isHttpUrl } from "@/lib/utils";
 import { ExternalLink, Settings } from "lucide-react";
 
@@ -44,14 +44,14 @@ export default function ProfilePage() {
 		<div className="mx-auto flex max-w-xl flex-col gap-6">
 			<div className="overflow-hidden rounded-xl border bg-card">
 				<div className="relative h-24">
-					<DitherGradient from={ACCENTS[prefs.accent].ditherHue} direction="down" opacity={0.6} />
+					<DitherGradient from={ditherHueOf(prefs)} direction="down" opacity={0.6} />
 				</div>
 				<div className="-mt-10 flex flex-col items-center gap-3 px-6 pb-6 text-center">
 					<Avatar className="size-20 ring-4 ring-card">
 						<AvatarFallback className="bg-primary text-xl font-semibold text-primary-foreground">{initials}</AvatarFallback>
 					</Avatar>
 					<div>
-						<h1 className="text-xl font-semibold tracking-tight">{name}</h1>
+						<h1 className="text-3xl">{name}</h1>
 						<p className="text-sm text-muted-foreground">
 							{site.data?.username ? `@${site.data.username} · ` : ""}
 							{connection?.siteName ?? site.data?.siteName}

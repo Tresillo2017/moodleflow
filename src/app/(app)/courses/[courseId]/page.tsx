@@ -116,7 +116,7 @@ function ForumBlock({ forum }: { forum: MoodleActivity }) {
 
 	return (
 		<section className="overflow-hidden rounded-xl border bg-card">
-			<h2 className="flex items-center gap-2 px-4 py-3 text-sm font-medium">
+			<h2 className="flex items-center gap-2 px-4 py-3 text-xl">
 				<MessageSquare className="size-4 text-muted-foreground" aria-hidden="true" />
 				<span className="flex-1 truncate">{forum.name}</span>
 				{isHttpUrl(forum.url) && (
@@ -229,7 +229,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ courseI
 						{sections.map((section, i) => (
 							<div
 								key={section.id}
-								className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 fill-mode-backwards duration-300 ease-out"
+								className="animate-track-in"
 								style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
 							>
 								<SectionBlock section={section} assignments={assignmentsById} />

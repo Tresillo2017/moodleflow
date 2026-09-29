@@ -26,7 +26,7 @@ const dateTime = (iso: string) =>
 function Section({ title, children }: { title?: string; children: React.ReactNode }) {
 	return (
 		<section className="flex flex-col gap-3 rounded-xl border bg-card p-4">
-			{title && <h2 className="text-sm font-medium">{title}</h2>}
+			{title && <h2 className="text-xl">{title}</h2>}
 			{children}
 		</section>
 	);
@@ -219,7 +219,7 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ ass
 
 					<Actions assignment={a} onChanged={refresh} />
 
-					<h2 className="text-lg font-semibold tracking-tight">Submission status</h2>
+					<h2 className="text-2xl">Submission status</h2>
 					<dl className="overflow-hidden rounded-xl border bg-card">
 						<StatusRow label="Submission status" tone={submissionLabel(a).tone}>
 							{submissionLabel(a).text}

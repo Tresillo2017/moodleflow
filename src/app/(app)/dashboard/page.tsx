@@ -26,7 +26,7 @@ import {
 import { buildGradeTrend } from "@/lib/moodle/grade-trend";
 import { isCurrentCourse } from "@/lib/moodle/course-filter";
 import { courseHue, formatDayLabel, formatEventTime } from "@/lib/format";
-import { ACCENTS, DASHBOARD_SECTIONS, hour12Of, type DashboardSection } from "@/lib/preferences";
+import { ditherHueOf, DASHBOARD_SECTIONS, hour12Of, type DashboardSection } from "@/lib/preferences";
 import {
 	AlertTriangle,
 	BookOpen,
@@ -57,7 +57,7 @@ function isOpen(a: MoodleAssignment) {
 function Reveal({ index, children, className }: { index: number; children: React.ReactNode; className?: string }) {
 	return (
 		<div
-			className={`motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 fill-mode-backwards duration-500 ease-out ${className ?? ""}`}
+			className={`animate-track-in ${className ?? ""}`}
 			style={{ animationDelay: `${index * 60}ms` }}
 		>
 			{children}
@@ -68,7 +68,7 @@ function Reveal({ index, children, className }: { index: number; children: React
 function SectionHeading({ title, href, linkLabel = "View all" }: { title: string; href?: string; linkLabel?: string }) {
 	return (
 		<div className="flex items-center justify-between">
-			<h2 className="text-sm font-medium text-muted-foreground">{title}</h2>
+			<h2 className="text-xl text-muted-foreground">{title}</h2>
 			{href && (
 				<Link href={href} className="group flex items-center gap-0.5 text-xs text-primary hover:underline">
 					{linkLabel}
@@ -190,7 +190,7 @@ export default function DashboardPage() {
 			<Reveal index={0}>
 				<div className="relative overflow-hidden rounded-xl border px-6 py-7">
 					<DitherGradient
-						from={ACCENTS[prefs.accent].ditherHue}
+						from={ditherHueOf(prefs)}
 						direction="up"
 						opacity={0.5}
 						className="[mask-image:linear-gradient(to_top,black,transparent)]"
@@ -200,7 +200,7 @@ export default function DashboardPage() {
 							<p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
 								{new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
 							</p>
-							<h1 className="text-2xl font-semibold tracking-tight text-balance">
+							<h1 className="text-4xl text-balance">
 								{greeting()}, {firstName}
 							</h1>
 							<p className="text-sm text-muted-foreground">{summary}</p>

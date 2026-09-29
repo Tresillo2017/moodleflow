@@ -16,6 +16,7 @@ import {
 	ACCENTS,
 	CHOICES,
 	DASHBOARD_SECTIONS,
+	hueOf,
 	type Accent,
 	type ChoiceKey,
 	type DashboardSection,
@@ -34,12 +35,12 @@ function Section({ id, title, description, children }: { id: string; title: stri
 	return (
 		<section id={id} aria-labelledby={`${id}-title`} className="flex scroll-mt-20 flex-col gap-3">
 			<div>
-				<h2 id={`${id}-title`} className="text-base font-semibold">
+				<h2 id={`${id}-title`} className="text-2xl">
 					{title}
 				</h2>
 				<p className="text-sm text-muted-foreground">{description}</p>
 			</div>
-			<div className="flex flex-col divide-y rounded-xl border bg-card">{children}</div>
+			<div className="flex flex-col divide-y rounded-xl glass shadow-[var(--ring-inset)]">{children}</div>
 		</section>
 	);
 }
@@ -180,13 +181,13 @@ function ThemePicker() {
 }
 
 function AccentPicker() {
-	const { prefs, setPref } = usePreferences();
+	const { prefs, setPrefs } = usePreferences();
 	const labelId = useId();
 	return (
 		<Row label="Accent color" hint="Used for buttons, highlights and charts." labelId={labelId}>
 			<div role="radiogroup" aria-labelledby={labelId} className="flex flex-wrap gap-2">
 				{(Object.keys(ACCENTS) as Accent[]).map((accent) => {
-					const checked = prefs.accent === accent;
+					const checked = prefs.hue === null && prefs.accent === accent;
 					return (
 						<label
 							key={accent}
@@ -199,7 +200,7 @@ function AccentPicker() {
 								name="accent"
 								value={accent}
 								checked={checked}
-								onChange={() => setPref("accent", accent)}
+								onChange={() => setPrefs({ accent, hue: null })}
 								className="sr-only"
 							/>
 							<span className="sr-only">{ACCENTS[accent].label}</span>
@@ -207,6 +208,32 @@ function AccentPicker() {
 						</label>
 					);
 				})}
+			</div>
+		</Row>
+	);
+}
+
+function HueSlider() {
+	const { prefs, setPref } = usePreferences();
+	const labelId = useId();
+	const hue = hueOf(prefs);
+	return (
+		<Row label="Custom hue" hint="Drag to pick any color. Choosing a swatch above resets it." labelId={labelId}>
+			<div className="flex items-center gap-3">
+				<input
+					type="range"
+					min={0}
+					max={359}
+					value={hue}
+					aria-labelledby={labelId}
+					onChange={(e) => setPref("hue", Number(e.target.value))}
+					className="h-2 w-48 cursor-pointer appearance-none rounded-full accent-primary"
+					style={{
+						background:
+							"linear-gradient(to right in oklch longer hue, oklch(0.7 0.15 0), oklch(0.7 0.15 359))",
+					}}
+				/>
+				<span className="w-9 text-right text-xs text-muted-foreground tabular-nums">{hue}°</span>
 			</div>
 		</Row>
 	);
@@ -291,6 +318,7 @@ function AccountSection() {
 
 export default function SettingsPage() {
 	const { resolvedTheme } = useTheme();
+	const { prefs } = usePreferences();
 
 	return (
 		<div className="flex flex-col gap-8">
@@ -318,9 +346,20 @@ export default function SettingsPage() {
 						{resolvedTheme === "dark" && (
 							<ChoiceRow name="darkStyle" label="Dark style" hint="Black is easiest on OLED screens; Dim is softer." />
 						)}
-						<AccentPicker />
+						<ChoiceRow name="palette" label="Color theme" hint="Named palettes have light and dark versions. bleh follows your accent." />
+						{prefs.palette === "bleh" && (
+							<>
+								<AccentPicker />
+								<HueSlider />
+								<ChoiceRow name="vibrance" label="Vibrance" hint="How saturated surfaces and accents are." />
+								<ChoiceRow name="season" label="Season" hint="Tints the theme for a holiday. Automatic follows the calendar." />
+								<ChoiceRow name="particles" label="Seasonal particles" hint="Falling snow, leaves and more while a season is active." />
+							</>
+						)}
+						<ChoiceRow name="glass" label="Glass blur" hint="Frosted, translucent panels. Off makes them solid." />
 						<ChoiceRow name="radius" label="Corner radius" />
 						<ChoiceRow name="font" label="Font" preview />
+						<ChoiceRow name="weight" label="Font weight" />
 						<ChoiceRow name="scale" label="Text size" hint="Scales the whole interface." />
 						<ChoiceRow name="motion" label="Motion" hint="Reduced turns off page and list animations." />
 					</Section>

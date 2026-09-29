@@ -73,7 +73,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
 		<form className={cn("flex flex-col gap-6", className)} onSubmit={handleSubmit} {...props}>
 			<FieldGroup>
 				<div className="flex flex-col items-center gap-1 text-center">
-					<h1 className="text-2xl font-bold">Connect to Moodle</h1>
+					<h1 className="text-4xl">Connect to Moodle</h1>
 					<p className="text-sm text-balance text-muted-foreground">
 						{useToken ? "Enter your site and web service token" : "Enter your Moodle site and login"}
 					</p>

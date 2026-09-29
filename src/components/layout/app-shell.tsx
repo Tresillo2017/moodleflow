@@ -6,6 +6,7 @@ import { usePreferences } from "@/components/providers/preferences-provider";
 import { cn } from "@/lib/utils";
 import { Topbar } from "./topbar";
 import { MobileNav } from "./mobile-nav";
+import { SeasonParticles } from "./season-particles";
 
 const WIDTHS = { normal: "max-w-5xl", wide: "max-w-7xl", full: "max-w-none" } as const;
 
@@ -14,6 +15,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
 	return (
 		<SidebarProvider>
+			<SeasonParticles />
 			<AppSidebar variant={prefs.sidebar} />
 			<SidebarInset className="min-w-0">
 				<Topbar />

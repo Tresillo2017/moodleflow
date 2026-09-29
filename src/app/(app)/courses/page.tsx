@@ -76,7 +76,7 @@ export default function CoursesPage() {
 					{visible.map((c, i) => (
 						<div
 							key={c.id}
-							className="motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-[0.98] fill-mode-backwards duration-300 ease-out"
+							className="animate-blur-in"
 							style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
 						>
 							<CourseCard course={c} />

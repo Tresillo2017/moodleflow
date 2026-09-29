@@ -15,9 +15,10 @@ export const NAV_ITEMS = [
 	{ href: "/calendar", label: "Calendar", icon: Calendar },
 	{ href: "/assignments", label: "Assignments", icon: ClipboardList },
 	{ href: "/grades", label: "Grades", icon: GraduationCap },
-	{ href: "/notifications", label: "Notifications", icon: Bell },
 ] as const;
 
 export const SETTINGS_ITEM = { href: "/settings", label: "Settings", icon: Settings } as const;
+
+export const NOTIFICATIONS_ITEM = { href: "/notifications", label: "Notifications", icon: Bell } as const;
 
 export const PROFILE_ITEM = { href: "/profile", label: "Profile", icon: User } as const;

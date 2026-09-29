@@ -176,14 +176,14 @@ export default function AssignmentsPage() {
 			{groups.map(({ bucket, items }, i) => (
 				<section
 					key={bucket}
-					className="flex flex-col gap-2 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 fill-mode-backwards duration-300 ease-out"
+					className="flex flex-col gap-2 animate-track-in"
 					style={{ animationDelay: `${i * 50}ms` }}
 				>
 					<h2
 						className={
 							bucket === "overdue"
-								? "flex items-center gap-2 text-sm font-medium text-danger"
-								: "flex items-center gap-2 text-sm font-medium text-muted-foreground"
+								? "flex items-center gap-2 text-xl text-danger"
+								: "flex items-center gap-2 text-xl text-muted-foreground"
 						}
 					>
 						{BUCKETS[bucket]}
