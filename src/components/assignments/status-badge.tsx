@@ -13,10 +13,10 @@ const LABELS: Record<SubmissionStatus, string> = {
 
 const STYLES: Record<SubmissionStatus, string> = {
 	not_started: "bg-muted text-muted-foreground border-transparent",
-	draft: "border-warning/30 bg-warning/10 text-warning-foreground",
+	draft: "border-warning/40 bg-warning/15 text-warning-foreground dark:text-warning",
 	submitted: "border-primary/30 bg-primary/10 text-primary",
 	graded: "border-success/30 bg-success/10 text-success",
-	late: "border-warning/30 bg-warning/10 text-warning-foreground",
+	late: "border-warning/40 bg-warning/15 text-warning-foreground dark:text-warning",
 	overdue: "border-danger/30 bg-danger/10 text-danger",
 };
 

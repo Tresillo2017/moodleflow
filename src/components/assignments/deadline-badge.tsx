@@ -11,7 +11,7 @@ export function DeadlineBadge({ dueDate }: { dueDate?: string }) {
 			className={cn(
 				"font-normal",
 				overdue && "border-danger/30 bg-danger/10 text-danger",
-				soon && !overdue && "border-warning/30 bg-warning/10 text-warning-foreground",
+				soon && !overdue && "border-warning/40 bg-warning/15 text-warning-foreground dark:text-warning",
 			)}
 		>
 			{label}
