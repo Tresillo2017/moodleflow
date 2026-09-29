@@ -30,7 +30,8 @@ export function useMoodleQuery<T>(
 			return;
 		}
 		let cancelled = false;
-		setState((s) => ({ ...s, loading: true, error: null }));
+		// On refetch keep showing the previous data instead of flashing a skeleton.
+		setState((s) => ({ ...s, loading: s.data === null, error: null }));
 		fetcher()
 			.then((data) => {
 				if (!cancelled) setState({ data, error: null, loading: false });

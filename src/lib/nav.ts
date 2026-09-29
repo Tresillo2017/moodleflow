@@ -6,6 +6,7 @@ import {
 	LayoutDashboard,
 	NotebookText,
 	Settings,
+	User,
 } from "lucide-react";
 
 export const NAV_ITEMS = [
@@ -18,3 +19,5 @@ export const NAV_ITEMS = [
 ] as const;
 
 export const SETTINGS_ITEM = { href: "/settings", label: "Settings", icon: Settings } as const;
+
+export const PROFILE_ITEM = { href: "/profile", label: "Profile", icon: User } as const;

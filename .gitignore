@@ -201,3 +201,5 @@ dist
 ### OpenNext ###
 .open-next/
 next-env.d.ts
+.playwright-mcp/
+.serena/
