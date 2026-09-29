@@ -31,7 +31,7 @@ export interface MoodleClient {
 	getGrades(courseId?: number): Promise<MoodleCourseGrades[]>;
 	getForumDiscussions(forumId: number): Promise<MoodleForumDiscussion[]>;
 	/** Adds the auth token to a Moodle file URL so the browser can download it. */
-	fileUrl(url: string): string;
+	fileUrl(url: string, opts?: { download?: boolean }): string;
 	getNotifications(): Promise<MoodleNotification[]>;
 	markNotificationRead(notificationId: number): Promise<void>;
 	markAllNotificationsRead(): Promise<void>;
@@ -196,12 +196,12 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 			return normalizeForumDiscussions(raw);
 		},
 
-		fileUrl(url: string) {
+		fileUrl(url: string, opts?: { download?: boolean }) {
 			const file = new URL(url, connection.siteUrl);
 			// never send the token to a host other than the Moodle site
 			if (file.origin !== new URL(connection.siteUrl).origin) return url;
 			file.searchParams.set("token", connection.token);
-			file.searchParams.set("forcedownload", "1");
+			if (opts?.download !== false) file.searchParams.set("forcedownload", "1");
 			return file.toString();
 		},
 

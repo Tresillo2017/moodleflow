@@ -43,7 +43,10 @@ const courseContents: Record<number, MoodleCourseContent> = {
 				id: 1,
 				name: "Week 1",
 				activities: [
-					{ id: 1, courseId: 1, sectionId: 1, type: "resource", name: "Lecture notes", visible: true, completed: true, files: [{ name: "lecture-1.pdf", url: "#", size: 482_000, mimeType: "application/pdf" }] },
+					{ id: 1, courseId: 1, sectionId: 1, type: "resource", name: "Lecture notes", visible: true, completed: true, files: [
+						{ name: "lecture-1.pdf", url: "data:application/pdf;base64,JVBERi0xLjEKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBvYmo8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iagozIDAgb2JqPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9NZWRpYUJveFswIDAgMzAwIDEwMF0vQ29udGVudHMgNCAwIFIvUmVzb3VyY2VzPDwvRm9udDw8L0YxIDUgMCBSPj4+Pj4+ZW5kb2JqCjQgMCBvYmo8PC9MZW5ndGggNDQ+PnN0cmVhbQpCVCAvRjEgMTggVGYgMjAgNTAgVGQgKERlbW8gbGVjdHVyZSkgVGogRVQKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqPDwvVHlwZS9Gb250L1N1YnR5cGUvVHlwZTEvQmFzZUZvbnQvSGVsdmV0aWNhPj5lbmRvYmoKdHJhaWxlcjw8L1Jvb3QgMSAwIFI+PgolJUVPRg==", size: 482_000, mimeType: "application/pdf" },
+						{ name: "series.py", url: "data:text/plain,def%20partial_sum(n)%3A%0A%20%20%20%20return%20sum(1%20%2F%20k**2%20for%20k%20in%20range(1%2C%20n%20%2B%201))%0A", size: 74 },
+					] },
 					{ id: 2, courseId: 1, sectionId: 1, type: "url", name: "Video lecture", visible: true, completed: true },
 					{ id: 3, courseId: 1, sectionId: 1, type: "quiz", name: "Quiz 1", visible: true, completed: true },
 				],

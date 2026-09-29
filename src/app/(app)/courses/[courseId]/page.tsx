@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo } from "react";
+import { use, useMemo, useState } from "react";
 import Link from "next/link";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
@@ -12,8 +12,10 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ActivityIcon } from "@/components/activities/activity-icon";
 import { DeadlineBadge } from "@/components/assignments/deadline-badge";
 import { SubmitDialog } from "@/components/assignments/submit-dialog";
+import { FileViewer } from "@/components/files/file-viewer";
+import { fileKind } from "@/lib/file-kind";
 import { CourseGrades } from "@/components/grades/course-grades";
-import { ArrowLeft, CheckCircle2, ChevronDown, Circle, Download, ExternalLink, FolderOpen, GraduationCap, MessageSquare, Pin, Star } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronDown, Circle, Download, ExternalLink, Eye, FolderOpen, GraduationCap, MessageSquare, Pin, Star } from "lucide-react";
 import { courseHue, formatDistanceToNow } from "@/lib/format";
 import { isHttpUrl } from "@/lib/utils";
 import type { MoodleActivity, MoodleAssignment, MoodleFile, MoodleSection } from "@/types/moodle";
@@ -26,22 +28,40 @@ function formatSize(bytes: number): string {
 
 function FileList({ files }: { files: MoodleFile[] }) {
 	const { client } = useMoodleConnection();
+	const [viewing, setViewing] = useState<MoodleFile | null>(null);
 	if (!client) return null;
+	const rowClass =
+		"group/file flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none";
 	return (
 		<ul className="flex flex-col gap-1 pr-4 pb-3 pl-11">
-			{files.map((f) => (
-				<li key={f.url}>
-					<a
-						href={client.fileUrl(f.url)}
-						download={f.name}
-						className="group/file flex items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none"
-					>
-						<Download className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+			{files.map((f) => {
+				const previewable = fileKind(f.name, f.mimeType).type !== "other";
+				const inner = (
+					<>
+						{previewable ? (
+							<Eye className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+						) : (
+							<Download className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+						)}
 						<span className="flex-1 truncate">{f.name}</span>
 						<span className="text-muted-foreground tabular-nums">{formatSize(f.size)}</span>
-					</a>
-				</li>
-			))}
+					</>
+				);
+				return (
+					<li key={f.url}>
+						{previewable ? (
+							<button type="button" onClick={() => setViewing(f)} className={rowClass}>
+								{inner}
+							</button>
+						) : (
+							<a href={client.fileUrl(f.url)} download={f.name} className={rowClass}>
+								{inner}
+							</a>
+						)}
+					</li>
+				);
+			})}
+			{viewing && <FileViewer file={viewing} onClose={() => setViewing(null)} />}
 		</ul>
 	);
 }
