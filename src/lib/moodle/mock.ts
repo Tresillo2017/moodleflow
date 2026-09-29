@@ -1,5 +1,7 @@
 import type { MoodleClient } from "./client";
+import { deriveSubmissionStatus } from "./normalize";
 import type {
+	AssignmentConfig,
 	MoodleAssignment,
 	MoodleCalendarEvent,
 	MoodleCourse,
@@ -20,12 +22,25 @@ const courses: MoodleCourse[] = [
 	{ id: 4, shortName: "CS210", fullName: "Data Structures", progress: 58, isFavourite: false, visible: true },
 ];
 
+const textAndFiles: AssignmentConfig = { acceptsText: true, acceptsFiles: true, maxFiles: 3, maxFileBytes: 10_485_760, requiresSubmitAction: false, requiresStatement: false };
+const draftMode: AssignmentConfig = { ...textAndFiles, requiresSubmitAction: true, requiresStatement: true };
+
 const assignments: MoodleAssignment[] = [
-	{ id: 101, courseId: 1, courseName: "Mathematics II", name: "Problem Set 4", dueDate: days(1), status: "not_started" },
-	{ id: 102, courseId: 2, courseName: "Physics Fundamentals", name: "Lab Report: Momentum", dueDate: days(4), status: "draft" },
-	{ id: 103, courseId: 3, courseName: "Modern History", name: "Essay: Cold War", dueDate: days(7), status: "not_started" },
-	{ id: 104, courseId: 4, courseName: "Data Structures", name: "Assignment: Binary Trees", dueDate: days(-2), status: "overdue" },
-	{ id: 105, courseId: 1, courseName: "Mathematics II", name: "Problem Set 3", dueDate: days(-10), status: "graded", grade: 87, maxGrade: 100, feedback: "Solid work, watch your integration by parts steps." },
+	{ id: 101, courseId: 1, courseName: "Mathematics II", name: "Problem Set 4", dueDate: days(1), status: "not_started", config: textAndFiles, canEdit: true, maxGrade: 100,
+		description: "<p>Solve problems <strong>1-8</strong> from chapter 4 and show your working.</p><ul><li>Use the ratio test where it applies</li><li>Justify every convergence claim</li></ul>",
+		introFiles: [{ name: "problem-set-4.pdf", url: "data:text/plain,hello", size: 120_000, mimeType: "application/pdf" }] },
+	{ id: 102, courseId: 2, courseName: "Physics Fundamentals", name: "Lab Report: Momentum", dueDate: days(4), status: "draft", config: draftMode, canEdit: true, maxGrade: 100,
+		description: "<p>Write up the momentum lab using the template.</p>",
+		submission: { status: "draft", timeModified: days(-1), text: "Draft intro paragraph.", files: [] } },
+	{ id: 103, courseId: 3, courseName: "Modern History", name: "Essay: Cold War", dueDate: days(7), status: "not_started", config: textAndFiles, canEdit: true, maxGrade: 100, description: "<p>1500 words.</p>" },
+	{ id: 104, courseId: 4, courseName: "Data Structures", name: "Assignment: Binary Trees", dueDate: days(-2), status: "overdue", config: textAndFiles, canEdit: true, maxGrade: 100, description: "<p>Implement insert, delete and traversal.</p>" },
+	{ id: 105, courseId: 1, courseName: "Mathematics II", name: "Problem Set 3", dueDate: days(-10), status: "graded", config: textAndFiles, canEdit: false, grade: 87, maxGrade: 100, gradedDate: days(-6),
+		feedback: "<p>Solid work, watch your integration by parts steps.</p>",
+		submission: { status: "submitted", timeModified: days(-11), text: "See attached.", files: [{ name: "ps3.pdf", url: "data:text/plain,ps3", size: 88_000, mimeType: "application/pdf" }] } },
+	{ id: 106, courseId: 2, courseName: "Physics Fundamentals", name: "Problem Set 2", dueDate: days(-3), status: "submitted", config: textAndFiles, canEdit: true, maxGrade: 100,
+		submission: { status: "submitted", timeModified: days(-4), text: "Answers below.", files: [] } },
+	{ id: 107, courseId: 3, courseName: "Modern History", name: "Reading Response", dueDate: days(-5), status: "late", config: textAndFiles, canEdit: true, maxGrade: 100,
+		submission: { status: "submitted", timeModified: days(-4), text: "Late response.", files: [] } },
 ];
 
 const calendarEvents: MoodleCalendarEvent[] = [
@@ -146,6 +161,27 @@ export function createMockMoodleClient(): MoodleClient {
 			),
 		getCalendarEvents: () => delay(calendarEvents),
 		getAssignments: () => delay(assignments),
+		getAssignment: (id) => delay(assignments.find((a) => a.id === id)),
+		saveAssignmentSubmission: (assignment, input) => {
+			const target = assignments.find((a) => a.id === assignment.id);
+			if (target) {
+				const files = (input.files ?? target.submission?.files ?? []).map((f) =>
+					f instanceof File ? { name: f.name, url: "data:text/plain,", size: f.size, mimeType: f.type } : f,
+				);
+				const submitted = !target.config?.requiresSubmitAction;
+				target.submission = { status: submitted ? "submitted" : "draft", timeModified: new Date().toISOString(), text: input.text ?? target.submission?.text, files };
+				target.status = deriveSubmissionStatus({ submissionStatus: target.submission.status, graded: false, dueDate: target.dueDate, submittedAt: target.submission.timeModified });
+			}
+			return delay(undefined);
+		},
+		submitAssignmentForGrading: (id) => {
+			const target = assignments.find((a) => a.id === id);
+			if (target?.submission) {
+				target.submission = { ...target.submission, status: "submitted", timeModified: new Date().toISOString() };
+				target.status = deriveSubmissionStatus({ submissionStatus: "submitted", graded: false, dueDate: target.dueDate, submittedAt: target.submission.timeModified });
+			}
+			return delay(undefined);
+		},
 		getGrades: (courseId) =>
 			delay(courseId ? gradesWithHistory.filter((g) => g.courseId === courseId) : gradesWithHistory),
 		getForumDiscussions: () =>
@@ -164,6 +200,5 @@ export function createMockMoodleClient(): MoodleClient {
 			for (const n of notifications) n.read = true;
 			return delay(undefined);
 		},
-		submitAssignmentText: () => delay(undefined),
 	};
 }

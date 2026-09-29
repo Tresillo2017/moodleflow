@@ -1,16 +1,19 @@
 import { MoodleError } from "@/types/moodle";
+import { uploadDraftFiles } from "./upload";
 import type {
 	MoodleAssignment,
 	MoodleCalendarEvent,
 	MoodleCourse,
 	MoodleCourseContent,
 	MoodleCourseGrades,
+	MoodleFile,
 	MoodleForumDiscussion,
 	MoodleNotification,
 	MoodleSiteInfo,
 	MoodleUser,
 } from "@/types/moodle";
 import {
+	applySubmissionStatus,
 	normalizeAssignments,
 	normalizeCalendarEvents,
 	normalizeCourseContent,
@@ -27,7 +30,12 @@ export interface MoodleClient {
 	getCourses(): Promise<MoodleCourse[]>;
 	getCourseContents(courseId: number): Promise<MoodleCourseContent>;
 	getCalendarEvents(): Promise<MoodleCalendarEvent[]>;
-	getAssignments(): Promise<MoodleAssignment[]>;
+	/** With courseIds, also fetches each assignment's real submission status; without, status is "unknown". */
+	getAssignments(courseIds?: number[]): Promise<MoodleAssignment[]>;
+	getAssignment(assignmentId: number): Promise<MoodleAssignment | undefined>;
+	/** Saves text and/or files (existing MoodleFile entries are re-uploaded so they survive the save). */
+	saveAssignmentSubmission(assignment: MoodleAssignment, input: SubmissionInput): Promise<void>;
+	submitAssignmentForGrading(assignmentId: number): Promise<void>;
 	getGrades(courseId?: number): Promise<MoodleCourseGrades[]>;
 	getForumDiscussions(forumId: number): Promise<MoodleForumDiscussion[]>;
 	/** Adds the auth token to a Moodle file URL so the browser can download it. */
@@ -35,7 +43,11 @@ export interface MoodleClient {
 	getNotifications(): Promise<MoodleNotification[]>;
 	markNotificationRead(notificationId: number): Promise<void>;
 	markAllNotificationsRead(): Promise<void>;
-	submitAssignmentText(assignmentId: number, text: string): Promise<void>;
+}
+
+export interface SubmissionInput {
+	text?: string;
+	files?: (File | MoodleFile)[];
 }
 
 export interface MoodleConnection {
@@ -130,9 +142,35 @@ async function callMoodle<T>(
 	return data as T;
 }
 
+const STATUS_CONCURRENCY = 6;
+
+/** Maps in parallel with at most `limit` calls in flight, preserving order. */
+async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+	const results = new Array<R>(items.length);
+	let next = 0;
+	async function worker() {
+		while (next < items.length) {
+			const i = next++;
+			results[i] = await fn(items[i]);
+		}
+	}
+	await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+	return results;
+}
+
 export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 	// Most calls need the user id first; fetch site info once per client instead of per call.
 	let siteInfo: Promise<MoodleSiteInfo> | null = null;
+
+	/** A failed status lookup degrades to status "unknown" instead of breaking the whole list. */
+	async function withStatus(assignment: MoodleAssignment): Promise<MoodleAssignment> {
+		try {
+			const raw = await callMoodle(connection, "mod_assign_get_submission_status", { assignid: assignment.id });
+			return applySubmissionStatus(assignment, raw);
+		} catch {
+			return assignment;
+		}
+	}
 
 	return {
 		getSiteInfo() {
@@ -175,9 +213,54 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 			return normalizeCalendarEvents(raw);
 		},
 
-		async getAssignments() {
+		async getAssignments(courseIds?: number[]) {
+			const raw = await callMoodle(
+				connection,
+				"mod_assign_get_assignments",
+				courseIds ? { courseids: Object.fromEntries(courseIds.map((id, i) => [i, id])) } : {},
+			);
+			const assignments = normalizeAssignments(raw);
+			if (!courseIds) return assignments;
+			return mapLimit(assignments, STATUS_CONCURRENCY, (a) => withStatus(a));
+		},
+
+		async getAssignment(assignmentId: number) {
 			const raw = await callMoodle(connection, "mod_assign_get_assignments");
-			return normalizeAssignments(raw);
+			const found = normalizeAssignments(raw).find((a) => a.id === assignmentId);
+			return found && withStatus(found);
+		},
+
+		async saveAssignmentSubmission(assignment: MoodleAssignment, input: SubmissionInput) {
+			const plugindata: MoodleParams = {};
+			if (input.text !== undefined) {
+				plugindata.onlinetext_editor = { text: input.text, format: 2, itemid: 0 };
+			}
+			if (input.files) {
+				const files = await Promise.all(
+					input.files.map(async (f) => {
+						if (f instanceof File) return f;
+						const res = await fetch(this.fileUrl(f.url, { download: false }));
+						if (!res.ok) throw new MoodleError("network_error", `Couldn't read existing file ${f.name}.`);
+						return new File([await res.blob()], f.name, { type: f.mimeType });
+					}),
+				);
+				plugindata.files_filemanager = files.length ? await uploadDraftFiles(connection, files) : 0;
+			}
+			await callMoodle(
+				connection,
+				"mod_assign_save_submission",
+				{ assignmentid: assignment.id, plugindata },
+				"POST",
+			);
+		},
+
+		async submitAssignmentForGrading(assignmentId: number) {
+			await callMoodle(
+				connection,
+				"mod_assign_submit_for_grading",
+				{ assignmentid: assignmentId, acceptsubmissionstatement: 1 },
+				"POST",
+			);
 		},
 
 		async getGrades(courseId?: number) {
@@ -228,18 +311,6 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 				connection,
 				"core_message_mark_all_notifications_as_read",
 				{ useridto: info.userId },
-				"POST",
-			);
-		},
-
-		async submitAssignmentText(assignmentId: number, text: string) {
-			await callMoodle(
-				connection,
-				"mod_assign_save_submission",
-				{
-					assignmentid: assignmentId,
-					plugindata: { onlinetext_editor: { text, format: 1, itemid: 0 } },
-				},
 				"POST",
 			);
 		},

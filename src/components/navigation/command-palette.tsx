@@ -1,5 +1,6 @@
 "use client";
 
+import { useAssignments } from "@/hooks/use-assignments";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
@@ -36,7 +37,7 @@ export function CommandPalette() {
 	const { toggleSidebar } = useSidebar();
 
 	const courses = useMoodleQuery(client ? () => client.getCourses() : null, [client]);
-	const assignments = useMoodleQuery(client ? () => client.getAssignments() : null, [client]);
+	const assignments = useAssignments();
 	const currentCourses = courses.data?.filter(isCurrentCourse) ?? [];
 	const currentIds = new Set(currentCourses.map((c) => c.id));
 	const openAssignments =

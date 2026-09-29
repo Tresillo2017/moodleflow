@@ -1,5 +1,6 @@
 "use client";
 
+import { useAssignments } from "@/hooks/use-assignments";
 import Link from "next/link";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
@@ -26,7 +27,7 @@ export default function ProfilePage() {
 	const { prefs } = usePreferences();
 	const site = useMoodleQuery(client ? () => client.getSiteInfo() : null, [client]);
 	const courses = useMoodleQuery(client ? () => client.getCourses() : null, [client]);
-	const assignments = useMoodleQuery(client ? () => client.getAssignments() : null, [client]);
+	const assignments = useAssignments();
 
 	const name = connection?.userFullName ?? site.data?.fullName ?? "Student";
 	const initials = name

@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo, useState } from "react";
+import { use, useMemo } from "react";
 import Link from "next/link";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
@@ -13,62 +13,18 @@ import { ActivityIcon } from "@/components/activities/activity-icon";
 import { DeadlineBadge } from "@/components/assignments/deadline-badge";
 import { SubmitDialog } from "@/components/assignments/submit-dialog";
 import { FileViewer } from "@/components/files/file-viewer";
+import { canSubmit } from "@/lib/moodle/assignment";
+import { FileList } from "@/components/files/file-list";
 import { fileKind } from "@/lib/file-kind";
 import { CourseGrades } from "@/components/grades/course-grades";
-import { ArrowLeft, CheckCircle2, ChevronDown, Circle, Download, ExternalLink, Eye, FolderOpen, GraduationCap, MessageSquare, Pin, Star } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronDown, Circle, ExternalLink, FolderOpen, GraduationCap, MessageSquare, Pin, Star } from "lucide-react";
 import { courseHue, formatDistanceToNow } from "@/lib/format";
 import { isHttpUrl } from "@/lib/utils";
-import type { MoodleActivity, MoodleAssignment, MoodleFile, MoodleSection } from "@/types/moodle";
-
-function formatSize(bytes: number): string {
-	if (bytes < 1024) return `${bytes} B`;
-	if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-	return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
-
-function FileList({ files }: { files: MoodleFile[] }) {
-	const { client } = useMoodleConnection();
-	const [viewing, setViewing] = useState<MoodleFile | null>(null);
-	if (!client) return null;
-	const rowClass =
-		"group/file flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none";
-	return (
-		<ul className="flex flex-col gap-1 pr-4 pb-3 pl-11">
-			{files.map((f) => {
-				const previewable = fileKind(f.name, f.mimeType).type !== "other";
-				const inner = (
-					<>
-						{previewable ? (
-							<Eye className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-						) : (
-							<Download className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-						)}
-						<span className="flex-1 truncate">{f.name}</span>
-						<span className="text-muted-foreground tabular-nums">{formatSize(f.size)}</span>
-					</>
-				);
-				return (
-					<li key={f.url}>
-						{previewable ? (
-							<button type="button" onClick={() => setViewing(f)} className={rowClass}>
-								{inner}
-							</button>
-						) : (
-							<a href={client.fileUrl(f.url)} download={f.name} className={rowClass}>
-								{inner}
-							</a>
-						)}
-					</li>
-				);
-			})}
-			{viewing && <FileViewer file={viewing} onClose={() => setViewing(null)} />}
-		</ul>
-	);
-}
+import type { MoodleActivity, MoodleAssignment, MoodleSection } from "@/types/moodle";
 
 function ActivityRow({ activity: a, assignment }: { activity: MoodleActivity; assignment?: MoodleAssignment }) {
-	const canSubmit =
-		assignment && (assignment.status === "not_started" || assignment.status === "draft" || assignment.status === "overdue");
+	const { refresh } = useMoodleConnection();
+	const submittable = assignment ? canSubmit(assignment) : false;
 	const content = (
 		<>
 			{a.completed === undefined ? (
@@ -94,7 +50,11 @@ function ActivityRow({ activity: a, assignment }: { activity: MoodleActivity; as
 	return (
 		<div>
 			<div className="flex items-center">
-				{isHttpUrl(a.url) ? (
+				{a.type === "assignment" && a.instance !== undefined ? (
+					<Link href={`/assignments/${a.instance}`} className={`${className} transition-colors hover:bg-muted/50`}>
+						{content}
+					</Link>
+				) : isHttpUrl(a.url) ? (
 					<a href={a.url} target="_blank" rel="noopener noreferrer" className={`${className} transition-colors hover:bg-muted/50`}>
 						{content}
 						<span className="sr-only">(opens in Moodle)</span>
@@ -102,13 +62,13 @@ function ActivityRow({ activity: a, assignment }: { activity: MoodleActivity; as
 				) : (
 					<div className={className}>{content}</div>
 				)}
-				{canSubmit && (
+				{assignment && submittable && (
 					<div className="pr-4">
-						<SubmitDialog assignmentId={assignment.id} assignmentName={assignment.name} />
+						<SubmitDialog assignment={assignment} onSubmitted={refresh} />
 					</div>
 				)}
 			</div>
-			{a.files && a.files.length > 0 && <FileList files={a.files} />}
+			{a.files && a.files.length > 0 && <FileList files={a.files} className="pr-4 pb-3 pl-11" />}
 		</div>
 	);
 }
@@ -201,7 +161,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ courseI
 
 	const courses = useMoodleQuery(client ? () => client.getCourses() : null, [client]);
 	const content = useMoodleQuery(client ? () => client.getCourseContents(id) : null, [client, id]);
-	const assignmentsQuery = useMoodleQuery(client ? () => client.getAssignments() : null, [client]);
+	const assignmentsQuery = useMoodleQuery(client ? () => client.getAssignments([id]) : null, [client, id]);
 	const gradesQuery = useMoodleQuery(client ? () => client.getGrades(id) : null, [client, id]);
 	const course = courses.data?.find((c) => c.id === id);
 	const sections = content.data?.sections.filter((s) => s.activities.length > 0) ?? [];

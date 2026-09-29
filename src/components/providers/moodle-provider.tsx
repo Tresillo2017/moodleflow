@@ -52,6 +52,11 @@ function withCache(client: MoodleClient): MoodleClient {
 		for (const key of cache.keys()) if (key.startsWith(`${name}:`)) cache.delete(key);
 	}
 
+	function invalidateAssignments() {
+		invalidate("assignments");
+		invalidate("assignment");
+	}
+
 	function notificationsChanged() {
 		invalidate("notifications");
 		window.dispatchEvent(new Event(NOTIFICATIONS_CHANGED));
@@ -63,7 +68,8 @@ function withCache(client: MoodleClient): MoodleClient {
 		getCourses: cached("courses", () => client.getCourses()),
 		getCourseContents: cached("contents", (courseId: number) => client.getCourseContents(courseId)),
 		getCalendarEvents: cached("events", () => client.getCalendarEvents()),
-		getAssignments: cached("assignments", () => client.getAssignments()),
+		getAssignments: cached("assignments", (courseIds?: number[]) => client.getAssignments(courseIds)),
+		getAssignment: cached("assignment", (id: number) => client.getAssignment(id)),
 		getGrades: cached("grades", (courseId?: number) => client.getGrades(courseId)),
 		getForumDiscussions: cached("forum", (forumId: number) => client.getForumDiscussions(forumId)),
 		fileUrl: (url, opts) => client.fileUrl(url, opts),
@@ -76,9 +82,13 @@ function withCache(client: MoodleClient): MoodleClient {
 			await client.markAllNotificationsRead();
 			notificationsChanged();
 		},
-		async submitAssignmentText(id, text) {
-			await client.submitAssignmentText(id, text);
-			invalidate("assignments");
+		async saveAssignmentSubmission(assignment, input) {
+			await client.saveAssignmentSubmission(assignment, input);
+			invalidateAssignments();
+		},
+		async submitAssignmentForGrading(id) {
+			await client.submitAssignmentForGrading(id);
+			invalidateAssignments();
 		},
 	};
 }

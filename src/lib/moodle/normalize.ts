@@ -1,6 +1,9 @@
 import { MoodleError } from "@/types/moodle";
 import type {
 	ActivityType,
+	AssignmentConfig,
+	AssignmentSubmission,
+	SubmissionStatus,
 	MoodleAssignment,
 	MoodleCalendarEvent,
 	MoodleCourse,
@@ -148,7 +151,39 @@ export function normalizeCalendarEvents(raw: unknown): MoodleCalendarEvent[] {
 	});
 }
 
-// mod_assign_get_assignments
+function mapFile(f: unknown): MoodleFile {
+	const r = asRecord(f);
+	return {
+		name: String(r.filename ?? ""),
+		url: String(r.fileurl ?? ""),
+		size: Number(r.filesize ?? 0),
+		mimeType: typeof r.mimetype === "string" ? r.mimetype : undefined,
+	};
+}
+
+const iso = (seconds: unknown): string | undefined => {
+	const n = Number(seconds ?? 0);
+	return n > 0 ? new Date(n * 1000).toISOString() : undefined;
+};
+
+function assignConfig(assign: Record<string, unknown>): AssignmentConfig {
+	const configs = asArray(assign.configs).map(asRecord);
+	const get = (plugin: string, name: string) =>
+		configs.find((c) => c.plugin === plugin && c.subtype === "assignsubmission" && c.name === name)?.value;
+	const noConfigs = configs.length === 0;
+	const maxFiles = Number(get("file", "maxfilesubmissions"));
+	const maxBytes = Number(get("file", "maxsubmissionsizebytes"));
+	return {
+		acceptsText: noConfigs ? true : String(get("onlinetext", "enabled")) === "1",
+		acceptsFiles: noConfigs ? false : String(get("file", "enabled")) === "1",
+		maxFiles: maxFiles > 0 ? maxFiles : undefined,
+		maxFileBytes: maxBytes > 0 ? maxBytes : undefined,
+		requiresSubmitAction: Number(assign.submissiondrafts ?? 0) === 1,
+		requiresStatement: Number(assign.requiresubmissionstatement ?? 0) === 1,
+	};
+}
+
+// mod_assign_get_assignments (status stays "unknown" until applySubmissionStatus)
 export function normalizeAssignments(raw: unknown): MoodleAssignment[] {
 	const r = asRecord(raw);
 	const assignments: MoodleAssignment[] = [];
@@ -156,19 +191,89 @@ export function normalizeAssignments(raw: unknown): MoodleAssignment[] {
 		const c = asRecord(course);
 		for (const a of asArray(c.assignments)) {
 			const assign = asRecord(a);
-			const dueDate = Number(assign.duedate ?? 0);
 			assignments.push({
 				id: Number(assign.id),
 				courseId: Number(c.id),
 				courseName: String(c.fullname ?? ""),
 				name: String(assign.name ?? ""),
 				description: assign.intro ? String(assign.intro) : undefined,
-				dueDate: dueDate > 0 ? new Date(dueDate * 1000).toISOString() : undefined,
-				status: "not_started",
+				introFiles: asArray(assign.introattachments).map(mapFile),
+				dueDate: iso(assign.duedate),
+				cutoffDate: iso(assign.cutoffdate),
+				maxGrade: Number(assign.grade) > 0 ? Number(assign.grade) : undefined,
+				status: "unknown",
+				config: assignConfig(assign),
 			});
 		}
 	}
 	return assignments;
+}
+
+export function deriveSubmissionStatus(p: {
+	submissionStatus?: string;
+	graded: boolean;
+	dueDate?: string;
+	submittedAt?: string;
+	now?: number;
+}): SubmissionStatus {
+	if (p.graded) return "graded";
+	if (p.submissionStatus === "submitted") {
+		const late = p.dueDate && p.submittedAt && new Date(p.submittedAt) > new Date(p.dueDate);
+		return late ? "late" : "submitted";
+	}
+	if (p.submissionStatus === "draft") return "draft";
+	const overdue = p.dueDate && new Date(p.dueDate).getTime() < (p.now ?? Date.now());
+	return overdue ? "overdue" : "not_started";
+}
+
+function editorText(plugin: Record<string, unknown>, field: string): string | undefined {
+	const editor = asArray(plugin.editorfields)
+		.map(asRecord)
+		.find((e) => e.name === field);
+	return editor?.text ? String(editor.text) : undefined;
+}
+
+function pluginFiles(plugin: Record<string, unknown>): MoodleFile[] {
+	return asArray(plugin.fileareas).flatMap((area) => asArray(asRecord(area).files).map(mapFile));
+}
+
+// mod_assign_get_submission_status
+export function applySubmissionStatus(assignment: MoodleAssignment, raw: unknown): MoodleAssignment {
+	const r = asRecord(raw);
+	const last = r.lastattempt ? asRecord(r.lastattempt) : {};
+	const sub = last.submission ? asRecord(last.submission) : undefined;
+	const feedback = r.feedback ? asRecord(r.feedback) : undefined;
+
+	const plugins = asArray(sub?.plugins).map(asRecord);
+	const submission: AssignmentSubmission | undefined = sub
+		? {
+				status: String(sub.status ?? "new") as AssignmentSubmission["status"],
+				timeModified: iso(sub.timemodified),
+				text: plugins.map((p) => (p.type === "onlinetext" ? editorText(p, "onlinetext") : undefined)).find(Boolean),
+				files: plugins.filter((p) => p.type === "file").flatMap(pluginFiles),
+			}
+		: undefined;
+
+	const gradeRecord = feedback?.grade ? asRecord(feedback.grade) : undefined;
+	const rawGrade = gradeRecord?.grade !== undefined ? Number(gradeRecord.grade) : NaN;
+	const graded = Number.isFinite(rawGrade) && rawGrade >= 0;
+	const feedbackPlugins = asArray(feedback?.plugins).map(asRecord);
+
+	return {
+		...assignment,
+		status: deriveSubmissionStatus({
+			submissionStatus: submission?.status,
+			graded,
+			dueDate: assignment.dueDate,
+			submittedAt: submission?.timeModified,
+		}),
+		submission,
+		canEdit: last.canedit === undefined ? undefined : Boolean(last.canedit),
+		grade: graded ? rawGrade : undefined,
+		gradedDate: iso(feedback?.gradeddate),
+		feedback: feedbackPlugins.map((p) => (p.type === "comments" ? editorText(p, "comments") : undefined)).find(Boolean),
+		feedbackFiles: feedbackPlugins.filter((p) => p.type === "file").flatMap(pluginFiles),
+	};
 }
 
 // mod_forum_get_forum_discussions

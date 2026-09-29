@@ -12,6 +12,8 @@ import { DeadlineBadge } from "@/components/assignments/deadline-badge";
 import { StatusBadge } from "@/components/assignments/status-badge";
 import { SubmitDialog } from "@/components/assignments/submit-dialog";
 import { isCurrentCourse } from "@/lib/moodle/course-filter";
+import { canSubmit, isDone } from "@/lib/moodle/assignment";
+import { useAssignments } from "@/hooks/use-assignments";
 import { courseHue } from "@/lib/format";
 import { ClipboardCheck, SearchX } from "lucide-react";
 import type { MoodleAssignment } from "@/types/moodle";
@@ -37,7 +39,7 @@ const VIEWS = {
 type View = keyof typeof VIEWS;
 
 function bucketOf(a: MoodleAssignment, now: number): Bucket {
-	if (a.status === "submitted" || a.status === "graded") return "done";
+	if (isDone(a)) return "done";
 	if (!a.dueDate) return "none";
 	const due = new Date(a.dueDate).getTime();
 	if (due < now) return "overdue";
@@ -50,8 +52,7 @@ function byDue(a: MoodleAssignment, b: MoodleAssignment) {
 	return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
 }
 
-function AssignmentRow({ assignment: a }: { assignment: MoodleAssignment }) {
-	const canSubmit = a.status === "not_started" || a.status === "draft" || a.status === "overdue";
+function AssignmentRow({ assignment: a, onSubmitted }: { assignment: MoodleAssignment; onSubmitted: () => void }) {
 	return (
 		// Stretched-link row: the title link covers the row, the submit button sits above it.
 		<div className="relative flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-muted/50 has-[a:focus-visible]:bg-muted/50">
@@ -63,7 +64,7 @@ function AssignmentRow({ assignment: a }: { assignment: MoodleAssignment }) {
 				/>
 				<div className="min-w-0">
 					<Link
-						href={`/courses/${a.courseId}`}
+						href={`/assignments/${a.id}`}
 						className="block truncate font-medium after:absolute after:inset-0 focus-visible:outline-none"
 					>
 						{a.name}
@@ -80,9 +81,9 @@ function AssignmentRow({ assignment: a }: { assignment: MoodleAssignment }) {
 				{/* the deadline badge already says "Overdue by …" */}
 				{a.status !== "overdue" && <StatusBadge status={a.status} />}
 				{a.status !== "graded" && <DeadlineBadge dueDate={a.dueDate} />}
-				{canSubmit && (
+				{canSubmit(a) && (
 					<div className="relative z-10">
-						<SubmitDialog assignmentId={a.id} assignmentName={a.name} />
+						<SubmitDialog assignment={a} onSubmitted={onSubmitted} />
 					</div>
 				)}
 			</div>
@@ -92,7 +93,7 @@ function AssignmentRow({ assignment: a }: { assignment: MoodleAssignment }) {
 
 export default function AssignmentsPage() {
 	const { client, refresh } = useMoodleConnection();
-	const assignments = useMoodleQuery(client ? () => client.getAssignments() : null, [client]);
+	const assignments = useAssignments();
 	const courses = useMoodleQuery(client ? () => client.getCourses() : null, [client]);
 	const [view, setView] = useState<View>("todo");
 	const [query, setQuery] = useState("");
@@ -176,7 +177,7 @@ export default function AssignmentsPage() {
 					</h2>
 					<div className="flex flex-col divide-y overflow-hidden rounded-xl border bg-card">
 						{items.map((a) => (
-							<AssignmentRow key={a.id} assignment={a} />
+							<AssignmentRow key={a.id} assignment={a} onSubmitted={refresh} />
 						))}
 					</div>
 				</section>

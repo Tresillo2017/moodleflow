@@ -84,19 +84,46 @@ export type SubmissionStatus =
 	| "submitted"
 	| "graded"
 	| "late"
-	| "overdue";
+	| "overdue"
+	| "unknown";
+
+export interface AssignmentConfig {
+	acceptsText: boolean;
+	acceptsFiles: boolean;
+	maxFiles?: number;
+	maxFileBytes?: number;
+	/** Drafts mode: saving is not final until "submit for grading". */
+	requiresSubmitAction: boolean;
+	requiresStatement: boolean;
+}
+
+export interface AssignmentSubmission {
+	status: "new" | "draft" | "submitted" | "reopened";
+	timeModified?: string;
+	text?: string;
+	files: MoodleFile[];
+}
 
 export interface MoodleAssignment {
 	id: number;
 	courseId: number;
 	courseName: string;
 	name: string;
+	/** Assignment intro (Moodle HTML). */
 	description?: string;
+	introFiles?: MoodleFile[];
 	dueDate?: string;
+	cutoffDate?: string;
 	status: SubmissionStatus;
+	config?: AssignmentConfig;
+	submission?: AssignmentSubmission;
+	/** Moodle's verdict on whether the current user may add/edit a submission. */
+	canEdit?: boolean;
 	grade?: number;
 	maxGrade?: number;
+	gradedDate?: string;
 	feedback?: string;
+	feedbackFiles?: MoodleFile[];
 }
 
 export interface MoodleForumDiscussion {

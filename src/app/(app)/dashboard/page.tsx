@@ -1,5 +1,6 @@
 "use client";
 
+import { useAssignments } from "@/hooks/use-assignments";
 import Link from "next/link";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { usePreferences } from "@/components/providers/preferences-provider";
@@ -146,7 +147,7 @@ export default function DashboardPage() {
 	const hour12 = hour12Of(prefs.clock);
 
 	const courses = useMoodleQuery(client ? () => client.getCourses() : null, [client]);
-	const assignments = useMoodleQuery(client ? () => client.getAssignments() : null, [client]);
+	const assignments = useAssignments();
 	const events = useMoodleQuery(client ? () => client.getCalendarEvents() : null, [client]);
 	const grades = useMoodleQuery(client ? () => client.getGrades() : null, [client]);
 

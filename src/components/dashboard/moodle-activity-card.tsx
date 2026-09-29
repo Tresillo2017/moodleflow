@@ -1,5 +1,6 @@
 "use client";
 
+import { useAssignments } from "@/hooks/use-assignments";
 import { useMemo } from "react";
 import { GitHubActivity } from "@/components/ui/github-activity";
 import { buildContributions, buildTopCourses } from "@/lib/moodle/activity";
@@ -21,7 +22,7 @@ export function MoodleActivityCard() {
 	const { client } = useMoodleConnection();
 	const courses = useMoodleQuery(client ? () => client.getCourses() : null, [client]);
 	const grades = useMoodleQuery(client ? () => client.getGrades() : null, [client]);
-	const assignments = useMoodleQuery(client ? () => client.getAssignments() : null, [client]);
+	const assignments = useAssignments();
 
 	const loading = courses.loading || grades.loading || assignments.loading;
 	const error = courses.error ?? grades.error ?? assignments.error;
