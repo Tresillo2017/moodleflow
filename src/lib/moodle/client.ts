@@ -28,6 +28,7 @@ export interface MoodleClient {
 	getSiteInfo(): Promise<MoodleSiteInfo>;
 	getCurrentUser(): Promise<MoodleUser>;
 	getCourses(): Promise<MoodleCourse[]>;
+	setCourseFavourite(courseId: number, favourite: boolean): Promise<void>;
 	getCourseContents(courseId: number): Promise<MoodleCourseContent>;
 	getCalendarEvents(): Promise<MoodleCalendarEvent[]>;
 	/** With courseIds, also fetches each assignment's real submission status; without, status is "unknown". */
@@ -199,6 +200,15 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 				userid: info.userId,
 			});
 			return normalizeCourses(raw);
+		},
+
+		async setCourseFavourite(courseId: number, favourite: boolean) {
+			await callMoodle(
+				connection,
+				"core_course_set_favourite_courses",
+				{ courses: { 0: { id: courseId, favourite: favourite ? 1 : 0 } } },
+				"POST",
+			);
 		},
 
 		async getCourseContents(courseId: number) {

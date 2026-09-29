@@ -54,6 +54,8 @@ export type DashboardSection = keyof typeof DASHBOARD_SECTIONS;
 export type Preferences = { [K in ChoiceKey]: keyof (typeof CHOICES)[K] } & {
 	accent: Accent;
 	dashboard: Record<DashboardSection, boolean>;
+	/** Course ids pinned to the top of the sidebar, in display order. */
+	pinnedCourses: number[];
 };
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -68,6 +70,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
 	weekStart: "monday",
 	clock: "auto",
 	dashboard: { stats: true, upcoming: true, courses: true, activity: true, calendar: true },
+	pinnedCourses: [],
 };
 
 const APPEARANCE_KEYS = ["darkStyle", "radius", "font", "scale", "motion"] as const;
@@ -76,6 +79,18 @@ const HUES = Object.fromEntries(Object.entries(ACCENTS).map(([key, a]) => [key, 
 
 function isOption(value: unknown, options: object): value is string {
 	return typeof value === "string" && Object.hasOwn(options, value);
+}
+
+const MAX_PINS = 50;
+
+function sanitizePins(raw: unknown): number[] {
+	if (!Array.isArray(raw)) return [];
+	return [...new Set(raw.filter((id): id is number => Number.isInteger(id) && id > 0))].slice(0, MAX_PINS);
+}
+
+/** Adds the id at the end, or removes it when already pinned. */
+export function togglePinned(pins: number[], id: number): number[] {
+	return pins.includes(id) ? pins.filter((p) => p !== id) : [...pins, id].slice(-MAX_PINS);
 }
 
 /** Stored data is untrusted (older versions, manual edits): keep only known keys with known values. */
@@ -91,6 +106,7 @@ export function sanitizePreferences(raw: unknown): Preferences {
 	return {
 		...DEFAULT_PREFERENCES,
 		...choices,
+		pinnedCourses: sanitizePins(input.pinnedCourses),
 		accent: isOption(input.accent, ACCENTS) ? (input.accent as Accent) : DEFAULT_PREFERENCES.accent,
 		dashboard: Object.fromEntries(
 			(Object.keys(DASHBOARD_SECTIONS) as DashboardSection[]).map((key) => [

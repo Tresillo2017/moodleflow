@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_PREFERENCES, sanitizePreferences } from "./preferences";
+import { DEFAULT_PREFERENCES, sanitizePreferences, togglePinned } from "./preferences";
 
 describe("sanitizePreferences", () => {
 	it("falls back to defaults for garbage input", () => {
@@ -24,5 +24,17 @@ describe("sanitizePreferences", () => {
 
 	it("rejects inherited object keys as option values", () => {
 		expect(sanitizePreferences({ accent: "toString" }).accent).toBe(DEFAULT_PREFERENCES.accent);
+	});
+});
+
+describe("pinned courses", () => {
+	it("toggles a pin on and off, keeping order", () => {
+		expect(togglePinned([1, 2], 3)).toEqual([1, 2, 3]);
+		expect(togglePinned([1, 2, 3], 2)).toEqual([1, 3]);
+	});
+
+	it("drops non-integer, non-positive and duplicate ids from stored data", () => {
+		expect(sanitizePreferences({ pinnedCourses: [3, "4", 3, -1, 1.5, 7] }).pinnedCourses).toEqual([3, 7]);
+		expect(sanitizePreferences({ pinnedCourses: "nope" }).pinnedCourses).toEqual([]);
 	});
 });

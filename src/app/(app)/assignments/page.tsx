@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { LinkContextMenu } from "@/components/navigation/link-context-menu";
+import { ContextMenuItem } from "@/components/ui/context-menu";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
 import { PageHeader } from "@/components/layout/page-header";
@@ -15,7 +18,7 @@ import { isCurrentCourse } from "@/lib/moodle/course-filter";
 import { canSubmit, isDone } from "@/lib/moodle/assignment";
 import { useAssignments } from "@/hooks/use-assignments";
 import { courseHue } from "@/lib/format";
-import { ClipboardCheck, SearchX } from "lucide-react";
+import { ClipboardCheck, GraduationCap, SearchX } from "lucide-react";
 import type { MoodleAssignment } from "@/types/moodle";
 
 const WEEK_MS = 7 * 86_400_000;
@@ -53,9 +56,20 @@ function byDue(a: MoodleAssignment, b: MoodleAssignment) {
 }
 
 function AssignmentRow({ assignment: a, onSubmitted }: { assignment: MoodleAssignment; onSubmitted: () => void }) {
+	const router = useRouter();
 	return (
 		// Stretched-link row: the title link covers the row, the submit button sits above it.
-		<div className="relative flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-muted/50 has-[a:focus-visible]:bg-muted/50">
+		<LinkContextMenu
+			href={`/assignments/${a.id}`}
+			render={
+				<div className="relative flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-muted/50 has-[a:focus-visible]:bg-muted/50" />
+			}
+			extra={
+				<ContextMenuItem onClick={() => router.push(`/courses/${a.courseId}`)}>
+					<GraduationCap /> Go to course
+				</ContextMenuItem>
+			}
+		>
 			<div className="flex min-w-0 items-center gap-3">
 				<span
 					className="h-8 w-1 shrink-0 rounded-full"
@@ -87,7 +101,7 @@ function AssignmentRow({ assignment: a, onSubmitted }: { assignment: MoodleAssig
 					</div>
 				)}
 			</div>
-		</div>
+		</LinkContextMenu>
 	);
 }
 

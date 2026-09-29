@@ -9,6 +9,11 @@ import { NavUser } from "@/components/nav-user";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
 import { useUnreadCount } from "@/hooks/use-unread-count";
+import { Pin, PinOff, ChevronRight } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { CourseContextMenu } from "@/components/courses/course-context-menu";
+import { usePinnedCourses } from "@/hooks/use-pinned-courses";
+import type { MoodleCourse } from "@/types/moodle";
 import { isCurrentCourse } from "@/lib/moodle/course-filter";
 import { courseHue } from "@/lib/format";
 import {
@@ -20,6 +25,7 @@ import {
 	SidebarGroupLabel,
 	SidebarHeader,
 	SidebarMenu,
+	SidebarMenuAction,
 	SidebarMenuBadge,
 	SidebarMenuButton,
 	SidebarMenuItem,
@@ -27,37 +33,86 @@ import {
 	useSidebar,
 } from "@/components/ui/sidebar";
 
-const MAX_STARRED = 6;
-
-function StarredCourses({ pathname }: { pathname: string }) {
-	const { client } = useMoodleConnection();
-	const courses = useMoodleQuery(client ? () => client.getCourses() : null, [client]);
-	const starred = courses.data?.filter((c) => c.isFavourite && isCurrentCourse(c)).slice(0, MAX_STARRED) ?? [];
-
-	if (starred.length === 0) return null;
+function CourseLink({ course, pathname, pinned }: { course: MoodleCourse; pathname: string; pinned: boolean }) {
+	const { toggle } = usePinnedCourses();
+	const href = `/courses/${course.id}`;
 	return (
-		<SidebarGroup className="group-data-[collapsible=icon]:hidden">
-			<SidebarGroupLabel>Starred</SidebarGroupLabel>
+		<CourseContextMenu course={course} render={<SidebarMenuItem />}>
+			<SidebarMenuButton tooltip={course.fullName} isActive={pathname === href} render={<Link href={href} />}>
+				<span
+					className="size-2 shrink-0 rounded-full"
+					style={{ background: `oklch(0.68 0.15 ${courseHue(course.id)})` }}
+					aria-hidden="true"
+				/>
+				<span className="truncate">{course.fullName}</span>
+			</SidebarMenuButton>
+			<SidebarMenuAction showOnHover onClick={() => toggle(course.id)} title={pinned ? "Unpin" : "Pin to sidebar"}>
+				{pinned ? <PinOff /> : <Pin />}
+				<span className="sr-only">{pinned ? `Unpin ${course.fullName}` : `Pin ${course.fullName}`}</span>
+			</SidebarMenuAction>
+		</CourseContextMenu>
+	);
+}
+
+function CourseGroup({ label, courses, pathname, pinned, hideWhenCollapsed }: {
+	label: string;
+	courses: MoodleCourse[];
+	pathname: string;
+	pinned: boolean;
+	hideWhenCollapsed?: boolean;
+}) {
+	if (courses.length === 0) return null;
+	return (
+		<SidebarGroup className={hideWhenCollapsed ? "group-data-[collapsible=icon]:hidden" : undefined}>
+			<SidebarGroupLabel>{label}</SidebarGroupLabel>
 			<SidebarGroupContent>
 				<SidebarMenu>
-					{starred.map((course) => {
-						const href = `/courses/${course.id}`;
-						return (
-							<SidebarMenuItem key={course.id}>
-								<SidebarMenuButton isActive={pathname === href} render={<Link href={href} />}>
-									<span
-										className="size-2 shrink-0 rounded-full"
-										style={{ background: `oklch(0.68 0.15 ${courseHue(course.id)})` }}
-										aria-hidden="true"
-									/>
-									<span className="truncate">{course.fullName}</span>
-								</SidebarMenuButton>
-							</SidebarMenuItem>
-						);
-					})}
+					{courses.map((course) => (
+						<CourseLink key={course.id} course={course} pathname={pathname} pinned={pinned} />
+					))}
 				</SidebarMenu>
 			</SidebarGroupContent>
 		</SidebarGroup>
+	);
+}
+
+function CoursesNav({ pathname }: { pathname: string }) {
+	const { client } = useMoodleConnection();
+	const courses = useMoodleQuery(client ? () => client.getCourses() : null, [client]);
+	const { pinnedIds } = usePinnedCourses();
+
+	const all = courses.data ?? [];
+	const pinned = pinnedIds.map((id) => all.find((c) => c.id === id)).filter((c): c is MoodleCourse => Boolean(c));
+	const rest = all.filter((c) => !pinnedIds.includes(c.id)).sort((a, b) => a.fullName.localeCompare(b.fullName));
+	const current = rest.filter(isCurrentCourse);
+	const past = rest.filter((c) => !isCurrentCourse(c));
+
+	return (
+		<>
+			{/* pinned stay visible when the sidebar collapses to icons */}
+			<CourseGroup label="Pinned" courses={pinned} pathname={pathname} pinned />
+			<CourseGroup label="Courses" courses={current} pathname={pathname} pinned={false} hideWhenCollapsed />
+			{past.length > 0 && (
+				<Collapsible className="group-data-[collapsible=icon]:hidden">
+					<SidebarGroup>
+						<CollapsibleTrigger className="group/past flex h-8 w-full items-center gap-1 rounded-md px-2 text-xs font-medium text-sidebar-foreground/70 outline-hidden hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring">
+							<ChevronRight className="size-3.5 transition-transform group-data-panel-open/past:rotate-90" aria-hidden="true" />
+							Past courses
+							<span className="ml-auto tabular-nums">{past.length}</span>
+						</CollapsibleTrigger>
+						<CollapsibleContent>
+							<SidebarGroupContent>
+								<SidebarMenu>
+									{past.map((course) => (
+										<CourseLink key={course.id} course={course} pathname={pathname} pinned={false} />
+									))}
+								</SidebarMenu>
+							</SidebarGroupContent>
+						</CollapsibleContent>
+					</SidebarGroup>
+				</Collapsible>
+			)}
+		</>
 	);
 }
 
@@ -113,7 +168,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 						</SidebarMenu>
 					</SidebarGroupContent>
 				</SidebarGroup>
-				<StarredCourses pathname={pathname} />
+				<CoursesNav pathname={pathname} />
 			</SidebarContent>
 			<SidebarFooter>
 				<SidebarMenu>

@@ -20,6 +20,7 @@ const courses: MoodleCourse[] = [
 	{ id: 2, shortName: "PHYS101", fullName: "Physics Fundamentals", progress: 41, isFavourite: true, visible: true },
 	{ id: 3, shortName: "HIST150", fullName: "Modern History", progress: 93, isFavourite: false, visible: true },
 	{ id: 4, shortName: "CS210", fullName: "Data Structures", progress: 58, isFavourite: false, visible: true },
+	{ id: 5, shortName: "ARCH100", fullName: "Intro to Architecture", progress: 100, isFavourite: false, visible: true, endDate: new Date(now - 200 * 86_400_000).toISOString() },
 ];
 
 const textAndFiles: AssignmentConfig = { acceptsText: true, acceptsFiles: true, maxFiles: 3, maxFileBytes: 10_485_760, requiresSubmitAction: false, requiresStatement: false };
@@ -155,6 +156,11 @@ export function createMockMoodleClient(): MoodleClient {
 		getSiteInfo: () => delay(siteInfo),
 		getCurrentUser: () => delay(user),
 		getCourses: () => delay(courses),
+		setCourseFavourite: (courseId, favourite) => {
+			const course = courses.find((c) => c.id === courseId);
+			if (course) course.isFavourite = favourite;
+			return delay(undefined);
+		},
 		getCourseContents: (courseId) =>
 			delay(
 				courseContents[courseId] ?? { courseId, sections: [] },

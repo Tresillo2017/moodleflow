@@ -66,6 +66,10 @@ function withCache(client: MoodleClient): MoodleClient {
 		getSiteInfo: cached("siteInfo", () => client.getSiteInfo()),
 		getCurrentUser: cached("user", () => client.getCurrentUser()),
 		getCourses: cached("courses", () => client.getCourses()),
+		async setCourseFavourite(courseId, favourite) {
+			await client.setCourseFavourite(courseId, favourite);
+			invalidate("courses");
+		},
 		getCourseContents: cached("contents", (courseId: number) => client.getCourseContents(courseId)),
 		getCalendarEvents: cached("events", () => client.getCalendarEvents()),
 		getAssignments: cached("assignments", (courseIds?: number[]) => client.getAssignments(courseIds)),
