@@ -254,3 +254,27 @@ html[data-bleh--theme_type="light"] .bg-card {
 [data-sileo-viewport] [data-sileo-title] {
 	text-transform: none;
 }
+
+/*
+ * Toast contrast. The popover colour is nearly the page colour in dark and OLED themes, so the toast lifts
+ * off it with a lighter surface, a hairline ring and a deep shadow. Sileo's data-theme names the text tone:
+ * "light" text = dark app, "dark" text = light app.
+ */
+:root {
+	--toast-surface: color-mix(in oklch, var(--popover) 86%, white);
+}
+.dark {
+	--toast-surface: color-mix(in oklch, var(--popover) 82%, white);
+}
+[data-sileo-viewport][data-theme="light"] [data-sileo-svg] {
+	filter: drop-shadow(0 0 0.75px rgb(255 255 255 / 0.55)) drop-shadow(0 10px 28px rgb(0 0 0 / 0.75));
+}
+[data-sileo-viewport][data-theme="dark"] [data-sileo-svg] {
+	filter: drop-shadow(0 0 0.75px rgb(0 0 0 / 0.4)) drop-shadow(0 10px 28px rgb(0 0 0 / 0.22));
+}
+[data-sileo-viewport][data-theme="light"] [data-sileo-description] {
+	color: rgb(255 255 255 / 0.82);
+}
+[data-sileo-viewport][data-theme="dark"] [data-sileo-description] {
+	color: rgb(0 0 0 / 0.72);
+}

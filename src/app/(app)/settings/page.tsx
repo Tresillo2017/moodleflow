@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useRef } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { motion } from "motion/react";
@@ -8,6 +8,8 @@ import { toast } from "@/lib/toast";
 import { Check, LogOut, Monitor, Moon, RotateCcw, RotateCw, Sun } from "lucide-react";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { usePreferences } from "@/components/providers/preferences-provider";
+import { useDeveloperMode } from "@/hooks/use-developer-mode";
+import { createTapCounter } from "@/lib/tap-unlock";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -258,6 +260,63 @@ function DashboardToggles() {
 	);
 }
 
+const DEV_TAPS = 7;
+const DEV_TAP_WINDOW_MS = 1500;
+
+/** The version number doubles as the developer-mode switch: tap it seven times. */
+function AboutSection() {
+	const { enabled, setEnabled } = useDeveloperMode();
+	const counter = useRef(createTapCounter(DEV_TAPS, DEV_TAP_WINDOW_MS));
+	const hint = useRef<string | null>(null);
+
+	function tap() {
+		const remaining = counter.current.tap();
+		if (hint.current) toast.dismiss(hint.current);
+		hint.current = null;
+		if (enabled) {
+			if (remaining === DEV_TAPS - 1) hint.current = toast.info("Developer mode is already on");
+			return;
+		}
+		if (remaining === 0) {
+			setEnabled(true);
+			toast.success("Developer mode enabled", { description: "Developer tools are now in Settings." });
+		} else if (remaining <= 3) {
+			hint.current = toast.info(`${remaining} more ${remaining === 1 ? "tap" : "taps"} to enable developer mode`, { duration: 1500 });
+		}
+	}
+
+	return (
+		<Section id="about" title="About" description="Which version you're running.">
+			<Row label="Version" hint="See what changed in each release.">
+				<div className="flex items-center gap-2">
+					<button
+						type="button"
+						onClick={tap}
+						className="rounded-md px-2 py-1 text-sm font-medium tabular-nums select-none hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
+					>
+						MoodleFlow v{process.env.NEXT_PUBLIC_APP_VERSION}
+					</button>
+					<Button variant="outline" size="sm" nativeButton={false} render={<Link href="/changelog" />}>
+						What&apos;s new
+					</Button>
+				</div>
+			</Row>
+			{enabled && (
+				<Row label="Developer tools" hint="Test toasts, UI states and app internals.">
+					<div className="flex items-center gap-2">
+						<Button variant="outline" size="sm" nativeButton={false} render={<Link href="/settings/developer" />}>
+							Open
+						</Button>
+						<Button variant="ghost" size="sm" onClick={() => setEnabled(false)}>
+							Turn off
+						</Button>
+					</div>
+				</Row>
+			)}
+		</Section>
+	);
+}
+
 function AccountSection() {
 	const { connection, disconnect, refresh } = useMoodleConnection();
 	const { reset } = usePreferences();
@@ -387,13 +446,7 @@ export default function SettingsPage() {
 
 					<AccountSection />
 
-					<Section id="about" title="About" description="Which version you're running.">
-						<Row label={`MoodleFlow v${process.env.NEXT_PUBLIC_APP_VERSION}`} hint="See what changed in each release.">
-							<Button variant="outline" size="sm" nativeButton={false} render={<Link href="/changelog" />}>
-								What&apos;s new
-							</Button>
-						</Row>
-					</Section>
+					<AboutSection />
 				</div>
 			</div>
 		</div>

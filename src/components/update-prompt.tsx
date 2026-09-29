@@ -6,6 +6,23 @@ import { PENDING_VERSION_KEY } from "@/lib/whats-new";
 
 const CHECK_EVERY_MS = 5 * 60 * 1000;
 
+/** The "new version available" toast; Reload remembers the version so the next load can show its notes. */
+export function showUpdateToast(version?: string) {
+	return toast.info("A new version of MoodleFlow is available", {
+		description: version ? `v${version} is ready. Reload to update.` : "Reload to update.",
+		duration: null,
+		button: {
+			title: "Reload",
+			onClick: () => {
+				try {
+					if (version) window.localStorage.setItem(PENDING_VERSION_KEY, version);
+				} catch {}
+				window.location.reload();
+			},
+		},
+	});
+}
+
 /** Asks the user to reload once the deployed build differs from the one this tab loaded. */
 export function UpdatePrompt() {
 	useEffect(() => {
@@ -20,20 +37,7 @@ export function UpdatePrompt() {
 				const latest = (await res.json()) as { build?: string; version?: string };
 				if (!latest.build || latest.build === current) return;
 				notified = true;
-				toast.info("A new version of MoodleFlow is available", {
-					description: latest.version ? `v${latest.version} is ready. Reload to update.` : "Reload to update.",
-					duration: null,
-					button: {
-						title: "Reload",
-						onClick: () => {
-							// remembered so the next load can show what's new
-							try {
-								if (latest.version) window.localStorage.setItem(PENDING_VERSION_KEY, latest.version);
-							} catch {}
-							window.location.reload();
-						},
-					},
-				});
+				showUpdateToast(latest.version);
 			} catch {
 				// offline or mid-deploy: try again on the next check
 			}

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import type { ChangelogRelease } from "@/lib/changelog";
 import { releases } from "@/lib/releases";
 import { toast } from "@/lib/toast";
 import { notesToShow, PENDING_VERSION_KEY } from "@/lib/whats-new";
@@ -9,6 +10,23 @@ import { notesToShow, PENDING_VERSION_KEY } from "@/lib/whats-new";
 const MAX_ITEMS = 4;
 const SHOW_FOR_MS = 20_000;
 const SHOW_DELAY_MS = 600;
+
+/** The "Updated to vX" popout: the release's notes (first few items) and a link to the full changelog. */
+export function showWhatsNew(release: ChangelogRelease, openChangelog: () => void) {
+	const items = release.groups.flatMap((g) => g.items);
+	return toast.success(`Updated to v${release.version}`, {
+		duration: SHOW_FOR_MS,
+		description: (
+			<ul className="list-disc space-y-1 pl-4 text-left">
+				{items.slice(0, MAX_ITEMS).map((item) => (
+					<li key={item}>{item}</li>
+				))}
+				{items.length > MAX_ITEMS && <li>and {items.length - MAX_ITEMS} more</li>}
+			</ul>
+		),
+		button: { title: "Full changelog", onClick: openChangelog },
+	});
+}
 
 /** After the user reloads for an update, shows what changed in the version they landed on. */
 export function WhatsNew() {
@@ -34,19 +52,7 @@ export function WhatsNew() {
 			} catch {}
 			if (!release) return;
 
-			const items = release.groups.flatMap((g) => g.items);
-			toast.success(`Updated to v${release.version}`, {
-				duration: SHOW_FOR_MS,
-				description: (
-					<ul className="list-disc space-y-1 pl-4 text-left">
-						{items.slice(0, MAX_ITEMS).map((item) => (
-							<li key={item}>{item}</li>
-						))}
-						{items.length > MAX_ITEMS && <li>and {items.length - MAX_ITEMS} more</li>}
-					</ul>
-				),
-				button: { title: "Full changelog", onClick: () => router.push("/changelog") },
-			});
+			showWhatsNew(release, () => router.push("/changelog"));
 		}, SHOW_DELAY_MS);
 		return () => clearTimeout(timer);
 	}, [router]);

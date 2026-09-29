@@ -7,6 +7,14 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-09-29
+
+### Added
+- Developer mode: tap the version number in Settings > About seven times to unlock a Developer tools page with a toast tester (every type, position, duration, promise and stacking scenarios), UI state previews and diagnostics.
+
+### Changed
+- Toasts have more contrast on dark and OLED themes: a lighter surface, a hairline ring and a deeper shadow.
+
 ## [0.7.1] - 2026-09-29
 
 ### Fixed

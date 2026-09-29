@@ -10,5 +10,8 @@ export const toast = {
 	info: make(sileo.info),
 	warning: make(sileo.warning),
 	action: make(sileo.action),
+	loading: make((opts) => sileo.show({ ...opts, type: "loading" })),
+	promise: sileo.promise,
 	dismiss: sileo.dismiss,
+	clear: sileo.clear,
 };
