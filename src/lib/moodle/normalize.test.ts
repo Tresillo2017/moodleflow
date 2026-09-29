@@ -4,6 +4,7 @@ import {
 	normalizeAssignments,
 	normalizeCourseContent,
 	normalizeCourses,
+	normalizeForumDiscussions,
 	normalizeGrades,
 	normalizeSiteInfo,
 } from "./normalize";
@@ -124,5 +125,54 @@ describe("normalizeGrades", () => {
 				],
 			}),
 		]);
+	});
+});
+
+describe("normalizeCourseContent files", () => {
+	it("keeps instance id and only file-type contents", () => {
+		const content = normalizeCourseContent(1, [
+			{
+				id: 10,
+				name: "Week 1",
+				modules: [
+					{
+						id: 55,
+						instance: 7,
+						modname: "resource",
+						name: "Notes",
+						contents: [
+							{ type: "file", filename: "a.pdf", fileurl: "https://m.example/pluginfile.php/a.pdf", filesize: 2048, mimetype: "application/pdf" },
+							{ type: "url", fileurl: "https://elsewhere.example" },
+						],
+					},
+				],
+			},
+		]);
+		const [activity] = content.sections[0].activities;
+		expect(activity.instance).toBe(7);
+		expect(activity.files).toEqual([
+			{ name: "a.pdf", url: "https://m.example/pluginfile.php/a.pdf", size: 2048, mimeType: "application/pdf" },
+		]);
+	});
+});
+
+describe("normalizeGrades percentage", () => {
+	it("parses Moodle's formatted percentage string", () => {
+		const [course] = normalizeGrades({
+			usergrades: [{ courseid: 1, coursename: "X", gradeitems: [{ id: 1, itemname: "A", percentageformatted: "85.50 %" }] }],
+		});
+		expect(course.items[0].percentage).toBe(85.5);
+	});
+});
+
+describe("normalizeForumDiscussions", () => {
+	it("maps discussions and tolerates an empty response", () => {
+		const list = normalizeForumDiscussions({
+			discussions: [{ discussion: 9, subject: "Hi", userfullname: "Ana", timemodified: 1_700_000_000, numreplies: 3, pinned: true }],
+		});
+		expect(list).toEqual([
+			{ id: 9, subject: "Hi", author: "Ana", timeModified: new Date(1_700_000_000 * 1000).toISOString(), replies: 3, pinned: true },
+		]);
+		expect(normalizeForumDiscussions({})).toEqual([]);
 	});
 });

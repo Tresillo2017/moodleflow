@@ -1,21 +1,54 @@
 "use client";
 
-import { use } from "react";
+import { use, useMemo } from "react";
 import Link from "next/link";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ui/state";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ActivityIcon } from "@/components/activities/activity-icon";
 import { DeadlineBadge } from "@/components/assignments/deadline-badge";
-import { ArrowLeft, CheckCircle2, ChevronDown, Circle, ExternalLink, FolderOpen, Star } from "lucide-react";
-import { courseHue } from "@/lib/format";
+import { SubmitDialog } from "@/components/assignments/submit-dialog";
+import { CourseGrades } from "@/components/grades/course-grades";
+import { ArrowLeft, CheckCircle2, ChevronDown, Circle, Download, ExternalLink, FolderOpen, GraduationCap, MessageSquare, Pin, Star } from "lucide-react";
+import { courseHue, formatDistanceToNow } from "@/lib/format";
 import { isHttpUrl } from "@/lib/utils";
-import type { MoodleActivity, MoodleSection } from "@/types/moodle";
+import type { MoodleActivity, MoodleAssignment, MoodleFile, MoodleSection } from "@/types/moodle";
 
-function ActivityRow({ activity: a }: { activity: MoodleActivity }) {
+function formatSize(bytes: number): string {
+	if (bytes < 1024) return `${bytes} B`;
+	if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+	return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function FileList({ files }: { files: MoodleFile[] }) {
+	const { client } = useMoodleConnection();
+	if (!client) return null;
+	return (
+		<ul className="flex flex-col gap-1 pr-4 pb-3 pl-11">
+			{files.map((f) => (
+				<li key={f.url}>
+					<a
+						href={client.fileUrl(f.url)}
+						download={f.name}
+						className="group/file flex items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none"
+					>
+						<Download className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+						<span className="flex-1 truncate">{f.name}</span>
+						<span className="text-muted-foreground tabular-nums">{formatSize(f.size)}</span>
+					</a>
+				</li>
+			))}
+		</ul>
+	);
+}
+
+function ActivityRow({ activity: a, assignment }: { activity: MoodleActivity; assignment?: MoodleAssignment }) {
+	const canSubmit =
+		assignment && (assignment.status === "not_started" || assignment.status === "draft" || assignment.status === "overdue");
 	const content = (
 		<>
 			{a.completed === undefined ? (
@@ -27,7 +60,7 @@ function ActivityRow({ activity: a }: { activity: MoodleActivity }) {
 			)}
 			<ActivityIcon type={a.type} className="size-4 shrink-0 text-muted-foreground" />
 			<span className="flex-1 truncate">{a.name}</span>
-			<DeadlineBadge dueDate={a.dueDate} />
+			<DeadlineBadge dueDate={a.dueDate ?? assignment?.dueDate} />
 			{isHttpUrl(a.url) && (
 				<ExternalLink
 					className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
@@ -36,19 +69,31 @@ function ActivityRow({ activity: a }: { activity: MoodleActivity }) {
 			)}
 		</>
 	);
-	const className = "group flex items-center gap-3 px-4 py-3 text-sm";
+	const className = "group flex min-w-0 flex-1 items-center gap-3 px-4 py-3 text-sm";
 
-	return isHttpUrl(a.url) ? (
-		<a href={a.url} target="_blank" rel="noopener noreferrer" className={`${className} transition-colors hover:bg-muted/50`}>
-			{content}
-			<span className="sr-only">(opens in Moodle)</span>
-		</a>
-	) : (
-		<div className={className}>{content}</div>
+	return (
+		<div>
+			<div className="flex items-center">
+				{isHttpUrl(a.url) ? (
+					<a href={a.url} target="_blank" rel="noopener noreferrer" className={`${className} transition-colors hover:bg-muted/50`}>
+						{content}
+						<span className="sr-only">(opens in Moodle)</span>
+					</a>
+				) : (
+					<div className={className}>{content}</div>
+				)}
+				{canSubmit && (
+					<div className="pr-4">
+						<SubmitDialog assignmentId={assignment.id} assignmentName={assignment.name} />
+					</div>
+				)}
+			</div>
+			{a.files && a.files.length > 0 && <FileList files={a.files} />}
+		</div>
 	);
 }
 
-function SectionBlock({ section }: { section: MoodleSection }) {
+function SectionBlock({ section, assignments }: { section: MoodleSection; assignments: Map<number, MoodleAssignment> }) {
 	const tracked = section.activities.filter((a) => a.completed !== undefined);
 	const done = tracked.filter((a) => a.completed).length;
 
@@ -69,11 +114,63 @@ function SectionBlock({ section }: { section: MoodleSection }) {
 			<CollapsibleContent className="h-(--collapsible-panel-height) overflow-hidden transition-[height] duration-200 ease-out data-ending-style:h-0 data-starting-style:h-0">
 				<div className="flex flex-col divide-y border-t">
 					{section.activities.map((a) => (
-						<ActivityRow key={a.id} activity={a} />
+						<ActivityRow
+							key={a.id}
+							activity={a}
+							assignment={a.type === "assignment" && a.instance !== undefined ? assignments.get(a.instance) : undefined}
+						/>
 					))}
 				</div>
 			</CollapsibleContent>
 		</Collapsible>
+	);
+}
+
+function ForumBlock({ forum }: { forum: MoodleActivity }) {
+	const { client, refresh } = useMoodleConnection();
+	const discussions = useMoodleQuery(
+		client && forum.instance !== undefined ? () => client.getForumDiscussions(forum.instance!) : null,
+		[client, forum.instance],
+	);
+
+	return (
+		<section className="overflow-hidden rounded-xl border bg-card">
+			<h2 className="flex items-center gap-2 px-4 py-3 text-sm font-medium">
+				<MessageSquare className="size-4 text-muted-foreground" aria-hidden="true" />
+				<span className="flex-1 truncate">{forum.name}</span>
+				{isHttpUrl(forum.url) && (
+					<a
+						href={forum.url}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="text-xs font-normal text-muted-foreground hover:text-foreground"
+					>
+						Open in Moodle<span className="sr-only"> (opens in a new tab)</span>
+					</a>
+				)}
+			</h2>
+			<div className="border-t">
+				{discussions.loading && <ListSkeleton rows={2} />}
+				{discussions.error && <ErrorState error={discussions.error} onRetry={refresh} />}
+				{discussions.data?.length === 0 && <p className="px-4 py-3 text-sm text-muted-foreground">No discussions yet.</p>}
+				<ul className="divide-y">
+					{discussions.data?.map((d) => (
+						<li key={d.id} className="flex items-center gap-3 px-4 py-3 text-sm">
+							{d.pinned && <Pin className="size-3.5 shrink-0 text-muted-foreground" aria-label="Pinned" />}
+							<div className="min-w-0 flex-1">
+								<p className="truncate font-medium">{d.subject}</p>
+								<p className="truncate text-xs text-muted-foreground">
+									{d.author} · {formatDistanceToNow(d.timeModified)}
+								</p>
+							</div>
+							<span className="text-xs text-muted-foreground tabular-nums">
+								{d.replies} {d.replies === 1 ? "reply" : "replies"}
+							</span>
+						</li>
+					))}
+				</ul>
+			</div>
+		</section>
 	);
 }
 
@@ -84,8 +181,16 @@ export default function CourseDetailPage({ params }: { params: Promise<{ courseI
 
 	const courses = useMoodleQuery(client ? () => client.getCourses() : null, [client]);
 	const content = useMoodleQuery(client ? () => client.getCourseContents(id) : null, [client, id]);
+	const assignmentsQuery = useMoodleQuery(client ? () => client.getAssignments() : null, [client]);
+	const gradesQuery = useMoodleQuery(client ? () => client.getGrades(id) : null, [client, id]);
 	const course = courses.data?.find((c) => c.id === id);
 	const sections = content.data?.sections.filter((s) => s.activities.length > 0) ?? [];
+	const assignmentsById = useMemo(
+		() => new Map((assignmentsQuery.data ?? []).map((a) => [a.id, a])),
+		[assignmentsQuery.data],
+	);
+	const forums = sections.flatMap((s) => s.activities).filter((a) => a.type === "forum" && a.instance !== undefined);
+	const courseGrades = gradesQuery.data?.find((g) => g.courseId === id);
 
 	return (
 		<div className="flex flex-col gap-6">
@@ -124,23 +229,48 @@ export default function CourseDetailPage({ params }: { params: Promise<{ courseI
 				<PageHeader title="Course" />
 			)}
 
-			{content.loading && <ListSkeleton rows={4} />}
-			{content.error && <ErrorState error={content.error} onRetry={refresh} />}
-			{content.data && sections.length === 0 && (
-				<EmptyState icon={FolderOpen} title="No content yet" description="This course has no published activities." />
-			)}
+			<Tabs defaultValue="content">
+				<TabsList>
+					<TabsTrigger value="content">Content</TabsTrigger>
+					<TabsTrigger value="grades">Grades</TabsTrigger>
+					{forums.length > 0 && <TabsTrigger value="forums">Forums</TabsTrigger>}
+				</TabsList>
 
-			<div className="flex flex-col gap-3">
-				{sections.map((section, i) => (
-					<div
-						key={section.id}
-						className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 fill-mode-backwards duration-300 ease-out"
-						style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
-					>
-						<SectionBlock section={section} />
+				<TabsContent value="content" className="flex flex-col gap-6 pt-2">
+					{content.loading && <ListSkeleton rows={4} />}
+					{content.error && <ErrorState error={content.error} onRetry={refresh} />}
+					{content.data && sections.length === 0 && (
+						<EmptyState icon={FolderOpen} title="No content yet" description="This course has no published activities." />
+					)}
+
+					<div className="flex flex-col gap-3">
+						{sections.map((section, i) => (
+							<div
+								key={section.id}
+								className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 fill-mode-backwards duration-300 ease-out"
+								style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
+							>
+								<SectionBlock section={section} assignments={assignmentsById} />
+							</div>
+						))}
 					</div>
-				))}
-			</div>
+				</TabsContent>
+
+				<TabsContent value="grades" className="flex flex-col gap-3 pt-2">
+					{gradesQuery.loading && <ListSkeleton rows={3} />}
+					{gradesQuery.error && <ErrorState error={gradesQuery.error} onRetry={refresh} />}
+					{gradesQuery.data && !courseGrades && (
+						<EmptyState icon={GraduationCap} title="No grades yet" description="Grades for this course show up here." />
+					)}
+					{courseGrades && <CourseGrades course={courseGrades} />}
+				</TabsContent>
+
+				<TabsContent value="forums" className="flex flex-col gap-3 pt-2">
+					{forums.map((f) => (
+						<ForumBlock key={f.id} forum={f} />
+					))}
+				</TabsContent>
+			</Tabs>
 		</div>
 	);
 }

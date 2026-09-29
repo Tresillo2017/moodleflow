@@ -5,6 +5,7 @@ import type {
 	MoodleCourse,
 	MoodleCourseContent,
 	MoodleCourseGrades,
+	MoodleForumDiscussion,
 	MoodleNotification,
 	MoodleSiteInfo,
 	MoodleUser,
@@ -14,6 +15,7 @@ import {
 	normalizeCalendarEvents,
 	normalizeCourseContent,
 	normalizeCourses,
+	normalizeForumDiscussions,
 	normalizeGrades,
 	normalizeNotifications,
 	normalizeSiteInfo,
@@ -27,6 +29,9 @@ export interface MoodleClient {
 	getCalendarEvents(): Promise<MoodleCalendarEvent[]>;
 	getAssignments(): Promise<MoodleAssignment[]>;
 	getGrades(courseId?: number): Promise<MoodleCourseGrades[]>;
+	getForumDiscussions(forumId: number): Promise<MoodleForumDiscussion[]>;
+	/** Adds the auth token to a Moodle file URL so the browser can download it. */
+	fileUrl(url: string): string;
 	getNotifications(): Promise<MoodleNotification[]>;
 	markNotificationRead(notificationId: number): Promise<void>;
 	markAllNotificationsRead(): Promise<void>;
@@ -182,6 +187,22 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 				...(courseId ? { courseid: courseId } : {}),
 			});
 			return normalizeGrades(raw);
+		},
+
+		async getForumDiscussions(forumId: number) {
+			const raw = await callMoodle(connection, "mod_forum_get_forum_discussions", {
+				forumid: forumId,
+			});
+			return normalizeForumDiscussions(raw);
+		},
+
+		fileUrl(url: string) {
+			const file = new URL(url, connection.siteUrl);
+			// never send the token to a host other than the Moodle site
+			if (file.origin !== new URL(connection.siteUrl).origin) return url;
+			file.searchParams.set("token", connection.token);
+			file.searchParams.set("forcedownload", "1");
+			return file.toString();
 		},
 
 		async getNotifications() {

@@ -43,8 +43,18 @@ export type ActivityType =
 	| "folder"
 	| "unknown";
 
+export interface MoodleFile {
+	name: string;
+	url: string;
+	size: number;
+	mimeType?: string;
+}
+
 export interface MoodleActivity {
 	id: number;
+	/** Module instance id (assignment id, forum id, ...); `id` is the course-module id. */
+	instance?: number;
+	files?: MoodleFile[];
 	courseId: number;
 	sectionId: number;
 	type: ActivityType;
@@ -87,6 +97,15 @@ export interface MoodleAssignment {
 	grade?: number;
 	maxGrade?: number;
 	feedback?: string;
+}
+
+export interface MoodleForumDiscussion {
+	id: number;
+	subject: string;
+	author: string;
+	timeModified: string;
+	replies: number;
+	pinned: boolean;
 }
 
 export interface MoodleCalendarEvent {

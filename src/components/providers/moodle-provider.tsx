@@ -65,6 +65,8 @@ function withCache(client: MoodleClient): MoodleClient {
 		getCalendarEvents: cached("events", () => client.getCalendarEvents()),
 		getAssignments: cached("assignments", () => client.getAssignments()),
 		getGrades: cached("grades", (courseId?: number) => client.getGrades(courseId)),
+		getForumDiscussions: cached("forum", (forumId: number) => client.getForumDiscussions(forumId)),
+		fileUrl: (url) => client.fileUrl(url),
 		getNotifications: cached("notifications", () => client.getNotifications()),
 		async markNotificationRead(id) {
 			await client.markNotificationRead(id);

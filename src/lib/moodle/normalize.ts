@@ -6,6 +6,8 @@ import type {
 	MoodleCourse,
 	MoodleCourseContent,
 	MoodleCourseGrades,
+	MoodleFile,
+	MoodleForumDiscussion,
 	MoodleNotification,
 	MoodleSiteInfo,
 } from "@/types/moodle";
@@ -76,6 +78,18 @@ const MODNAME_TO_TYPE: Record<string, ActivityType> = {
 	folder: "folder",
 };
 
+function normalizeFiles(contents: unknown): MoodleFile[] {
+	return asArray(contents)
+		.map(asRecord)
+		.filter((f) => f.type === "file" && typeof f.fileurl === "string")
+		.map((f) => ({
+			name: String(f.filename ?? ""),
+			url: String(f.fileurl),
+			size: Number(f.filesize ?? 0),
+			mimeType: typeof f.mimetype === "string" ? f.mimetype : undefined,
+		}));
+}
+
 // core_course_get_contents
 export function normalizeCourseContent(courseId: number, raw: unknown): MoodleCourseContent {
 	const sections = asArray(raw).map((s) => {
@@ -85,6 +99,8 @@ export function normalizeCourseContent(courseId: number, raw: unknown): MoodleCo
 			const modname = String(mod.modname ?? "");
 			return {
 				id: Number(mod.id),
+				instance: mod.instance !== undefined ? Number(mod.instance) : undefined,
+				files: normalizeFiles(mod.contents),
 				courseId,
 				sectionId: Number(r.id),
 				type: MODNAME_TO_TYPE[modname] ?? "unknown",
@@ -155,6 +171,21 @@ export function normalizeAssignments(raw: unknown): MoodleAssignment[] {
 	return assignments;
 }
 
+// mod_forum_get_forum_discussions
+export function normalizeForumDiscussions(raw: unknown): MoodleForumDiscussion[] {
+	return asArray(asRecord(raw).discussions).map((d) => {
+		const disc = asRecord(d);
+		return {
+			id: Number(disc.discussion ?? disc.id),
+			subject: String(disc.subject ?? disc.name ?? ""),
+			author: String(disc.userfullname ?? ""),
+			timeModified: new Date(Number(disc.timemodified ?? 0) * 1000).toISOString(),
+			replies: Number(disc.numreplies ?? 0),
+			pinned: Boolean(disc.pinned),
+		};
+	});
+}
+
 // message_popup_get_popup_notifications
 export function normalizeNotifications(raw: unknown): MoodleNotification[] {
 	const r = asRecord(raw);
@@ -172,6 +203,11 @@ export function normalizeNotifications(raw: unknown): MoodleNotification[] {
 	});
 }
 
+function parsePercent(value: unknown): number | undefined {
+	const n = parseFloat(String(value ?? ""));
+	return Number.isFinite(n) ? n : undefined;
+}
+
 // gradereport_user_get_grade_items
 export function normalizeGrades(raw: unknown): MoodleCourseGrades[] {
 	const r = asRecord(raw);
@@ -184,8 +220,7 @@ export function normalizeGrades(raw: unknown): MoodleCourseGrades[] {
 				itemName: String(item.itemname ?? ""),
 				grade: item.graderaw !== null && item.graderaw !== undefined ? Number(item.graderaw) : undefined,
 				maxGrade: item.grademax !== undefined ? Number(item.grademax) : undefined,
-				percentage:
-					item.gradepercentage !== undefined ? Number(item.gradepercentage) : undefined,
+				percentage: parsePercent(item.percentageformatted ?? item.gradepercentage),
 				letterGrade: item.gradeletter ? String(item.gradeletter) : undefined,
 				feedback: item.feedback ? String(item.feedback) : undefined,
 				gradedDate:

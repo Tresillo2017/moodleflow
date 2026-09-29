@@ -43,7 +43,7 @@ const courseContents: Record<number, MoodleCourseContent> = {
 				id: 1,
 				name: "Week 1",
 				activities: [
-					{ id: 1, courseId: 1, sectionId: 1, type: "resource", name: "Lecture notes", visible: true, completed: true },
+					{ id: 1, courseId: 1, sectionId: 1, type: "resource", name: "Lecture notes", visible: true, completed: true, files: [{ name: "lecture-1.pdf", url: "#", size: 482_000, mimeType: "application/pdf" }] },
 					{ id: 2, courseId: 1, sectionId: 1, type: "url", name: "Video lecture", visible: true, completed: true },
 					{ id: 3, courseId: 1, sectionId: 1, type: "quiz", name: "Quiz 1", visible: true, completed: true },
 				],
@@ -52,8 +52,8 @@ const courseContents: Record<number, MoodleCourseContent> = {
 				id: 2,
 				name: "Week 2",
 				activities: [
-					{ id: 4, courseId: 1, sectionId: 2, type: "assignment", name: "Problem Set 4", dueDate: days(1), visible: true, completed: false },
-					{ id: 5, courseId: 1, sectionId: 2, type: "forum", name: "Discussion: Series convergence", visible: true, completed: false },
+					{ id: 4, instance: 101, courseId: 1, sectionId: 2, type: "assignment", name: "Problem Set 4", dueDate: days(1), visible: true, completed: false },
+					{ id: 5, instance: 1, courseId: 1, sectionId: 2, type: "forum", name: "Discussion: Series convergence", visible: true, completed: false },
 				],
 			},
 		],
@@ -145,6 +145,12 @@ export function createMockMoodleClient(): MoodleClient {
 		getAssignments: () => delay(assignments),
 		getGrades: (courseId) =>
 			delay(courseId ? gradesWithHistory.filter((g) => g.courseId === courseId) : gradesWithHistory),
+		getForumDiscussions: () =>
+			delay([
+				{ id: 1, subject: "Does the ratio test always work?", author: "Ana Costa", timeModified: days(-1), replies: 4, pinned: false },
+				{ id: 2, subject: "Welcome to the course", author: "Prof. Silva", timeModified: days(-20), replies: 0, pinned: true },
+			]),
+		fileUrl: (url) => url,
 		getNotifications: () => delay(notifications),
 		markNotificationRead: (notificationId) => {
 			const n = notifications.find((n) => n.id === notificationId);
