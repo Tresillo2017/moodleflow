@@ -7,6 +7,15 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-09-30
+
+### Added
+- Quizzes: overview with rules, attempts and best grade; take an attempt (autosave, navigation panel, timer, flag questions, summary and submit); review attempts as far as the quiz's review options allow. Unsupported question types show read-only with a link to Moodle.
+- Lessons: branching pages, question pages, progress, grade and review.
+- Workshops: phase planner, submissions with files, peer assessment forms, received assessments and grades.
+- Choice, Feedback and Survey activities: vote and see results, multi-page feedback forms with analysis, and survey answers.
+- H5P activities (embedded player and attempts), SCORM 1.2 packages (sandboxed player that saves tracks) and external tools (LTI launch in a new tab).
+
 ## [0.11.2] - 2026-09-29
 
 ### Security

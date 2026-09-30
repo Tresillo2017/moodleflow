@@ -38,6 +38,15 @@ const APP_MODULES: Partial<Record<MoodleActivity["type"], string>> = {
 	forum: "forum",
 	chat: "chat",
 	bigbluebuttonbn: "bigbluebuttonbn",
+	quiz: "quiz",
+	lesson: "lesson",
+	workshop: "workshop",
+	choice: "choice",
+	feedback: "feedback",
+	survey: "survey",
+	h5pactivity: "h5pactivity",
+	scorm: "scorm",
+	lti: "lti",
 };
 
 function ActivityRow({ activity: a, assignment, updated }: { activity: MoodleActivity; assignment?: MoodleAssignment; updated?: boolean }) {

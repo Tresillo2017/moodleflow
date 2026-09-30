@@ -13,6 +13,12 @@ import {
 	Package,
 	MessagesSquare,
 	Video,
+	Users,
+	Vote,
+	ClipboardCheck,
+	PlayCircle,
+	Boxes,
+	ExternalLink,
 } from "lucide-react";
 import type { ActivityType } from "@/types/moodle";
 
@@ -31,6 +37,12 @@ const ICONS: Record<ActivityType, React.ComponentType<{ className?: string }>> =
 	imscp: Package,
 	chat: MessagesSquare,
 	bigbluebuttonbn: Video,
+	workshop: Users,
+	choice: Vote,
+	survey: ClipboardCheck,
+	h5pactivity: PlayCircle,
+	scorm: Boxes,
+	lti: ExternalLink,
 	unknown: File,
 };
 

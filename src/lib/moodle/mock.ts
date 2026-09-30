@@ -1,6 +1,11 @@
 import type { MoodleClient } from "./client";
 import { deriveSubmissionStatus } from "./normalize";
 import { createMockSocialApi } from "./mock-social";
+import { createMockQuizApi } from "./mock-quiz";
+import { createMockLessonApi } from "./mock-lesson";
+import { createMockWorkshopApi } from "./mock-workshop";
+import { createMockEngageApi } from "./mock-engage";
+import { createMockEmbedApi } from "./mock-embed";
 import type {
 	AssignmentConfig,
 	MoodleAssignment,
@@ -101,6 +106,15 @@ const courseContents: Record<number, MoodleCourseContent> = {
 					{ id: 5, instance: 1, courseId: 1, sectionId: 2, type: "forum", name: "Discussion: Series convergence", visible: true, completed: false },
 						{ id: 7, instance: 1, courseId: 1, sectionId: 2, type: "chat", name: "Study room", description: "<p>Drop in to work through problems together.</p>", visible: true },
 						{ id: 8, instance: 1, courseId: 1, sectionId: 2, type: "bigbluebuttonbn", name: "Weekly live session", description: "<p>Thursdays at 14:00.</p>", visible: true },
+						{ id: 21, instance: 3, courseId: 1, sectionId: 2, type: "quiz", name: "Quiz: Series and convergence", visible: true },
+						{ id: 22, instance: 1, courseId: 1, sectionId: 2, type: "lesson", name: "Series and convergence: guided lesson", visible: true },
+						{ id: 23, instance: 1, courseId: 1, sectionId: 2, type: "workshop", name: "Workshop: Peer proofs", visible: true },
+						{ id: 24, instance: 1, courseId: 1, sectionId: 2, type: "choice", name: "Choice: Study group time", visible: true },
+						{ id: 25, instance: 1, courseId: 1, sectionId: 2, type: "feedback", name: "Course feedback", visible: true },
+						{ id: 26, instance: 1, courseId: 1, sectionId: 2, type: "survey", name: "Course experience survey", visible: true },
+						{ id: 27, instance: 1, courseId: 1, sectionId: 2, type: "h5pactivity", name: "Interactive summary", visible: true },
+						{ id: 28, instance: 1, courseId: 1, sectionId: 2, type: "scorm", name: "SCORM: Limits primer", visible: true },
+						{ id: 29, instance: 1, courseId: 1, sectionId: 2, type: "lti", name: "External tool: Plagiarism checker", visible: true },
 				],
 			},
 			{
@@ -208,6 +222,11 @@ function delay<T>(value: T, ms = 250): Promise<T> {
 export function createMockMoodleClient(): MoodleClient {
 	return {
 		...createMockSocialApi(),
+		...createMockQuizApi(),
+		...createMockLessonApi(),
+		...createMockWorkshopApi(),
+		...createMockEngageApi(),
+		...createMockEmbedApi(),
 		getSiteInfo: () => delay(siteInfo),
 		getSiteConfig: () => delay({ siteName: siteInfo.siteName, maxUploadBytes: 10_485_760, registrationEnabled: false }),
 		supports: () => true,

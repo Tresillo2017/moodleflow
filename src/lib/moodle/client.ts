@@ -12,6 +12,11 @@ import {
 } from "./call";
 import { viewCall, type ViewTarget } from "./views";
 import { createSocialApi, type SocialApi } from "./client-social";
+import { createQuizApi, type QuizApi } from "./client-quiz";
+import { createLessonApi, type LessonApi } from "./client-lesson";
+import { createWorkshopApi, type WorkshopApi } from "./client-workshop";
+import { createEngageApi, type EngageApi } from "./client-engage";
+import { createEmbedApi, type EmbedApi } from "./client-embed";
 import type {
 	CourseBlock,
 	CourseCompletion,
@@ -50,7 +55,7 @@ import {
 	normalizeSiteInfo,
 } from "./normalize";
 
-export interface MoodleClient extends SocialApi {
+export interface MoodleClient extends SocialApi, QuizApi, LessonApi, WorkshopApi, EngageApi, EmbedApi {
 	getSiteInfo(): Promise<MoodleSiteInfo>;
 	/** Site name, logo, upload limit and registration/policy flags; falls back to site info when the site lacks tool_mobile. */
 	getSiteConfig(): Promise<MoodleSiteConfig>;
@@ -204,11 +209,11 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 		area: "submission_comments",
 	});
 
-	const social = createSocialApi({
+	const socialCtx = {
 		connection,
 		userId: () => fetchSiteInfo().then((info) => info.userId),
-		uploadFiles: (files) => uploadFiles(files),
-	});
+		uploadFiles: (files: File[]) => uploadFiles(files),
+	};
 
 	async function uploadFiles(files: File[], opts?: { maxBytes?: number; onProgress?: (fraction: number) => void }) {
 		const info = await fetchSiteInfo();
@@ -216,7 +221,12 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 	}
 
 	return {
-		...social,
+		...createSocialApi(socialCtx),
+		...createQuizApi(socialCtx),
+		...createLessonApi(socialCtx),
+		...createWorkshopApi(socialCtx),
+		...createEngageApi(socialCtx),
+		...createEmbedApi(socialCtx),
 		getSiteInfo: fetchSiteInfo,
 
 		supports: (wsfunction) => siteFunctions?.has(wsfunction) ?? true,

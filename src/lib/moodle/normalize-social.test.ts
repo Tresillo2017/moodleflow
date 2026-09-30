@@ -91,6 +91,7 @@ describe("parseMoodleLink", () => {
 
 	it("maps module types to app routes", () => {
 		expect(modulePath("forum", 3, 9)).toBe("/forums/3?course=9");
-		expect(modulePath("quiz", 3, 9)).toBe("/courses/9");
+expect(modulePath("quiz", 3, 9)).toBe("/quizzes/3?course=9");
+		expect(modulePath("label", 3, 9)).toBe("/courses/9");
 	});
 });

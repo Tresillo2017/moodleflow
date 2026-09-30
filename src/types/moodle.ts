@@ -56,6 +56,12 @@ export type ActivityType =
 	| "imscp"
 	| "chat"
 	| "bigbluebuttonbn"
+	| "workshop"
+	| "choice"
+	| "survey"
+	| "h5pactivity"
+	| "scorm"
+	| "lti"
 	| "unknown";
 
 export interface MoodleFile {

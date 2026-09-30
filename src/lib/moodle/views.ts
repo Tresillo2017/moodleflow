@@ -17,6 +17,12 @@ const VIEW: Partial<Record<MoodleActivity["type"], [string, string]>> = {
 	feedback: ["mod_feedback_view_feedback", "feedbackid"],
 	chat: ["mod_chat_view_chat", "chatid"],
 	bigbluebuttonbn: ["mod_bigbluebuttonbn_view_bigbluebuttonbn", "bigbluebuttonbnid"],
+	workshop: ["mod_workshop_view_workshop", "workshopid"],
+	choice: ["mod_choice_view_choice", "choiceid"],
+	survey: ["mod_survey_view_survey", "surveyid"],
+	h5pactivity: ["mod_h5pactivity_view_h5pactivity", "h5pactivityid"],
+	scorm: ["mod_scorm_view_scorm", "scormid"],
+	lti: ["mod_lti_view_lti", "ltiid"],
 };
 
 /** The WS call that records a view of this activity, or null for types Moodle doesn't track (labels, unknown). */

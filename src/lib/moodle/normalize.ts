@@ -122,6 +122,12 @@ const MODNAME_TO_TYPE: Record<string, ActivityType> = {
 	imscp: "imscp",
 	chat: "chat",
 	bigbluebuttonbn: "bigbluebuttonbn",
+	workshop: "workshop",
+	choice: "choice",
+	survey: "survey",
+	h5pactivity: "h5pactivity",
+	scorm: "scorm",
+	lti: "lti",
 };
 
 function normalizeFiles(contents: unknown): MoodleFile[] {

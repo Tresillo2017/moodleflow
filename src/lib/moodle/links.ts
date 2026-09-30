@@ -48,6 +48,24 @@ export function modulePath(modname: string, instance: number, courseId: number):
 			return `/chat/${instance}?course=${courseId}`;
 		case "bigbluebuttonbn":
 			return `/meetings/${instance}?course=${courseId}`;
+		case "quiz":
+			return `/quizzes/${instance}?course=${courseId}`;
+		case "lesson":
+			return `/lessons/${instance}?course=${courseId}`;
+		case "workshop":
+			return `/workshops/${instance}?course=${courseId}`;
+		case "choice":
+			return `/choices/${instance}?course=${courseId}`;
+		case "feedback":
+			return `/feedback/${instance}?course=${courseId}`;
+		case "survey":
+			return `/surveys/${instance}?course=${courseId}`;
+		case "h5pactivity":
+			return `/h5p/${instance}?course=${courseId}`;
+		case "scorm":
+			return `/scorm/${instance}?course=${courseId}`;
+		case "lti":
+			return `/lti/${instance}?course=${courseId}`;
 		default:
 			return `/courses/${courseId}`;
 	}
