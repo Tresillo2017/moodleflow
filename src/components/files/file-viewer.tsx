@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { useTheme } from "next-themes";
 import { Download, Loader2 } from "lucide-react";
+import { FileActions } from "@/components/files/file-actions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
@@ -15,7 +16,7 @@ const MAX_CODE_CHARS = 1_000_000;
 const MAX_DOCX_BYTES = 15 * 1024 * 1024;
 const MAX_CSV_ROWS = 2000;
 
-type Loaded =
+export type Loaded =
 	| { status: "loading" }
 	| { status: "error" }
 	| { status: "blob"; url: string }
@@ -83,7 +84,7 @@ function useFileContent(file: MoodleFile): Loaded {
 	return state;
 }
 
-function Body({ file, state }: { file: MoodleFile; state: Loaded }) {
+function Body({ file, state, pdfFrame }: { file: MoodleFile; state: Loaded; pdfFrame: RefObject<HTMLIFrameElement | null> }) {
 	const kind = fileKind(file.name, file.mimeType);
 	if (state.status === "loading") {
 		return (
@@ -145,7 +146,7 @@ function Body({ file, state }: { file: MoodleFile; state: Loaded }) {
 		return <video src={state.url} controls className="mx-auto h-full max-w-full bg-black" />;
 	}
 	return kind.type === "pdf" ? (
-		<iframe src={state.url} title={file.name} className="h-full w-full border-0" />
+		<iframe ref={pdfFrame} src={state.url} title={file.name} className="h-full w-full border-0" />
 	) : (
 		// eslint-disable-next-line @next/next/no-img-element
 		<img src={state.url} alt={file.name} className="mx-auto max-h-full max-w-full object-contain p-4" />
@@ -155,21 +156,25 @@ function Body({ file, state }: { file: MoodleFile; state: Loaded }) {
 export function FileViewer({ file, onClose }: { file: MoodleFile; onClose: () => void }) {
 	const { client } = useMoodleConnection();
 	const state = useFileContent(file);
+	const pdfFrame = useRef<HTMLIFrameElement>(null);
 
 	return (
 		<Dialog open onOpenChange={(open: boolean) => !open && onClose()}>
 			<DialogContent className="flex h-[85vh] max-w-5xl flex-col gap-3 sm:max-w-5xl">
 				<DialogHeader className="flex-row items-center justify-between gap-3 pr-8">
 					<DialogTitle className="truncate text-sm">{file.name}</DialogTitle>
-					{client && (
-						<Button size="sm" variant="outline" nativeButton={false} render={<a href={client.fileUrl(file.url)} download={file.name} />}>
-							<Download className="size-3.5" aria-hidden="true" />
-							Download
-						</Button>
-					)}
+					<div className="flex shrink-0 items-center gap-2">
+						<FileActions file={file} state={state} pdfFrame={pdfFrame} />
+						{client && (
+							<Button size="sm" variant="outline" nativeButton={false} render={<a href={client.fileUrl(file.url)} download={file.name} />}>
+								<Download className="size-3.5" aria-hidden="true" />
+								<span className="max-sm:hidden">Download</span>
+							</Button>
+						)}
+					</div>
 				</DialogHeader>
 				<div className="min-h-0 flex-1 overflow-hidden rounded-lg border bg-muted/30">
-					<Body file={file} state={state} />
+					<Body file={file} state={state} pdfFrame={pdfFrame} />
 				</div>
 			</DialogContent>
 		</Dialog>

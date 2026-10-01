@@ -7,6 +7,9 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+### Added
+- File preview: Print, "Ask AI" (Claude, ChatGPT, T3 Chat, Gemini with a prefilled explain / summarise / quiz / code-review prompt, plus a copyable Claude Code command) and "Open in…" (VS Code, Cursor, Zed, JetBrains and more for code; suggested apps and the system share sheet for other files). Nothing is sent anywhere until you click, and your Moodle token never goes into an AI link.
+
 ## [0.12.0] - 2026-09-30
 
 ### Added
