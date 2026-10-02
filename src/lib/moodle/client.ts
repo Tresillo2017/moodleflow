@@ -382,7 +382,7 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 					input.files.map(async (f) => {
 						if (f instanceof File) return f;
 						const res = await fetch(this.fileUrl(f.url, { download: false }));
-						if (!res.ok) throw new MoodleError("network_error", `Couldn't read existing file ${f.name}.`);
+						if (!res.ok) throw new MoodleError("network_error", `Couldn't read existing file ${f.name} (HTTP ${res.status}).`);
 						return new File([await res.blob()], f.name, { type: f.mimeType });
 					}),
 				);

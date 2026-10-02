@@ -11,7 +11,7 @@ describe("moodleExceptionToError", () => {
 	it("never surfaces raw Moodle text for unknown codes", () => {
 		const error = moodleExceptionToError("dmlreadexception");
 		expect(error.code).toBe("unknown_error");
-		expect(error.message).toBe("Moodle couldn't complete that request.");
+		expect(error.message).toBe("Moodle couldn't complete that request (dmlreadexception).");
 		expect(error.moodleCode).toBe("dmlreadexception");
 	});
 });

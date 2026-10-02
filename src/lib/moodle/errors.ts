@@ -25,6 +25,8 @@ const GENERIC: [MoodleErrorCode, string] = ["unknown_error", "Moodle couldn't co
 
 /** Builds a user-facing error from a Moodle exception; the raw Moodle message is deliberately dropped. */
 export function moodleExceptionToError(errorcode?: string): MoodleError {
-	const [code, message] = (errorcode && KNOWN[errorcode]) || GENERIC;
-	return new MoodleError(code, message, errorcode);
+	const known = errorcode ? KNOWN[errorcode] : undefined;
+	const [code, message] = known ?? GENERIC;
+	// the code is a short identifier, not raw Moodle text, so it's safe to show and makes failures reportable
+	return new MoodleError(code, !known && errorcode ? `${message.replace(/\.$/, "")} (${errorcode}).` : message, errorcode);
 }
