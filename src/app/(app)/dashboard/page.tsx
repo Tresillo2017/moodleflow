@@ -5,11 +5,12 @@ import Link from "next/link";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { usePreferences } from "@/components/providers/preferences-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
-import { CourseCard } from "@/components/courses/course-card";
 import { isDone } from "@/lib/moodle/assignment";
 import { DeadlineBadge } from "@/components/assignments/deadline-badge";
 import { EmptyState, ErrorState, ListSkeleton, FeatureGate } from "@/components/ui/state";
-import { DitherGradient } from "@/components/dither-kit/gradient";
+import { PageSplit } from "@/components/layout/page-split";
+import { CourseCarousel } from "@/components/dashboard/course-carousel";
+import { NAV_ITEMS, PROFILE_ITEM } from "@/lib/nav";
 import { MoodleActivityCard } from "@/components/dashboard/moodle-activity-card";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ import {
 import { buildGradeTrend } from "@/lib/moodle/grade-trend";
 import { isCurrentCourse } from "@/lib/moodle/course-filter";
 import { courseHue, formatDayLabel, formatEventTime } from "@/lib/format";
-import { ditherHueOf, DASHBOARD_SECTIONS, hour12Of, type DashboardSection } from "@/lib/preferences";
+import { DASHBOARD_SECTIONS, hour12Of, type DashboardSection } from "@/lib/preferences";
 import {
 	AlertTriangle,
 	BookOpen,
@@ -34,7 +35,6 @@ import {
 	ChevronRight,
 	ClipboardList,
 	GraduationCap,
-	PartyPopper,
 	Settings2,
 } from "lucide-react";
 import type { MoodleAssignment } from "@/types/moodle";
@@ -133,6 +133,55 @@ function CustomizeMenu() {
 	);
 }
 
+const ASIDE_LINKS = [PROFILE_ITEM, ...NAV_ITEMS.filter((i) => ["/courses", "/assignments", "/grades"].includes(i.href))];
+
+/** Right column: quick links, then the deadlines coming up (bleh's "Scrobbling now" slot). */
+function DashboardAside({ upcoming, loading, showUpcoming }: { upcoming: MoodleAssignment[]; loading: boolean; showUpcoming: boolean }) {
+	return (
+		<>
+			<nav aria-label="Quick links" className="st-group flex flex-col divide-y">
+				{ASIDE_LINKS.map(({ href, label, icon: Icon }) => (
+					<Link
+						key={href}
+						href={href}
+						className="flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none"
+					>
+						<Icon className="size-4 text-(--sh-accent-2)" aria-hidden="true" />
+						{label.replace("My ", "")}
+					</Link>
+				))}
+			</nav>
+			{showUpcoming && (
+				<section className="flex flex-col gap-3">
+					<h2 className="font-sans text-base font-semibold not-italic">Due soon</h2>
+					{loading && <ListSkeleton rows={3} />}
+					{!loading && upcoming.length === 0 && <p className="text-sm text-muted-foreground">Nothing due soon. You&apos;re all caught up.</p>}
+					<ul className="flex flex-col gap-3">
+						{upcoming.map((a) => (
+							<li key={a.id}>
+								<Link href={`/courses/${a.courseId}`} className="group flex items-center gap-3 rounded-lg focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">
+									<span
+										className="grid size-10 shrink-0 place-items-center rounded-lg text-white/90"
+										style={{ background: `linear-gradient(135deg, oklch(0.62 0.14 ${courseHue(a.courseId)}), oklch(0.45 0.12 ${courseHue(a.courseId) + 40}))` }}
+										aria-hidden="true"
+									>
+										<ClipboardList className="size-4" />
+									</span>
+									<span className="min-w-0 flex-1 text-sm leading-tight">
+										<span className="block truncate font-medium group-hover:underline">{a.name}</span>
+										<span className="block truncate text-xs text-muted-foreground">{a.courseName}</span>
+									</span>
+									<DeadlineBadge dueDate={a.dueDate} />
+								</Link>
+							</li>
+						))}
+					</ul>
+				</section>
+			)}
+		</>
+	);
+}
+
 function DashboardPageContent() {
 	const { client } = useMoodleConnection();
 	const { prefs } = usePreferences();
@@ -155,6 +204,8 @@ function DashboardPageContent() {
 		const t = new Date(a.dueDate!).getTime();
 		return t >= now && t - now <= WEEK_MS;
 	});
+	const dueCounts = new Map<number, number>();
+	for (const a of open) dueCounts.set(a.courseId, (dueCounts.get(a.courseId) ?? 0) + 1);
 	const upcoming = open.slice(0, 5);
 	const nextEvents = [...(events.data ?? [])].sort((a, b) => a.startDate.localeCompare(b.startDate)).slice(0, 5);
 	const starred = currentCourses?.filter((c) => c.isFavourite) ?? [];
@@ -177,151 +228,96 @@ function DashboardPageContent() {
 	const nothingShown = !Object.values(show).some(Boolean);
 
 	return (
-		<div className="flex flex-col gap-8">
-			<Reveal index={0}>
-				<div className="relative overflow-hidden rounded-xl border px-6 py-7">
-					<DitherGradient
-						from={ditherHueOf(prefs)}
-						direction="up"
-						opacity={0.5}
-						className="[mask-image:linear-gradient(to_top,black,transparent)]"
-					/>
-					<div className="relative flex flex-wrap items-end justify-between gap-4">
-						<div className="flex flex-col gap-1">
-							<p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-								{new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
-							</p>
-							<h2 className="text-3xl text-balance">{summary}</h2>
+		<PageSplit aside={<DashboardAside upcoming={upcoming} loading={assignments.loading} showUpcoming={show.upcoming} />}>
+			<div className="flex flex-col gap-8">
+				<Reveal index={0}>
+					<div className="relative flex flex-col items-center gap-1 pt-4 text-center">
+						<div className="absolute top-0 right-0">
+							<CustomizeMenu />
 						</div>
-						<CustomizeMenu />
-					</div>
-				</div>
-			</Reveal>
-
-			{nothingShown && (
-				<EmptyState
-					icon={Settings2}
-					title="Your dashboard is empty"
-					description="All sections are hidden. Use Customize to bring some back."
-				/>
-			)}
-
-			{show.stats && (
-				<Reveal index={1}>
-					<div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-						<StatCard icon={BookOpen} label="Active courses" value={currentCourses ? String(currentCourses.length) : "—"} href="/courses" />
-						<StatCard icon={ClipboardList} label="Due this week" value={loaded ? String(dueThisWeek.length) : "—"} href="/assignments" />
-						<StatCard
-							icon={AlertTriangle}
-							label="Overdue"
-							value={loaded ? String(overdue.length) : "—"}
-							href="/assignments"
-							tone={overdue.length > 0 ? "danger" : "primary"}
-						/>
-						<StatCard
-							icon={GraduationCap}
-							label="Recent average"
-							value={currentAverage !== undefined ? `${currentAverage}%` : "—"}
-							href="/grades"
-						/>
+						<h2 className="px-20 text-[2rem] leading-tight text-balance">{starred.length > 0 ? "Your starred courses" : "Your courses"}</h2>
+						<p className="text-sm text-muted-foreground">{summary}</p>
 					</div>
 				</Reveal>
-			)}
 
-			{(show.upcoming || show.calendar) && (
-				<div className={show.upcoming && show.calendar ? "grid gap-8 lg:grid-cols-2" : "grid gap-8"}>
-					{show.upcoming && (
-						<Reveal index={2}>
-							<section className="flex flex-col gap-3">
-								<SectionHeading title="Upcoming" href="/assignments" />
-								{assignments.loading && <ListSkeleton rows={3} />}
-								{assignments.error && <ErrorState error={assignments.error} />}
-								{!assignments.loading && !assignments.error && upcoming.length === 0 && (
-									<EmptyState icon={PartyPopper} title="Nothing due soon" description="You're all caught up." />
-								)}
-								{upcoming.length > 0 && (
-									<div className="flex flex-col divide-y overflow-hidden rounded-xl border bg-card">
-										{upcoming.map((a) => (
-											<Link
-												key={a.id}
-												href={`/courses/${a.courseId}`}
-												className="flex items-center justify-between gap-4 px-4 py-3 text-sm transition-colors hover:bg-muted/50"
-											>
-												<div className="flex min-w-0 items-center gap-3">
-													<span
-														className="h-8 w-1 shrink-0 rounded-full"
-														style={{ background: `oklch(0.68 0.15 ${courseHue(a.courseId)})` }}
-														aria-hidden="true"
-													/>
-													<div className="min-w-0">
-														<p className="truncate font-medium">{a.name}</p>
-														<p className="truncate text-xs text-muted-foreground">{a.courseName}</p>
-													</div>
-												</div>
-												<DeadlineBadge dueDate={a.dueDate} />
-											</Link>
-										))}
-									</div>
-								)}
-							</section>
-						</Reveal>
-					)}
+				{nothingShown && (
+					<EmptyState
+						icon={Settings2}
+						title="Your dashboard is empty"
+						description="All sections are hidden. Use Customize to bring some back."
+					/>
+				)}
 
-					{show.calendar && (
-						<Reveal index={3}>
-							<section className="flex flex-col gap-3">
-								<SectionHeading title="Calendar" href="/calendar" linkLabel="Open calendar" />
-								{events.loading && <ListSkeleton rows={3} />}
-								{events.error && <ErrorState error={events.error} />}
-								{events.data && events.data.length === 0 && <EmptyState icon={CalendarClock} title="No upcoming events" />}
-								{events.data && events.data.length > 0 && (
-									<div className="flex flex-col divide-y overflow-hidden rounded-xl border bg-card">
-										{nextEvents.map((e) => (
-											<div key={e.id} className="flex items-center gap-4 px-4 py-3 text-sm">
-												<div className="w-24 shrink-0 text-xs leading-tight">
-													<p className="font-medium">{formatDayLabel(e.startDate)}</p>
-													<p className="text-muted-foreground tabular-nums">{formatEventTime(e.startDate, hour12)}</p>
-												</div>
-												<div className="min-w-0">
-													<p className="truncate font-medium">{e.name}</p>
-													{e.courseName && <p className="truncate text-xs text-muted-foreground">{e.courseName}</p>}
-												</div>
+				{show.courses && (
+					<Reveal index={1}>
+						<section className="-mx-6 flex flex-col gap-3" aria-label="Courses">
+							{courses.loading && <ListSkeleton rows={2} />}
+							{courses.error && <ErrorState error={courses.error} />}
+							{shownCourses.length > 0 && <CourseCarousel courses={shownCourses.slice(0, 12)} dueCounts={dueCounts} />}
+							{shownCourses.length > 0 && (
+								<Link href="/courses" className="group mx-auto flex items-center gap-0.5 text-xs text-primary hover:underline">
+									All courses
+									<ChevronRight className="size-3 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+								</Link>
+							)}
+						</section>
+					</Reveal>
+				)}
+
+				{show.calendar && (
+					<Reveal index={2}>
+						<section className="flex flex-col gap-3">
+							<SectionHeading title="Calendar" href="/calendar" linkLabel="Open calendar" />
+							{events.loading && <ListSkeleton rows={3} />}
+							{events.error && <ErrorState error={events.error} />}
+							{events.data && events.data.length === 0 && <EmptyState icon={CalendarClock} title="No upcoming events" />}
+							{events.data && events.data.length > 0 && (
+								<div className="st-group flex flex-col divide-y">
+									{nextEvents.map((e) => (
+										<div key={e.id} className="flex items-center gap-4 px-4 py-3 text-sm">
+											<div className="w-24 shrink-0 text-xs leading-tight">
+												<p className="font-medium">{formatDayLabel(e.startDate)}</p>
+												<p className="text-muted-foreground tabular-nums">{formatEventTime(e.startDate, hour12)}</p>
 											</div>
-										))}
-									</div>
-								)}
-							</section>
-						</Reveal>
-					)}
-				</div>
-			)}
+											<div className="min-w-0">
+												<p className="truncate font-medium">{e.name}</p>
+												{e.courseName && <p className="truncate text-xs text-muted-foreground">{e.courseName}</p>}
+											</div>
+										</div>
+									))}
+								</div>
+							)}
+						</section>
+					</Reveal>
+				)}
 
-			{show.courses && (
-				<Reveal index={4}>
-					<section className="flex flex-col gap-3">
-						<SectionHeading title={starred.length > 0 ? "Starred courses" : "My courses"} href="/courses" />
-						{courses.loading && <ListSkeleton rows={2} />}
-						{courses.error && <ErrorState error={courses.error} />}
-						{shownCourses.length > 0 && (
-							<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-								{shownCourses.slice(0, 6).map((c) => (
-									<CourseCard key={c.id} course={c} />
-								))}
-							</div>
-						)}
-					</section>
-				</Reveal>
-			)}
+				{show.activity && (
+					<Reveal index={3}>
+						<section className="flex flex-col gap-3">
+							<SectionHeading title="Activity" />
+							<MoodleActivityCard />
+						</section>
+					</Reveal>
+				)}
 
-			{show.activity && (
-				<Reveal index={5}>
-					<section className="flex flex-col gap-3">
-						<SectionHeading title="Activity" />
-						<MoodleActivityCard />
-					</section>
-				</Reveal>
-			)}
-		</div>
+				{show.stats && (
+					<Reveal index={4}>
+						<div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+							<StatCard icon={BookOpen} label="Active courses" value={currentCourses ? String(currentCourses.length) : "—"} href="/courses" />
+							<StatCard icon={ClipboardList} label="Due this week" value={loaded ? String(dueThisWeek.length) : "—"} href="/assignments" />
+							<StatCard
+								icon={AlertTriangle}
+								label="Overdue"
+								value={loaded ? String(overdue.length) : "—"}
+								href="/assignments"
+								tone={overdue.length > 0 ? "danger" : "primary"}
+							/>
+							<StatCard icon={GraduationCap} label="Recent average" value={currentAverage !== undefined ? `${currentAverage}%` : "—"} href="/grades" />
+						</div>
+					</Reveal>
+				)}
+			</div>
+		</PageSplit>
 	);
 }
 

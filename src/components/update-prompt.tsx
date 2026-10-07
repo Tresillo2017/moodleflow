@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { toast } from "@/lib/toast";
-import { PENDING_VERSION_KEY } from "@/lib/whats-new";
+import { applyUpdate, checkForUpdate, getUpdateState } from "@/lib/updater";
 
 const CHECK_EVERY_MS = 5 * 60 * 1000;
 
@@ -11,38 +11,23 @@ export function showUpdateToast(version?: string) {
 	return toast.info("A new version of MoodleFlow is available", {
 		description: version ? `v${version} is ready. Reload to update.` : "Reload to update.",
 		duration: null,
-		button: {
-			title: "Reload",
-			onClick: () => {
-				try {
-					if (version) window.localStorage.setItem(PENDING_VERSION_KEY, version);
-				} catch {}
-				window.location.reload();
-			},
-		},
+		button: { title: "Reload", onClick: () => applyUpdate(version) },
 	});
 }
 
-/** Asks the user to reload once the deployed build differs from the one this tab loaded. */
+/** Checks in the background and asks the user to reload once the deployed build differs from this tab's. */
 export function UpdatePrompt() {
 	useEffect(() => {
-		const current = process.env.NEXT_PUBLIC_BUILD_ID;
 		let notified = false;
 
 		async function check() {
 			if (notified || document.visibilityState !== "visible") return;
-			try {
-				const res = await fetch("/api/version", { cache: "no-store" });
-				if (!res.ok) return;
-				const latest = (await res.json()) as { build?: string; version?: string };
-				if (!latest.build || latest.build === current) return;
-				notified = true;
-				showUpdateToast(latest.version);
-			} catch {
-				// offline or mid-deploy: try again on the next check
-			}
+			if ((await checkForUpdate()) !== "available") return;
+			notified = true;
+			showUpdateToast(getUpdateState().latest?.version);
 		}
 
+		void check();
 		const timer = setInterval(check, CHECK_EVERY_MS);
 		document.addEventListener("visibilitychange", check);
 		return () => {

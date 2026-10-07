@@ -7,6 +7,19 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-10-07
+
+### Added
+- In-app updater (Settings > General): check for a newer deploy, see its version, and reload into it; the Settings tab shows a dot while an update is waiting.
+- Settings redesigned after bleh: tabs (General, Visual, Interface, Notifications, Seasonal, Accessibility, Advanced), search, and Import / Export / Reset of your settings.
+- Visual settings: theme picker with previews, noise overlay opacity and card background vibrancy sliders, live colour palette.
+- Seasonal timeline with the current season's start and end dates, and the particle options alongside it.
+- Export and import your settings as a JSON file; the Settings sidebar also shows the running build.
+- Dashboard: cover-flow course carousel, a sidebar with quick links and deadlines, and the page content now sits in a glass panel.
+
+### Changed
+- The default content width is wider (80rem).
+
 ## [0.13.0] - 2026-10-01
 
 ### Added

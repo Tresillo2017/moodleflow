@@ -1,459 +1,105 @@
 "use client";
 
-import { useId, useRef } from "react";
-import Link from "next/link";
-import { useTheme } from "next-themes";
-import { motion } from "motion/react";
-import { toast } from "@/lib/toast";
-import { Check, LogOut, Monitor, Moon, RotateCcw, RotateCw, Sun } from "lucide-react";
-import { useMoodleConnection } from "@/components/providers/moodle-provider";
-import { usePreferences } from "@/components/providers/preferences-provider";
-import { useDeveloperMode } from "@/hooks/use-developer-mode";
-import { createTapCounter } from "@/lib/tap-unlock";
-import { PageHeader } from "@/components/layout/page-header";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { NotificationPreferencesRows } from "@/components/settings/notification-preferences";
+import { useEffect, useRef, useState } from "react";
+import { Accessibility, Bell, Filter, Leaf, PanelsTopLeft, Paintbrush, Settings } from "lucide-react";
+import { PageSplit } from "@/components/layout/page-split";
+import { AccessibilityTab, AdvancedTab, InterfaceTab, NotificationsTab } from "@/components/settings/basic-tabs";
+import { GeneralTab } from "@/components/settings/general-tab";
+import { SeasonalTab } from "@/components/settings/seasonal-tab";
+import { SettingsSearchContext } from "@/components/settings/settings-ui";
+import { SettingsSidebar } from "@/components/settings/settings-sidebar";
+import { VisualTab } from "@/components/settings/visual-tab";
 import { cn } from "@/lib/utils";
-import {
-	ACCENTS,
-	CHOICES,
-	DASHBOARD_SECTIONS,
-	hueOf,
-	type Accent,
-	type ChoiceKey,
-	type DashboardSection,
-	type Preferences,
-} from "@/lib/preferences";
 
-const SECTIONS = [
-	{ id: "appearance", label: "Appearance" },
-	{ id: "layout", label: "Layout" },
-	{ id: "dashboard", label: "Dashboard" },
-	{ id: "notifications", label: "Notifications" },
-	{ id: "datetime", label: "Date & time" },
-	{ id: "account", label: "Account" },
-	{ id: "about", label: "About" },
+const TABS = [
+	{ id: "general", label: "General", icon: Settings, panel: GeneralTab },
+	{ id: "visual", label: "Visual", icon: Paintbrush, panel: VisualTab },
+	{ id: "interface", label: "Interface", icon: PanelsTopLeft, panel: InterfaceTab },
+	{ id: "notifications", label: "Notifications", icon: Bell, panel: NotificationsTab },
+	{ id: "seasonal", label: "Seasonal", icon: Leaf, panel: SeasonalTab },
+	{ id: "accessibility", label: "Accessibility", icon: Accessibility, panel: AccessibilityTab },
+	{ id: "advanced", label: "Advanced", icon: Filter, panel: AdvancedTab },
 ] as const;
 
-function Section({ id, title, description, children }: { id: string; title: string; description: string; children: React.ReactNode }) {
-	return (
-		<section id={id} aria-labelledby={`${id}-title`} className="flex scroll-mt-20 flex-col gap-3">
-			<div>
-				<h2 id={`${id}-title`} className="text-2xl">
-					{title}
-				</h2>
-				<p className="text-sm text-muted-foreground">{description}</p>
-			</div>
-			<div className="flex flex-col divide-y rounded-xl glass shadow-[var(--ring-inset)]">{children}</div>
-		</section>
-	);
-}
+type TabId = (typeof TABS)[number]["id"];
 
-/** One setting: label + hint on the left, control on the right (stacked on small screens). */
-function Row({ label, hint, labelId, children }: { label: string; hint?: string; labelId?: string; children: React.ReactNode }) {
-	return (
-		<div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-4">
-			<div className="min-w-48 flex-1 basis-56">
-				<p id={labelId} className="text-sm font-medium">
-					{label}
-				</p>
-				{hint && <p className="text-xs text-muted-foreground text-pretty">{hint}</p>}
-			</div>
-			<div className="max-w-full">{children}</div>
-		</div>
-	);
-}
+const isTabId = (value: string): value is TabId => TABS.some((t) => t.id === value);
 
-/** Segmented control built on native radios, so arrow keys and form semantics come for free. */
-function Segmented<K extends ChoiceKey>({ name, labelId, preview }: { name: K; labelId: string; preview?: boolean }) {
-	const { prefs, setPref } = usePreferences();
-	return (
-		<div role="radiogroup" aria-labelledby={labelId} className="inline-flex flex-wrap rounded-lg bg-muted p-[3px]">
-			{Object.entries(CHOICES[name]).map(([value, text]) => {
-				const checked = prefs[name] === value;
-				return (
-					<label
-						key={value}
-						data-font={preview ? value : undefined}
-						className={cn(
-							"relative cursor-pointer rounded-md px-3 py-1 text-sm font-medium transition-colors has-focus-visible:ring-[3px] has-focus-visible:ring-ring/50",
-							preview && "font-sans",
-							checked ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-						)}
-					>
-						<input
-							type="radio"
-							name={name}
-							value={value}
-							checked={checked}
-							onChange={() => setPref(name, value as Preferences[K])}
-							className="sr-only"
-						/>
-						{checked && (
-							<motion.span
-								layoutId={`segmented-${name}`}
-								className="absolute inset-0 rounded-md bg-background shadow-sm dark:bg-input/40"
-								transition={{ type: "spring", bounce: 0.15, duration: 0.35 }}
-							/>
-						)}
-						<span className="relative">{text}</span>
-					</label>
-				);
-			})}
-		</div>
-	);
-}
+export default function SettingsPage() {
+	const [tab, setTab] = useState<TabId>("general");
+	const [query, setQuery] = useState("");
+	const [noResults, setNoResults] = useState(false);
+	const panels = useRef<HTMLDivElement>(null);
+	const searching = query.trim() !== "";
 
-function ChoiceRow({ name, label, hint, preview }: { name: ChoiceKey; label: string; hint?: string; preview?: boolean }) {
-	const labelId = useId();
-	return (
-		<Row label={label} hint={hint} labelId={labelId}>
-			<Segmented name={name} labelId={labelId} preview={preview} />
-		</Row>
-	);
-}
+	// The tab lives in the URL hash (#visual) so it survives a reload and can be linked to.
+	useEffect(() => {
+		const read = () => {
+			const fromHash = window.location.hash.slice(1);
+			if (isTabId(fromHash)) setTab(fromHash);
+		};
+		read();
+		window.addEventListener("hashchange", read);
+		return () => window.removeEventListener("hashchange", read);
+	}, []);
 
-const THEMES = [
-	{ value: "light", label: "Light", icon: Sun },
-	{ value: "dark", label: "Dark", icon: Moon },
-	{ value: "system", label: "System", icon: Monitor },
-] as const;
+	useEffect(() => {
+		setNoResults(searching && !panels.current?.querySelector("[data-row]"));
+	}, [query, searching]);
 
-function ThemePreview({ mode }: { mode: "light" | "dark" | "system" }) {
-	const pane = (dark: boolean) => (
-		<div className={cn("flex flex-1 gap-1 p-1.5", dark ? "bg-neutral-950" : "bg-neutral-100")}>
-			<div className={cn("w-1/4 rounded-sm", dark ? "bg-neutral-800" : "bg-white")} />
-			<div className="flex flex-1 flex-col gap-1">
-				<div className="h-1.5 w-2/3 rounded-full bg-primary" />
-				<div className={cn("h-1.5 rounded-full", dark ? "bg-neutral-800" : "bg-white")} />
-				<div className={cn("h-1.5 w-1/2 rounded-full", dark ? "bg-neutral-800" : "bg-white")} />
-			</div>
-		</div>
-	);
-	return (
-		<div className="flex h-14 overflow-hidden rounded-md border">
-			{mode === "system" ? (
-				<>
-					{pane(false)}
-					{pane(true)}
-				</>
-			) : (
-				pane(mode === "dark")
-			)}
-		</div>
-	);
-}
+	function select(id: TabId) {
+		setTab(id);
+		window.history.replaceState(null, "", `#${id}`);
+	}
 
-function ThemePicker() {
-	const { theme, setTheme } = useTheme();
-	const labelId = useId();
-	return (
-		<div className="flex flex-col gap-3 px-4 py-4">
-			<div>
-				<p id={labelId} className="text-sm font-medium">
-					Theme
-				</p>
-				<p className="text-xs text-muted-foreground">System follows your device setting.</p>
-			</div>
-			<div role="radiogroup" aria-labelledby={labelId} className="grid grid-cols-3 gap-3">
-				{THEMES.map(({ value, label, icon: Icon }) => (
-					<label
-						key={value}
-						className={cn(
-							"flex cursor-pointer flex-col gap-2 rounded-lg border p-2 transition-[border-color,box-shadow] hover:border-foreground/25 has-focus-visible:ring-[3px] has-focus-visible:ring-ring/50",
-							theme === value && "border-primary ring-1 ring-primary hover:border-primary",
-						)}
-					>
-						<input
-							type="radio"
-							name="theme"
-							value={value}
-							checked={theme === value}
-							onChange={() => setTheme(value)}
-							className="sr-only"
-						/>
-						<ThemePreview mode={value} />
-						<span className="flex items-center gap-1.5 text-xs font-medium">
-							<Icon className="size-3.5" aria-hidden="true" />
-							{label}
-						</span>
-					</label>
-				))}
-			</div>
-		</div>
-	);
-}
-
-function AccentPicker() {
-	const { prefs, setPrefs } = usePreferences();
-	const labelId = useId();
-	return (
-		<Row label="Accent color" hint="Used for buttons, highlights and charts." labelId={labelId}>
-			<div role="radiogroup" aria-labelledby={labelId} className="flex flex-wrap gap-2">
-				{(Object.keys(ACCENTS) as Accent[]).map((accent) => {
-					const checked = prefs.hue === null && prefs.accent === accent;
-					return (
-						<label
-							key={accent}
-							title={ACCENTS[accent].label}
-							className="grid size-7 cursor-pointer place-items-center rounded-full ring-offset-2 ring-offset-card transition-transform hover:scale-110 active:scale-95 has-checked:ring-2 has-checked:ring-(--swatch) has-focus-visible:ring-2 has-focus-visible:ring-ring"
-							style={{ background: `oklch(0.62 0.16 ${ACCENTS[accent].hue})`, "--swatch": `oklch(0.62 0.16 ${ACCENTS[accent].hue})` } as React.CSSProperties}
-						>
-							<input
-								type="radio"
-								name="accent"
-								value={accent}
-								checked={checked}
-								onChange={() => setPrefs({ accent, hue: null })}
-								className="sr-only"
-							/>
-							<span className="sr-only">{ACCENTS[accent].label}</span>
-							{checked && <Check className="size-3.5 text-white motion-safe:animate-in motion-safe:zoom-in-50" aria-hidden="true" />}
-						</label>
-					);
-				})}
-			</div>
-		</Row>
-	);
-}
-
-function HueSlider() {
-	const { prefs, setPref } = usePreferences();
-	const labelId = useId();
-	const hue = hueOf(prefs);
-	return (
-		<Row label="Custom hue" hint="Drag to pick any color. Choosing a swatch above resets it." labelId={labelId}>
-			<div className="flex items-center gap-3">
-				<input
-					type="range"
-					min={0}
-					max={359}
-					value={hue}
-					aria-labelledby={labelId}
-					onChange={(e) => setPref("hue", Number(e.target.value))}
-					className="h-2 w-48 cursor-pointer appearance-none rounded-full accent-primary"
-					style={{
-						background:
-							"linear-gradient(to right in oklch longer hue, oklch(0.7 0.15 0), oklch(0.7 0.15 359))",
-					}}
-				/>
-				<span className="w-9 text-right text-xs text-muted-foreground tabular-nums">{hue}°</span>
-			</div>
-		</Row>
-	);
-}
-
-function DashboardToggles() {
-	const { prefs, setPref } = usePreferences();
-	return (
-		<>
-			{(Object.keys(DASHBOARD_SECTIONS) as DashboardSection[]).map((key) => (
-				<label key={key} className="flex cursor-pointer items-center justify-between gap-4 px-4 py-3">
-					<span className="text-sm font-medium">{DASHBOARD_SECTIONS[key]}</span>
-					<Switch
-						checked={prefs.dashboard[key]}
-						onCheckedChange={(checked) => setPref("dashboard", { ...prefs.dashboard, [key]: checked })}
-					/>
-				</label>
-			))}
-		</>
-	);
-}
-
-const DEV_TAPS = 7;
-const DEV_TAP_WINDOW_MS = 1500;
-
-/** The version number doubles as the developer-mode switch: tap it seven times. */
-function AboutSection() {
-	const { enabled, setEnabled } = useDeveloperMode();
-	const counter = useRef(createTapCounter(DEV_TAPS, DEV_TAP_WINDOW_MS));
-	const hint = useRef<string | null>(null);
-
-	function tap() {
-		const remaining = counter.current.tap();
-		if (hint.current) toast.dismiss(hint.current);
-		hint.current = null;
-		if (enabled) {
-			if (remaining === DEV_TAPS - 1) hint.current = toast.info("Developer mode is already on");
-			return;
-		}
-		if (remaining === 0) {
-			setEnabled(true);
-			toast.success("Developer mode enabled", { description: "Developer tools are now in Settings." });
-		} else if (remaining <= 3) {
-			hint.current = toast.info(`${remaining} more ${remaining === 1 ? "tap" : "taps"} to enable developer mode`, { duration: 1500 });
-		}
+	function onKeyDown(event: React.KeyboardEvent, index: number) {
+		const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
+		if (!step) return;
+		event.preventDefault();
+		const next = TABS[(index + step + TABS.length) % TABS.length];
+		select(next.id);
+		document.getElementById(`settings-tab-${next.id}`)?.focus();
 	}
 
 	return (
-		<Section id="about" title="About" description="Which version you're running.">
-			<Row label="Version" hint="See what changed in each release.">
-				<div className="flex items-center gap-2">
+		<>
+			<h1 className="sr-only">Settings</h1>
+			<div className="sh-subtabs" role="tablist" aria-label="Settings sections">
+				{TABS.map(({ id, label, icon: Icon }, index) => (
 					<button
+						key={id}
+						id={`settings-tab-${id}`}
 						type="button"
-						onClick={tap}
-						className="rounded-md px-2 py-1 text-sm font-medium tabular-nums select-none hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
+						role="tab"
+						aria-selected={!searching && tab === id}
+						aria-controls={`settings-panel-${id}`}
+						tabIndex={tab === id ? 0 : -1}
+						className={cn("sh-subtab", id === "advanced" && "sh-subtab-end")}
+						onClick={() => {
+							setQuery("");
+							select(id);
+						}}
+						onKeyDown={(e) => onKeyDown(e, index)}
 					>
-						MoodleFlow v{process.env.NEXT_PUBLIC_APP_VERSION}
+						<Icon aria-hidden="true" />
+						{label}
 					</button>
-					<Button variant="outline" size="sm" nativeButton={false} render={<Link href="/changelog" />}>
-						What&apos;s new
-					</Button>
-				</div>
-			</Row>
-			{enabled && (
-				<Row label="Developer tools" hint="Test toasts, UI states and app internals.">
-					<div className="flex items-center gap-2">
-						<Button variant="outline" size="sm" nativeButton={false} render={<Link href="/settings/developer" />}>
-							Open
-						</Button>
-						<Button variant="ghost" size="sm" onClick={() => setEnabled(false)}>
-							Turn off
-						</Button>
+				))}
+			</div>
+			<PageSplit aside={<SettingsSidebar query={query} onQueryChange={setQuery} />}>
+				<SettingsSearchContext.Provider value={query}>
+					<div ref={panels} className="flex flex-col gap-6">
+						{TABS.map(({ id, panel: Panel }) =>
+							searching || tab === id ? (
+								<div key={id} id={`settings-panel-${id}`} role="tabpanel" aria-labelledby={`settings-tab-${id}`} className="animate-track-in">
+									<Panel />
+								</div>
+							) : null,
+						)}
+						{noResults && <p className="py-10 text-center text-sm text-muted-foreground">No settings match &ldquo;{query.trim()}&rdquo;.</p>}
 					</div>
-				</Row>
-			)}
-		</Section>
-	);
-}
-
-function AccountSection() {
-	const { connection, disconnect, refresh } = useMoodleConnection();
-	const { reset } = usePreferences();
-	return (
-		<Section id="account" title="Account" description="MoodleFlow keeps your token and preferences only in this browser.">
-			<div className="flex flex-wrap items-center justify-between gap-3 px-4 py-4">
-				<div className="min-w-0">
-					<p className="truncate text-sm font-medium">{connection?.siteName ?? "Moodle site"}</p>
-					<p className="truncate text-xs text-muted-foreground">
-						{connection?.userFullName ? `${connection.userFullName} · ` : ""}
-						{connection?.siteUrl}
-					</p>
-				</div>
-				<Badge variant="outline" className="border-success/30 bg-success/10 text-success">
-					{connection?.mock ? "Demo mode" : "Connected"}
-				</Badge>
-			</div>
-			<Row label="Refresh data" hint="Reload courses, grades and events from Moodle.">
-				<Button
-					variant="outline"
-					size="sm"
-					onClick={() => {
-						refresh();
-						toast.success("Refreshing data from Moodle");
-					}}
-				>
-					<RotateCw aria-hidden="true" />
-					Refresh
-				</Button>
-			</Row>
-			<Row label="Reset preferences" hint="Restore the default look and layout.">
-				<Button
-					variant="outline"
-					size="sm"
-					onClick={() => {
-						reset();
-						toast.success("Preferences reset");
-					}}
-				>
-					<RotateCcw aria-hidden="true" />
-					Reset
-				</Button>
-			</Row>
-			{!connection?.mock && connection && (
-				<Row label="Manage tokens" hint="Moodle can't revoke a token from here. Delete the mobile app key in Moodle's Security keys to invalidate it everywhere.">
-					<Button variant="outline" size="sm" nativeButton={false} render={<a href={new URL("/user/managetoken.php", connection.siteUrl).toString()} target="_blank" rel="noopener noreferrer" />}>
-						Open in Moodle
-					</Button>
-				</Row>
-			)}
-			<Row label="Sign out" hint="Removes the saved token from this browser.">
-				<Button
-					variant="destructive"
-					size="sm"
-					onClick={() => {
-						disconnect();
-						toast.success("Disconnected from Moodle");
-					}}
-				>
-					<LogOut aria-hidden="true" />
-					Sign out
-				</Button>
-			</Row>
-		</Section>
-	);
-}
-
-export default function SettingsPage() {
-	const { resolvedTheme } = useTheme();
-	const { prefs } = usePreferences();
-
-	return (
-		<div className="flex flex-col gap-8">
-			<PageHeader title="Settings" description="Changes apply instantly and are saved to this browser." />
-
-			<div className="grid gap-8 lg:grid-cols-[10rem_minmax(0,1fr)]">
-				<nav aria-label="Settings sections" className="hidden lg:block">
-					<ul className="sticky top-20 flex flex-col gap-0.5 text-sm">
-						{SECTIONS.map((s) => (
-							<li key={s.id}>
-								<a
-									href={`#${s.id}`}
-									className="block rounded-md px-2.5 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-								>
-									{s.label}
-								</a>
-							</li>
-						))}
-					</ul>
-				</nav>
-
-				<div className="flex max-w-3xl flex-col gap-10">
-					<Section id="appearance" title="Appearance" description="Colors, shapes and type.">
-						<ThemePicker />
-						<ChoiceRow
-							name={resolvedTheme === "dark" ? "darkTheme" : "lightTheme"}
-							label="Color theme"
-							hint="Named themes come from bleh. Each mode keeps its own choice."
-						/>
-						<AccentPicker />
-						<HueSlider />
-						<ChoiceRow name="vibrance" label="Vibrance" hint="How saturated surfaces and accents are." />
-						<ChoiceRow name="glass" label="Glass blur" hint="Frosted, translucent panels. Off makes them solid." />
-						<ChoiceRow name="season" label="Season" hint="Tints the theme for a holiday. Automatic follows bleh's calendar." />
-						<ChoiceRow name="overlays" label="Seasonal overlays" hint="Icicles and other decoration at the top of cards." />
-						<ChoiceRow name="particles" label="Seasonal particles" hint="Falling snow while a season with snow is active." />
-						<ChoiceRow name="radius" label="Corner radius" />
-						<ChoiceRow name="font" label="Font" preview />
-						<ChoiceRow name="weight" label="Font weight" />
-						<ChoiceRow name="scale" label="Text size" hint="Scales the whole interface." />
-						<ChoiceRow name="motion" label="Motion" hint="Reduced turns off page and list animations." />
-					</Section>
-
-					<Section id="layout" title="Layout" description="How the app frame is arranged.">
-						<ChoiceRow name="width" label="Content width" hint="Wide and Full use more of large screens." />
-					</Section>
-
-					<Section id="dashboard" title="Dashboard" description="Choose which sections appear on your dashboard.">
-						<DashboardToggles />
-					</Section>
-
-					<Section id="notifications" title="Notifications" description="Where Moodle sends each kind of notification.">
-						<NotificationPreferencesRows />
-					</Section>
-
-					<Section id="datetime" title="Date & time" description="How dates and times are shown.">
-						<ChoiceRow name="weekStart" label="Week starts on" />
-						<ChoiceRow name="clock" label="Clock" hint="Auto follows your browser's locale." />
-					</Section>
-
-					<AccountSection />
-
-					<AboutSection />
-				</div>
-			</div>
-		</div>
+				</SettingsSearchContext.Provider>
+			</PageSplit>
+		</>
 	);
 }

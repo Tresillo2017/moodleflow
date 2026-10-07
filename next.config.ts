@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
 		NEXT_PUBLIC_APP_VERSION: pkg.version,
 		NEXT_PUBLIC_RELEASES: JSON.stringify(releases),
 		NEXT_PUBLIC_BUILD_ID: build ? `${pkg.version}+${build}` : pkg.version,
+		NEXT_PUBLIC_BUILD_TIME: new Date().toISOString(),
 	},
 	turbopack: {
 		root: path.resolve(__dirname),

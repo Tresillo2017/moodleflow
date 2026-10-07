@@ -11,12 +11,13 @@ import { useMoodleQuery } from "@/hooks/use-moodle-query";
 import { useUnreadCount } from "@/hooks/use-unread-count";
 import { useUnreadMessages } from "@/hooks/use-unread-messages";
 import { useLoaderActive } from "@/lib/loader";
+import { useUpdateState } from "@/lib/updater";
 import { NAV_ITEMS, NOTIFICATIONS_ITEM, SETTINGS_ITEM } from "@/lib/nav";
 import { ditherHueOf } from "@/lib/preferences";
 import { AccountMenu, Masthead, UserPicture, type ShellUser } from "./masthead";
 import { SeasonParticles } from "./season-particles";
 
-const WIDTHS = { normal: "64rem", wide: "80rem", full: "100%" } as const;
+const WIDTHS = { normal: "80rem", wide: "96rem", full: "100%" } as const;
 const HOME = "/dashboard";
 const MOBILE_ITEMS = NAV_ITEMS.filter((i) => ["/dashboard", "/courses", "/assignments", "/messages"].includes(i.href));
 const REPO_URL = "https://github.com/Tresillo2017/moodleflow";
@@ -108,13 +109,15 @@ function CountBadge({ count }: { count: number }) {
 function HeaderTabs({ pathname }: { pathname: string }) {
 	const unreadMessages = useUnreadMessages();
 	const unreadNotifications = useUnreadCount();
-	const tab = (item: { href: string; label: string; icon: React.ElementType }, count = 0) => {
+	const updateReady = useUpdateState().status === "available";
+	const tab = (item: { href: string; label: string; icon: React.ElementType }, count = 0, dot = false) => {
 		const active = pathname.startsWith(item.href);
 		return (
 			<Link key={item.href} href={item.href} className="sh-tab" aria-current={active ? "page" : undefined}>
 				<item.icon className="sh-tab-icon" aria-hidden="true" />
 				{item.label}
 				<CountBadge count={count} />
+				{dot && <span className="sh-count sh-count-dot" role="img" aria-label="Update available" />}
 			</Link>
 		);
 	};
@@ -124,7 +127,7 @@ function HeaderTabs({ pathname }: { pathname: string }) {
 				{NAV_ITEMS.map((item) => tab(item, item.href === "/messages" ? unreadMessages : 0))}
 				<span className="sh-tab-spacer" />
 				{tab(NOTIFICATIONS_ITEM, unreadNotifications)}
-				{tab(SETTINGS_ITEM)}
+				{tab(SETTINGS_ITEM, 0, updateReady)}
 			</div>
 		</nav>
 	);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_PREFERENCES, activeSeason, hueOf, isBlockHidden, sanitizePreferences, seasonForDate, togglePinned } from "./preferences";
+import { DEFAULT_PREFERENCES, SEASONS, activeSeason, hueOf, isBlockHidden, sanitizePreferences, seasonForDate, seasonTimeline, togglePinned, type SeasonName } from "./preferences";
 
 describe("sanitizePreferences", () => {
 	it("falls back to defaults for garbage input", () => {
@@ -98,5 +98,34 @@ describe("hidden blocks", () => {
 		expect(isBlockHidden(hiddenBlocks, 1, { id: 5, name: "html" })).toBe(true);
 		expect(isBlockHidden(hiddenBlocks, 2, { id: 5, name: "html" })).toBe(false);
 		expect(isBlockHidden(hiddenBlocks, 2, { id: 9, name: "news_items" })).toBe(true);
+	});
+});
+
+describe("noise and vibrancy", () => {
+	it("clamps to range and ignores non-numbers", () => {
+		expect(sanitizePreferences({ noise: 4, vibrancy: -1 })).toMatchObject({ noise: 1, vibrancy: 0 });
+		expect(sanitizePreferences({ noise: "loud", vibrancy: null })).toMatchObject({ noise: DEFAULT_PREFERENCES.noise, vibrancy: DEFAULT_PREFERENCES.vibrancy });
+		expect(sanitizePreferences({ noise: 0.333 }).noise).toBe(0.33);
+	});
+});
+
+describe("seasonTimeline", () => {
+	it("finds the current season and its neighbours", () => {
+		const { previous, current, next } = seasonTimeline(new Date(2026, 9, 7));
+		expect([previous?.name, current?.name, next?.name]).toEqual(["summer", "halloween", "pre_fall"]);
+	});
+
+	it("wraps across the new year", () => {
+		const { previous, current, next } = seasonTimeline(new Date(2027, 0, 20));
+		expect([previous?.name, current?.name, next?.name]).toEqual(["new_years", undefined, "easter"]);
+	});
+
+	it("agrees with seasonForDate at every season's first and last moment", () => {
+		for (const name of Object.keys(SEASONS) as SeasonName[]) {
+			const { current } = seasonTimeline(new Date(2026, SEASONS[name].start[0] - 1, SEASONS[name].start[1] + 1));
+			for (const edge of [current!.start, current!.end]) {
+				expect(seasonTimeline(edge).current?.name).toBe(seasonForDate(edge));
+			}
+		}
 	});
 });

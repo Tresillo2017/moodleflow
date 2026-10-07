@@ -74,6 +74,10 @@ export type Preferences = { [K in ChoiceKey]: keyof (typeof CHOICES)[K] } & {
 	/** Custom accent hue (0-359) that overrides the accent preset; null uses the preset. */
 	hue: number | null;
 	dashboard: Record<DashboardSection, boolean>;
+	/** Opacity (0-1) of the grain laid over solid backgrounds. */
+	noise: number;
+	/** Multiplies how much colour card backgrounds pick up (0 = grey, 1 = default, 2 = vivid). */
+	vibrancy: number;
 	/** Course ids pinned as quick links in the masthead, in display order. */
 	pinnedCourses: number[];
 	/** Hidden course blocks: `course:<courseId>:<blockId>` for one course, `name:<plugin>` for every course. */
@@ -99,6 +103,8 @@ export const DEFAULT_PREFERENCES: Preferences = {
 	weekStart: "monday",
 	clock: "auto",
 	dashboard: { stats: true, upcoming: true, courses: true, activity: true, calendar: true },
+	noise: 0.25,
+	vibrancy: 1,
 	pinnedCourses: [],
 	hiddenBlocks: [],
 };
@@ -106,6 +112,14 @@ export const DEFAULT_PREFERENCES: Preferences = {
 const APPEARANCE_KEYS = ["radius", "font", "scale", "motion", "vibrance", "weight"] as const;
 
 const HUES = Object.fromEntries(Object.entries(ACCENTS).map(([key, a]) => [key, a.hue]));
+
+export const NOISE_MAX = 1;
+export const VIBRANCY_MAX = 2;
+
+/** A finite number clamped to [0, max]; anything else falls back. */
+function sanitizeRange(raw: unknown, max: number, fallback: number): number {
+	return typeof raw === "number" && Number.isFinite(raw) ? Math.min(max, Math.max(0, Math.round(raw * 100) / 100)) : fallback;
+}
 
 function sanitizeHue(raw: unknown): number | null {
 	return typeof raw === "number" && Number.isFinite(raw) ? ((Math.round(raw) % 360) + 360) % 360 : null;
@@ -135,6 +149,36 @@ export function seasonForDate(d: Date, seasons: Record<string, { start: readonly
 		return new Date(d.getFullYear(), month - 1, whole, end ? 23 : day > whole ? 12 : 0, end ? 59 : 0, end ? 59 : 0);
 	};
 	return Object.keys(seasons).find((id) => d >= at(seasons[id].start[0], seasons[id].start[1], false) && d <= at(seasons[id].end[0], seasons[id].end[1], true)) ?? null;
+}
+
+export interface SeasonSpan {
+	name: SeasonName;
+	start: Date;
+	end: Date;
+}
+
+/** The same window seasonForDate matches, as dates: `d.5` starts at noon, ends run to 23:59:59. */
+export function seasonSpan(name: SeasonName, year: number): SeasonSpan {
+	const { start, end } = SEASONS[name];
+	const startDay = Math.floor(start[1]);
+	return {
+		name,
+		start: new Date(year, start[0] - 1, startDay, start[1] > startDay ? 12 : 0),
+		end: new Date(year, end[0] - 1, Math.floor(end[1]), 23, 59, 59),
+	};
+}
+
+/** The season in effect and its neighbours: the last one to end and the next one to start. */
+export function seasonTimeline(now: Date): { previous: SeasonSpan | null; current: SeasonSpan | null; next: SeasonSpan | null } {
+	const year = now.getFullYear();
+	const spans = [year - 1, year, year + 1].flatMap((y) => (Object.keys(SEASONS) as SeasonName[]).map((name) => seasonSpan(name, y)));
+	const ended = spans.filter((s) => s.end < now);
+	const upcoming = spans.filter((s) => s.start > now);
+	return {
+		previous: ended.reduce<SeasonSpan | null>((best, s) => (!best || s.end > best.end ? s : best), null),
+		current: spans.find((s) => s.start <= now && now <= s.end) ?? null,
+		next: upcoming.reduce<SeasonSpan | null>((best, s) => (!best || s.start < best.start ? s : best), null),
+	};
 }
 
 /** The season in effect (null when off or out of season). */
@@ -212,6 +256,8 @@ export function sanitizePreferences(raw: unknown): Preferences {
 		pinnedCourses: sanitizePins(input.pinnedCourses),
 		hiddenBlocks: sanitizeHiddenBlocks(input.hiddenBlocks),
 		hue: sanitizeHue(input.hue),
+		noise: sanitizeRange(input.noise, NOISE_MAX, DEFAULT_PREFERENCES.noise),
+		vibrancy: sanitizeRange(input.vibrancy, VIBRANCY_MAX, DEFAULT_PREFERENCES.vibrancy),
 		accent: isOption(input.accent, ACCENTS) ? (input.accent as Accent) : DEFAULT_PREFERENCES.accent,
 		dashboard: Object.fromEntries(
 			(Object.keys(DASHBOARD_SECTIONS) as DashboardSection[]).map((key) => [
@@ -277,6 +323,11 @@ function applyAppearanceWith(
 	const sat = { muted: "0.5", vivid: "2.6" }[prefs.vibrance as string];
 	if (sat) style.setProperty("--sat-over", sat);
 	else style.removeProperty("--sat-over");
+	const noise = Number(prefs.noise);
+	style.setProperty("--noise-opacity", String(Number.isFinite(noise) ? Math.min(1, Math.max(0, noise)) : 0.25));
+	const vibrancy = Number(prefs.vibrancy);
+	if (Number.isFinite(vibrancy) && vibrancy !== 1) style.setProperty("--sat-bg", String(Math.min(2, Math.max(0, vibrancy))));
+	else style.removeProperty("--sat-bg");
 	const weight = { light: 340, normal: 400, medium: 500 }[prefs.weight as string] ?? 400;
 	style.setProperty("--custom_font_weight", String(weight));
 	style.setProperty("--custom_font_weight_medium", String(weight + 100));
