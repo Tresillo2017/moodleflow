@@ -54,7 +54,7 @@ export function CourseContextMenu({ course, children, render }: CourseContextMen
 				</ContextMenuItem>
 				<ContextMenuSeparator />
 				<ContextMenuItem onClick={() => toggle(course.id)}>
-					{pinned ? <PinOff /> : <Pin />} {pinned ? "Unpin from sidebar" : "Pin to sidebar"}
+					{pinned ? <PinOff /> : <Pin />} {pinned ? "Unpin from top bar" : "Pin to top bar"}
 				</ContextMenuItem>
 				{isCurrentCourse(course) && (
 					<ContextMenuItem onClick={toggleStar}>

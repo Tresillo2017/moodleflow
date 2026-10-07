@@ -41,14 +41,6 @@ import type { MoodleAssignment } from "@/types/moodle";
 
 const WEEK_MS = 7 * 86_400_000;
 
-function greeting() {
-	const hour = new Date().getHours();
-	if (hour < 5) return "Still up";
-	if (hour < 12) return "Good morning";
-	if (hour < 18) return "Good afternoon";
-	return "Good evening";
-}
-
 function isOpen(a: MoodleAssignment) {
 	return !isDone(a);
 }
@@ -142,7 +134,7 @@ function CustomizeMenu() {
 }
 
 function DashboardPageContent() {
-	const { client, connection } = useMoodleConnection();
+	const { client } = useMoodleConnection();
 	const { prefs } = usePreferences();
 	const show = prefs.dashboard;
 	const hour12 = hour12Of(prefs.clock);
@@ -152,7 +144,6 @@ function DashboardPageContent() {
 	const events = useMoodleQuery(client ? () => client.getCalendarEvents() : null, [client]);
 	const grades = useMoodleQuery(client ? () => client.getGrades() : null, [client]);
 
-	const firstName = connection?.userFullName?.split(" ")[0] ?? "there";
 	const currentCourses = courses.data?.filter(isCurrentCourse);
 	const currentCourseIds = new Set(currentCourses?.map((c) => c.id));
 	const now = Date.now();
@@ -200,10 +191,7 @@ function DashboardPageContent() {
 							<p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
 								{new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
 							</p>
-							<h1 className="text-4xl text-balance">
-								{greeting()}, {firstName}
-							</h1>
-							<p className="text-sm text-foreground/75">{summary}</p>
+							<h2 className="text-3xl text-balance">{summary}</h2>
 						</div>
 						<CustomizeMenu />
 					</div>

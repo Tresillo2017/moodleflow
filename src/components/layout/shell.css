@@ -1,0 +1,698 @@
+/* shell: masthead, backdrop, banner, hero, tab row, footer, mobile bar. Ported from sc-dashboard's shell.css. */
+
+.sh-root {
+	/* scoped accents: shadcn already owns --accent (hover surfaces) */
+	--sh-accent: oklch(var(--l3-c));
+	--sh-accent-2: oklch(var(--l2-c-theme-switch));
+	--sh-accent-deep: oklch(var(--l4-c));
+	--sh-masthead: 48px;
+	--sh-mobilebar: 58px;
+	--sh-avatar: 180px;
+	--sh-inner: min(var(--sh-width, 64rem), 100%);
+	position: relative;
+	isolation: isolate;
+	min-height: 100vh;
+	overflow-x: clip;
+}
+.sh-main {
+	padding-top: 30px;
+}
+.sh-page {
+	width: var(--sh-inner);
+	min-height: 480px;
+	margin: 0 auto;
+	padding: 24px 16px 0;
+}
+@media (min-width: 768px) {
+	.sh-page {
+		padding-inline: 24px;
+	}
+}
+
+/* ── backdrop: blurred picture / accent glow behind everything ── */
+.sh-backdrop {
+	position: absolute;
+	inset: 0 0 auto 0;
+	height: 800px;
+	z-index: -2;
+	contain: strict;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.5s var(--trans-function-ani);
+}
+.sh-backdrop[data-ready] {
+	opacity: 0.4;
+}
+.sh-backdrop-img {
+	position: absolute;
+	inset: 0;
+	background: radial-gradient(60% 70% at 50% 30%, oklch(var(--h3)), transparent);
+	background-size: cover;
+	background-position: center 60%;
+	filter: blur(clamp(24px, 3vw, 60px));
+	scale: 1.2;
+}
+.sh-backdrop::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: var(--background);
+	mask-image: linear-gradient(180deg, transparent, white);
+}
+
+/* ── banner: strip behind hero and tabs ── */
+.sh-banner {
+	--banner-edge: linear-gradient(90deg, transparent 0%, white 40%, white 60%, transparent 100%);
+	position: absolute;
+	top: 0;
+	left: 50%;
+	width: 1300px;
+	max-width: 100vw;
+	translate: -50% 0;
+	height: calc(99px + var(--tab-size) + var(--sh-avatar));
+	z-index: -1;
+	overflow: hidden;
+	pointer-events: none;
+	border-radius: 0 0 var(--card-radius) var(--card-radius);
+	mask-image: linear-gradient(0deg, rgb(255 255 255 / 60%) 0%, white 20%);
+	transition: height 0.4s var(--trans-function-ani);
+}
+.sh-banner::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: var(--background);
+	mask-image: var(--banner-edge);
+}
+.sh-banner-img {
+	position: absolute;
+	inset: 0;
+	background-size: cover;
+	background-position: center;
+	filter: blur(3px);
+	opacity: 0.8;
+	mask-image: var(--banner-edge);
+}
+
+/* ── masthead ── */
+.sh-masthead {
+	position: fixed;
+	inset: 0 0 auto 0;
+	z-index: 40;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: var(--sh-masthead);
+}
+.sh-masthead::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(180deg, var(--background), transparent);
+	opacity: 0.7;
+	pointer-events: none;
+}
+.sh-masthead-inner {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	width: min(calc(var(--sh-inner) + 40px), 100%);
+	padding: 0 11px;
+}
+.sh-cluster {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	min-width: 0;
+	filter: var(--header-filter-shadow);
+}
+.sh-cluster-left {
+	flex: 1;
+}
+.sh-logo {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	height: 32px;
+	padding: 0 9px;
+	border-radius: var(--radius-md);
+	color: var(--sh-accent-2);
+	transition: background-color var(--trans) var(--trans-function);
+}
+.sh-logo:hover {
+	background: oklch(var(--b4) / 40%);
+}
+.sh-logo-word {
+	font-size: 15px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+}
+.sh-logo-version {
+	font-size: 12px;
+	font-variant-numeric: tabular-nums;
+	color: oklch(var(--c3));
+}
+.sh-quicklinks {
+	display: flex;
+	gap: 2px;
+	min-width: 0;
+}
+.sh-quick {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	max-width: 140px;
+	height: 32px;
+	padding: 0 9px;
+	border-radius: var(--radius-md);
+	font-size: 14px;
+	font-weight: 500;
+	color: oklch(var(--c2));
+	transition: background-color var(--trans) var(--trans-function);
+}
+.sh-quick:hover {
+	background: oklch(var(--b4) / 40%);
+}
+.sh-account-sep {
+	width: 4px;
+	flex: none;
+}
+.sh-account {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	max-width: 200px;
+	height: 32px;
+	padding: 0 25px 0 7px;
+	border-radius: var(--radius-md);
+	font-size: 14px;
+	font-weight: 500;
+	color: oklch(var(--c2));
+	cursor: pointer;
+	transition: background-color var(--trans) var(--trans-function);
+}
+.sh-account:hover,
+.sh-account[aria-expanded="true"] {
+	background: oklch(var(--b4) / 40%);
+}
+.sh-account-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.sh-account > svg {
+	position: absolute;
+	right: 8px;
+	width: 12px;
+	height: 12px;
+	color: oklch(var(--c3));
+	transition: transform var(--trans) var(--trans-function);
+}
+.sh-account[aria-expanded="true"] > svg {
+	transform: scaleY(-1);
+}
+
+/* picture or initials; sized by the caller */
+.sh-picture {
+	display: inline-grid;
+	flex: none;
+	place-items: center;
+	overflow: hidden;
+	border-radius: var(--avatar-radius);
+	background: oklch(var(--h3));
+	color: oklch(var(--l2-c-theme-switch));
+	font-weight: 600;
+	font-size: 0.4em;
+	container-type: size;
+}
+.sh-picture > img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.sh-picture > span {
+	font-size: 40cqh;
+	line-height: 1;
+}
+
+/* account menu header: the picture washed out behind name and site */
+.sh-acct-head {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: -4px -4px 0;
+	padding: 12px 14px;
+	overflow: hidden;
+}
+.sh-acct-wash {
+	position: absolute;
+	inset: 0;
+	background-size: cover;
+	background-position: center;
+	filter: blur(14px);
+	opacity: 0.2;
+	scale: 1.3;
+}
+.sh-acct-head > :not(.sh-acct-wash) {
+	position: relative;
+}
+
+/* ── hero ── */
+.sh-hero {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 35px;
+	width: var(--sh-inner);
+	margin: 45px auto 20px;
+	padding: 0 24px;
+	transition: margin 0.4s var(--trans-function-ani);
+}
+@media (min-width: 981px) {
+	/* inner pages: smaller hero so the content clears the fold */
+	.sh-root[data-compact] {
+		--sh-avatar: 96px;
+	}
+	.sh-root[data-compact] .sh-hero {
+		margin-top: 30px;
+		margin-bottom: 14px;
+	}
+}
+.sh-hero-avatar {
+	position: relative;
+	display: block;
+	flex: none;
+	width: var(--sh-avatar);
+	height: var(--sh-avatar);
+	border-radius: var(--avatar-radius);
+	box-shadow: 0 10px 80px 10px oklch(var(--h4) / 40%), var(--menu-shadow);
+	transition:
+		width 0.4s var(--trans-function-ani),
+		height 0.4s var(--trans-function-ani),
+		scale 0.4s var(--trans-function-ani),
+		filter 0.4s var(--trans-function-ani);
+}
+.sh-hero-avatar::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 8%);
+	pointer-events: none;
+}
+.sh-hero-avatar:hover {
+	scale: 1.06;
+	filter: brightness(110%);
+}
+.sh-hero-avatar:active {
+	scale: 0.96;
+}
+.sh-hero-avatar > .sh-picture {
+	width: 100%;
+	height: 100%;
+}
+.sh-hero-text {
+	min-width: 0;
+	filter: var(--header-filter-shadow);
+}
+.sh-hero-eyebrow {
+	font-size: 16px;
+	line-height: 20px;
+	font-weight: 500;
+	color: oklch(var(--c2));
+}
+.sh-hero-title {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-family: inherit;
+	font-style: normal;
+	font-size: 26px;
+	line-height: 40px;
+	font-weight: 600;
+	color: oklch(var(--c1));
+}
+
+/* ── header tab row ── */
+.sh-tabs {
+	position: relative;
+	width: var(--sh-inner);
+	height: var(--tab-size);
+	margin: 0 auto;
+	padding: 0 12px;
+}
+.sh-tabs::before {
+	content: "";
+	position: absolute;
+	inset: 0 20px -1px;
+	background: linear-gradient(0deg, oklch(var(--b6) / 75%) 20%, transparent 90%);
+	mask-image: linear-gradient(90deg, transparent, white 10%, white 90%, transparent);
+	pointer-events: none;
+}
+.sh-tabs-list {
+	position: relative;
+	display: flex;
+	gap: 6px;
+	height: 100%;
+}
+.sh-tab-spacer {
+	flex: 1;
+}
+.sh-tab {
+	position: relative;
+	display: flex;
+	flex: none;
+	align-items: center;
+	height: var(--tab-size);
+	padding: 0 9px 0 29px;
+	color: oklch(var(--c2));
+	font-size: 14px;
+	line-height: 18px;
+	font-weight: 500;
+	white-space: nowrap;
+	transform-origin: bottom;
+	-webkit-tap-highlight-color: transparent;
+	transition:
+		color var(--trans) var(--trans-function),
+		transform var(--trans) var(--trans-function);
+}
+.sh-tab:active {
+	transform: scale(0.98);
+}
+.sh-tab-icon {
+	position: absolute;
+	left: 9px;
+	top: 50%;
+	width: 16px;
+	height: 16px;
+	margin-top: -8px;
+	color: var(--sh-accent-2);
+}
+.sh-tab::after {
+	content: "";
+	position: absolute;
+	left: 9px;
+	right: 9px;
+	bottom: -2px;
+	height: 3px;
+	border-radius: var(--item-big-radius);
+	background: var(--sh-accent);
+	box-shadow: 0 -4px 20px 2px oklch(var(--l4-c) / 60%);
+	opacity: 0;
+	translate: 0 2px;
+	pointer-events: none;
+	transition:
+		translate var(--trans) var(--trans-function),
+		opacity var(--trans) var(--trans-function);
+}
+.sh-tab:is(:hover, :focus-visible)::after {
+	opacity: 0.6;
+	translate: 0 0;
+}
+.sh-tab[aria-current="page"] {
+	color: var(--sh-accent);
+}
+.sh-tab[aria-current="page"] .sh-tab-icon {
+	color: color-mix(in oklch, var(--sh-accent), var(--sh-accent-deep) 40%);
+}
+.sh-tab[aria-current="page"]::after {
+	opacity: 1;
+	translate: 0 0;
+	transition: none;
+}
+.sh-count {
+	display: inline-grid;
+	place-items: center;
+	min-width: 18px;
+	height: 18px;
+	margin-left: 6px;
+	padding: 0 5px;
+	border-radius: 999px;
+	background: oklch(var(--h3));
+	color: oklch(var(--l2-c-theme-switch));
+	font-size: 11px;
+	font-variant-numeric: tabular-nums;
+	animation: var(--motion, bubble 0.9s var(--trans-function));
+}
+
+/* ── footer ── */
+.sh-footer {
+	width: var(--sh-inner);
+	margin: 0 auto;
+	padding: 120px 24px;
+	color: oklch(var(--c3));
+	font-size: 14px;
+	line-height: 18px;
+}
+.sh-footer-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+}
+.sh-footer-brand {
+	color: oklch(var(--c2));
+	font-weight: 500;
+}
+.sh-footer-dot {
+	width: 2px;
+	height: 2px;
+	margin: 0 4px;
+	flex: none;
+	border-radius: 50%;
+	background: oklch(var(--c3));
+}
+.sh-footer-link:hover {
+	color: oklch(var(--c2));
+	text-decoration: underline;
+}
+.sh-footer-heart {
+	display: inline;
+	width: 14px;
+	height: 14px;
+	color: var(--sh-accent);
+	fill: currentColor;
+	vertical-align: -2px;
+	transition: scale 0.6s var(--trans-function);
+}
+.sh-footer-heart:hover {
+	scale: 1.15;
+}
+
+/* ── loader bar ── */
+.sh-loader {
+	position: fixed;
+	inset: 0 0 auto;
+	z-index: 50;
+	padding: 2px;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.4s var(--trans-function);
+}
+.sh-loader[data-active] {
+	opacity: 1;
+}
+.sh-loader-bar {
+	width: 0;
+	height: 4px;
+	border-radius: 12px;
+	background: oklch(var(--h3));
+	box-shadow: 0 6px 20px oklch(var(--h4));
+	animation: var(--motion, sh-load 3.5s var(--trans-function) forwards);
+}
+@keyframes sh-load {
+	from {
+		width: 0;
+	}
+	to {
+		width: 100%;
+	}
+}
+[data-bleh--reduced_motion="true"] .sh-loader-bar {
+	width: 100%;
+	animation: none;
+}
+
+/* ── mobile bottom bar ── */
+.sh-mobilebar {
+	display: none;
+}
+.sh-mctl {
+	position: relative;
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+	padding: 28px 6px 10px;
+	color: oklch(var(--c2));
+	font-size: 11px;
+	line-height: 14px;
+	-webkit-tap-highlight-color: transparent;
+	transition: color var(--trans) var(--trans-function);
+}
+.sh-mctl[aria-expanded="true"] {
+	background: oklch(var(--b4) / 20%);
+}
+.sh-mctl > .sh-mctl-icon {
+	position: absolute;
+	top: 10px;
+	left: 50%;
+	width: 16px;
+	height: 16px;
+	margin-left: -8px;
+	color: var(--sh-accent-2);
+}
+.sh-mctl > .sh-mctl-avatar {
+	position: absolute;
+	top: 8px;
+	left: 50%;
+	width: 18px;
+	height: 18px;
+	margin-left: -9px;
+}
+.sh-mctl-label {
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.sh-mctl::after {
+	content: "";
+	position: absolute;
+	left: 9px;
+	right: 9px;
+	bottom: 0;
+	height: 3px;
+	border-radius: var(--item-big-radius);
+	background: var(--sh-accent);
+	box-shadow: 0 -4px 20px 2px oklch(var(--l4-c) / 60%);
+	opacity: 0;
+	transition: opacity var(--trans) var(--trans-function);
+}
+.sh-mctl[aria-current="page"] {
+	color: var(--sh-accent);
+}
+.sh-mctl[aria-current="page"]::after {
+	opacity: 1;
+}
+.sh-mctl-dot {
+	position: absolute;
+	top: 7px;
+	left: calc(50% + 12px);
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: oklch(var(--l3-c));
+	box-shadow: 0 0 30px 8px oklch(var(--h4));
+	animation: var(--motion, bubble 0.9s var(--trans-function));
+}
+
+/* ── responsive ── */
+@media (max-width: 980px) {
+	.sh-root {
+		--sh-avatar: 100px;
+	}
+	.sh-main {
+		padding-bottom: calc(var(--sh-mobilebar) + env(safe-area-inset-bottom) + 15px);
+	}
+	.sh-quicklinks,
+	.sh-logo-version,
+	.sh-account-slot,
+	.sh-account-sep {
+		display: none;
+	}
+	.sh-banner {
+		left: 0;
+		width: 100vw;
+		translate: none;
+		height: calc(99px + var(--tab-size) + 80px);
+		border-radius: 0;
+		mask-image: linear-gradient(180deg, white, transparent);
+	}
+	.sh-banner::before {
+		display: none;
+	}
+	.sh-banner-img {
+		mask-image: none;
+	}
+	.sh-hero {
+		flex-direction: column;
+		gap: 10px;
+		margin: 40px auto 15px;
+		padding: 15px;
+		text-align: center;
+	}
+	.sh-hero-text {
+		max-width: 100%;
+	}
+	.sh-hero-title {
+		font-size: 24px;
+		line-height: 34px;
+	}
+	.sh-tabs {
+		height: auto;
+		padding: 0;
+	}
+	.sh-tabs::before {
+		inset: 0;
+	}
+	.sh-tabs-list {
+		height: auto;
+		overflow-x: auto;
+		padding: 0 6px;
+		scrollbar-width: none;
+	}
+	.sh-tab {
+		flex-direction: column;
+		justify-content: flex-end;
+		min-width: 60px;
+		height: auto;
+		padding: 30px 9px 10px;
+		font-size: 13px;
+		line-height: 16px;
+	}
+	.sh-tab-icon {
+		left: 50%;
+		top: 10px;
+		margin-top: 0;
+		margin-left: -8px;
+	}
+	.sh-tab::after {
+		bottom: 0;
+	}
+	.sh-tab .sh-count {
+		position: absolute;
+		top: 4px;
+		left: calc(50% + 6px);
+		margin: 0;
+	}
+	.sh-tab-spacer {
+		display: none;
+	}
+	.sh-footer {
+		padding: 80px 16px;
+	}
+	.sh-page {
+		min-height: 360px;
+	}
+	.sh-mobilebar {
+		display: block;
+		position: fixed;
+		inset: auto 0 0;
+		z-index: 40;
+		padding-bottom: env(safe-area-inset-bottom);
+		border: 1px solid var(--border);
+		border-bottom: 0;
+		border-radius: var(--card-radius) var(--card-radius) 0 0;
+		background: oklch(var(--b6) / 85%);
+		backdrop-filter: blur(16px);
+		box-shadow: var(--menu-shadow);
+	}
+	.sh-mobilebar-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+		height: var(--sh-mobilebar);
+	}
+}

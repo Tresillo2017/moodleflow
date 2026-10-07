@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { MoodleError } from "@/types/moodle";
 import { CACHE_UPDATED, SESSION_EXPIRED } from "@/components/providers/moodle-provider";
+import { useLoaderBar } from "@/lib/loader";
 
 export interface MoodleQueryState<T> {
 	data: T | null;
@@ -60,5 +61,6 @@ export function useMoodleQuery<T>(
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [...deps, revalidations]);
 
+	useLoaderBar(state.loading);
 	return state;
 }

@@ -433,7 +433,6 @@ export default function SettingsPage() {
 					</Section>
 
 					<Section id="layout" title="Layout" description="How the app frame is arranged.">
-						<ChoiceRow name="sidebar" label="Sidebar style" hint="Collapse it any time with ⌘B." />
 						<ChoiceRow name="width" label="Content width" hint="Wide and Full use more of large screens." />
 					</Section>
 

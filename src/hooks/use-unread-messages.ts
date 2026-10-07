@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 
-/** Fired on window after messages are read or sent, so the sidebar badge refetches. */
+/** Fired on window after messages are read or sent, so the tab badges refetch. */
 export const MESSAGES_CHANGED = "moodleflow:messages-changed";
 
 const POLL_MS = 60_000;

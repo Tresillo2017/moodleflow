@@ -8,6 +8,7 @@
 @import "../styles/bleh/keyframes.css";
 @import "../styles/bleh/snow.css";
 @import "../styles/bleh/components.css";
+@import "../components/layout/shell.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -244,7 +245,7 @@ html[data-bleh--theme_type="light"] .bg-card {
 	}
 }
 @utility animate-page-in {
-	animation: var(--motion, page_in 0.2s cubic-bezier(0.23, 1, 0.32, 1));
+	animation: var(--motion, grid 0.4s var(--trans-function-ani) backwards);
 	@media (prefers-reduced-motion: reduce) {
 		animation: var(--motion, page_in_reduced 0.15s ease);
 	}

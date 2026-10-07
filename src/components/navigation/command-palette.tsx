@@ -16,10 +16,9 @@ import {
 	CommandShortcut,
 } from "@/components/ui/command";
 import { NAV_ITEMS, PROFILE_ITEM, SETTINGS_ITEM } from "@/lib/nav";
-import { ClipboardList, LogOut, Moon, PanelLeft, Palette, RotateCw, Search, Sun } from "lucide-react";
+import { ClipboardList, LogOut, Moon, Palette, RotateCw, Search, Sun } from "lucide-react";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { usePreferences } from "@/components/providers/preferences-provider";
-import { useSidebar } from "@/components/ui/sidebar";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
 import { isCurrentCourse } from "@/lib/moodle/course-filter";
 import { ACCENTS, type Accent } from "@/lib/preferences";
@@ -35,7 +34,6 @@ export function CommandPalette() {
 	const { setTheme, resolvedTheme } = useTheme();
 	const { client, disconnect, refresh } = useMoodleConnection();
 	const { prefs, setPref } = usePreferences();
-	const { toggleSidebar } = useSidebar();
 
 	const courses = useMoodleQuery(client ? () => client.getCourses() : null, [client]);
 	const assignments = useAssignments();
@@ -69,7 +67,7 @@ export function CommandPalette() {
 				type="button"
 				onClick={() => setOpen(true)}
 				aria-label="Search"
-				className="flex size-8 items-center justify-center gap-2 rounded-md text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:h-8 sm:w-56 sm:justify-start sm:border sm:bg-muted/40 sm:px-2.5 lg:w-64"
+				className="flex size-8 items-center justify-center gap-2 rounded-md text-sm text-muted-foreground transition-[background-color,width] duration-200 hover:bg-muted/40 hover:text-foreground sm:h-8 sm:w-48 sm:justify-start sm:px-2.5 sm:hover:w-64 sm:focus-visible:w-64"
 			>
 				<Search className="size-4" aria-hidden="true" />
 				<span className="hidden flex-1 text-left sm:inline">Search…</span>
@@ -132,11 +130,6 @@ export function CommandPalette() {
 						<CommandItem onSelect={() => run(() => setTheme(resolvedTheme === "dark" ? "light" : "dark"))}>
 							{resolvedTheme === "dark" ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
 							Switch to {resolvedTheme === "dark" ? "light" : "dark"} mode
-						</CommandItem>
-						<CommandItem onSelect={() => run(toggleSidebar)}>
-							<PanelLeft aria-hidden="true" />
-							Toggle sidebar
-							<CommandShortcut>⌘B</CommandShortcut>
 						</CommandItem>
 						<CommandItem onSelect={() => run(refresh)}>
 							<RotateCw aria-hidden="true" />

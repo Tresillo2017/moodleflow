@@ -52,7 +52,6 @@ export const CHOICES = {
 	weight: { light: "Light", normal: "Regular", medium: "Medium" },
 	scale: { sm: "Small", md: "Default", lg: "Large", xl: "Larger" },
 	motion: { system: "Follow system", reduced: "Reduced" },
-	sidebar: { sidebar: "Standard", floating: "Floating", inset: "Inset" },
 	width: { normal: "Normal", wide: "Wide", full: "Full" },
 	weekStart: { sunday: "Sunday", monday: "Monday" },
 	clock: { auto: "Auto", "12h": "12-hour", "24h": "24-hour" },
@@ -75,7 +74,7 @@ export type Preferences = { [K in ChoiceKey]: keyof (typeof CHOICES)[K] } & {
 	/** Custom accent hue (0-359) that overrides the accent preset; null uses the preset. */
 	hue: number | null;
 	dashboard: Record<DashboardSection, boolean>;
-	/** Course ids pinned to the top of the sidebar, in display order. */
+	/** Course ids pinned as quick links in the masthead, in display order. */
 	pinnedCourses: number[];
 	/** Hidden course blocks: `course:<courseId>:<blockId>` for one course, `name:<plugin>` for every course. */
 	hiddenBlocks: string[];
@@ -96,7 +95,6 @@ export const DEFAULT_PREFERENCES: Preferences = {
 	font: "bleh",
 	scale: "md",
 	motion: "system",
-	sidebar: "sidebar",
 	width: "normal",
 	weekStart: "monday",
 	clock: "auto",
