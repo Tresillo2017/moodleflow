@@ -1,0 +1,44 @@
+name: Release dependency updates
+# Only fires for merged Dependabot PRs (commit prefix "chore(deps)"): patch bump + changelog + tag + GitHub release.
+# Cloudflare builds from the release, same as a manual one.
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: startsWith(github.event.head_commit.message, 'chore(deps)')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Bump, changelog, tag
+        id: bump
+        run: |
+          set -e
+          SUBJECT=$(git log -1 --format=%s | sed 's/^chore(deps)[:!]* *//')
+          npm version patch --no-git-tag-version >/dev/null
+          VERSION=$(node -p "require('./package.json').version")
+          SUBJECT="$SUBJECT" VERSION="$VERSION" node -e '
+            const fs = require("fs");
+            const { SUBJECT, VERSION } = process.env;
+            const date = new Date().toISOString().slice(0, 10);
+            const entry = `## [Unreleased]\n\n## [${VERSION}] - ${date}\n\n### Changed\n- Dependency updates: ${SUBJECT}\n`;
+            fs.writeFileSync("CHANGELOG.md", fs.readFileSync("CHANGELOG.md", "utf8").replace("## [Unreleased]\n", entry));
+          '
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "v$VERSION"
+          git tag "v$VERSION"
+          git push origin HEAD:master "v$VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: GitHub release
+        run: |
+          gh release create "v${{ steps.bump.outputs.version }}" \
+            --notes "Automated dependency update release. See CHANGELOG.md."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
