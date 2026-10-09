@@ -44,6 +44,7 @@ const APP_MODULES: Partial<Record<MoodleActivity["type"], string>> = {
 	choice: "choice",
 	feedback: "feedback",
 	survey: "survey",
+	wiki: "wiki",
 	h5pactivity: "h5pactivity",
 	scorm: "scorm",
 	lti: "lti",
@@ -109,13 +110,13 @@ function ActivityRow({ activity: a, assignment, updated }: { activity: MoodleAct
 			)}
 		</>
 	);
-	const className = "group flex min-w-0 flex-1 items-center gap-3 py-3 pr-4 text-sm";
+	const className = "group flex min-w-0 flex-1 items-center gap-3 py-3.5 pr-5 text-sm";
 	const hover = `${className} transition-colors hover:bg-muted/50`;
 
 	return (
 		<div>
 			<div className="flex items-center">
-				<span className="pl-4">
+				<span className="pl-5">
 					{a.manualCompletion && a.completed !== undefined ? (
 						<button
 							type="button"
@@ -184,14 +185,14 @@ function SectionBlock({ section, assignments, updated }: { section: MoodleSectio
 	].filter(Boolean);
 
 	return (
-		<Collapsible defaultOpen id={sectionAnchor(section.id)} className="scroll-mt-20 overflow-hidden rounded-xl border bg-card">
-			<CollapsibleTrigger className="group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none">
+		<Collapsible defaultOpen id={sectionAnchor(section.id)} className="scroll-mt-20 overflow-hidden rounded-2xl border bg-card">
+			<CollapsibleTrigger className="group flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none">
 				<ChevronDown
 					className="size-4 shrink-0 -rotate-90 text-muted-foreground transition-transform duration-200 group-data-panel-open:rotate-0"
 					aria-hidden="true"
 				/>
 				<span className="min-w-0 flex-1">
-					<span className="block truncate text-sm font-medium">{section.name}</span>
+					<span className="block truncate text-[0.95rem] font-semibold tracking-tight">{section.name}</span>
 					<span className="block truncate text-xs text-muted-foreground">{meta.join(" · ")}</span>
 				</span>
 				{tracked.length > 0 && (
@@ -208,7 +209,7 @@ function SectionBlock({ section, assignments, updated }: { section: MoodleSectio
 					</div>
 				)}
 				{section.summary && <RichContent html={section.summary} className="border-t px-4 py-3 text-muted-foreground" />}
-				<div className="flex flex-col divide-y border-t">
+				<div className="flex flex-col divide-y divide-border/50 border-t">
 					{section.activities.map((a) => (
 						<ActivityRow
 							key={a.id}
@@ -301,7 +302,11 @@ function CourseDetailContent({ params }: { params: Promise<{ courseId: string }>
 
 			{course ? (
 				<div className="flex flex-col gap-4">
-					{course.imageUrl && <CourseBanner course={course} className="h-32 rounded-xl sm:h-40" />}
+					{course.imageUrl && (
+						<CourseBanner course={course} className="h-36 rounded-2xl ring-1 ring-border sm:h-48">
+							<div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent" aria-hidden="true" />
+						</CourseBanner>
+					)}
 					<PageHeader
 						eyebrow={
 							<span className="flex items-center gap-2">
@@ -316,8 +321,8 @@ function CourseDetailContent({ params }: { params: Promise<{ courseId: string }>
 						}
 						title={course.fullName}
 					/>
-					<div className="flex max-w-sm items-center gap-3">
-						<Progress value={course.progress ?? 0} className="flex-1" />
+					<div className="flex max-w-md items-center gap-3">
+						<Progress value={course.progress ?? 0} className="h-1.5 flex-1" />
 						<span className="shrink-0 text-xs text-muted-foreground tabular-nums">{course.progress ?? 0}% complete</span>
 					</div>
 				</div>
@@ -350,7 +355,7 @@ function CourseDetailContent({ params }: { params: Promise<{ courseId: string }>
 						<EmptyState icon={FolderOpen} title="No content yet" description="This course has no published activities." />
 					)}
 
-					<div className="flex flex-col gap-3">
+					<div className="flex flex-col gap-4">
 						{sections.map((section, i) => (
 							<div
 								key={section.id}

@@ -48,8 +48,8 @@ export function CourseOutline({ sections, className }: { sections: MoodleSection
 							document.getElementById(sectionAnchor(s.id))?.scrollIntoView({ behavior: "smooth", block: "start" });
 						}}
 						className={cn(
-							"flex items-start gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none",
-							active === s.id ? "bg-muted font-medium text-foreground" : "text-muted-foreground",
+							"flex items-start gap-2 rounded-lg border-l-2 px-3 py-1.5 text-sm transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none",
+							active === s.id ? "border-primary bg-muted/70 font-medium text-foreground" : "border-transparent text-muted-foreground",
 						)}
 					>
 						<span className="min-w-0 flex-1 leading-snug break-words">{s.name}</span>

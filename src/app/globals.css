@@ -245,7 +245,7 @@ html[data-bleh--theme_type="light"] .bg-card {
 	}
 }
 @utility animate-page-in {
-	animation: var(--motion, grid 0.4s var(--trans-function-ani) backwards);
+	animation: var(--motion, page_in 0.3s var(--trans-function) backwards);
 	@media (prefers-reduced-motion: reduce) {
 		animation: var(--motion, page_in_reduced 0.15s ease);
 	}

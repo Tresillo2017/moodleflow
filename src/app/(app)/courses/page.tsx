@@ -76,7 +76,7 @@ function CoursesPageContent() {
 					{visible.map((c, i) => (
 						<div
 							key={c.id}
-							className="animate-blur-in"
+							className="animate-track-in"
 							style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
 						>
 							<CourseCard course={c} />
