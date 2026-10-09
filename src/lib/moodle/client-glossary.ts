@@ -1,5 +1,6 @@
 import { callMoodle, type MoodleParams } from "./call";
 import { normalizeGlossaries, normalizeGlossaryCategories, normalizeGlossaryPage } from "./normalize-glossary";
+import { asRecord } from "./normalize";
 import type { SocialContext } from "./client-social";
 import type { Glossary, GlossaryCategory, GlossaryPage, GlossaryQuery } from "@/types/glossary";
 
@@ -9,11 +10,16 @@ export interface GlossaryApi {
 	getGlossaryCategories(glossaryId: number): Promise<GlossaryCategory[]>;
 	/** The first `limit` entries matching the query. */
 	getGlossaryEntries(glossaryId: number, query: GlossaryQuery, limit: number): Promise<GlossaryPage>;
+	/** Adds an entry and resolves to its id (it may wait for teacher approval). */
+	addGlossaryEntry(glossaryId: number, concept: string, html: string): Promise<number>;
+	updateGlossaryEntry(entryId: number, concept: string, html: string): Promise<void>;
+	deleteGlossaryEntry(entryId: number): Promise<void>;
 	/** Tells Moodle the glossary was opened. Best effort. */
 	logGlossaryView(glossaryId: number): Promise<void>;
 }
 
 export function createGlossaryApi({ connection }: SocialContext): GlossaryApi {
+	const post = <T = unknown>(fn: string, params: MoodleParams = {}) => callMoodle<T>(connection, fn, params, "POST");
 	const get = <T>(fn: string, params: MoodleParams = {}) => callMoodle<T>(connection, fn, params);
 
 	return {
@@ -37,6 +43,16 @@ export function createGlossaryApi({ connection }: SocialContext): GlossaryApi {
 				case "date":
 					return normalizeGlossaryPage(await get("mod_glossary_get_entries_by_date", { ...page, order: "UPDATE", sort: "DESC" }));
 			}
+		},
+		async addGlossaryEntry(glossaryId, concept, html) {
+			const added = asRecord(await post("mod_glossary_add_entry", { glossaryid: glossaryId, concept, definition: html, definitionformat: 1 }));
+			return Number(added.entryid);
+		},
+		async updateGlossaryEntry(entryId, concept, html) {
+			await post("mod_glossary_update_entry", { entryid: entryId, concept, definition: html, definitionformat: 1 });
+		},
+		async deleteGlossaryEntry(entryId) {
+			await post("mod_glossary_delete_entry", { entryid: entryId });
 		},
 		async logGlossaryView(glossaryId) {
 			await callMoodle(connection, "mod_glossary_view_glossary", { id: glossaryId, mode: "letter" }, "POST").catch(() => undefined);

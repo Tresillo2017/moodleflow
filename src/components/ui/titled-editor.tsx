@@ -9,16 +9,20 @@ import { toast } from "@/lib/toast";
 
 const plain = (html: string) => html.replace(/<[^>]*>/g, "").trim();
 
-/** Title (new pages only) + rich text for a wiki page. */
-export function WikiEditor({
+/** Optional title + rich text, shared by wiki pages, glossary entries and blog entries. */
+export function TitledEditor({
 	initialTitle,
 	initialHtml = "",
+	titleLabel = "Title",
+	contentLabel = "Content",
 	submitLabel,
 	onSubmit,
 	onCancel,
 }: {
-	/** Omit to keep the title fixed (editing an existing page). */
+	/** Omit to hide the title field (editing an existing wiki page). */
 	initialTitle?: string;
+	titleLabel?: string;
+	contentLabel?: string;
 	initialHtml?: string;
 	submitLabel: string;
 	onSubmit: (title: string, html: string) => Promise<void>;
@@ -47,8 +51,8 @@ export function WikiEditor({
 				void submit();
 			}}
 		>
-			{initialTitle !== undefined && <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Page title" aria-label="Page title" maxLength={255} required />}
-			<RichTextEditor initialHtml={initialHtml} onChange={setHtml} placeholder="Write the page…" minRows={10} label="Page content" onSubmitShortcut={() => void submit()} />
+			{initialTitle !== undefined && <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={titleLabel} aria-label={titleLabel} maxLength={255} required />}
+			<RichTextEditor initialHtml={initialHtml} onChange={setHtml} placeholder="Write something…" minRows={10} label={contentLabel} onSubmitShortcut={() => void submit()} />
 			<div className="flex justify-end gap-2">
 				<Button type="button" variant="ghost" onClick={onCancel} disabled={busy}>
 					Cancel

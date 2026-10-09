@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BookA } from "lucide-react";
+import { BookA, Pencil, Plus, Trash2 } from "lucide-react";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
 import { RichContent } from "@/components/content/rich-content";
 import { Button } from "@/components/ui/button";
+import { TitledEditor } from "@/components/ui/titled-editor";
 import { SearchInput } from "@/components/ui/search-input";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ui/state";
+import { toast } from "@/lib/toast";
+import { useSupports } from "@/hooks/use-supports";
 import { formatDistanceToNow } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { GLOSSARY_ALL_CATEGORIES, GLOSSARY_NOT_CATEGORISED } from "@/types/glossary";
@@ -18,7 +21,39 @@ const SEARCH_DELAY_MS = 300;
 const LETTERS = ["ALL", ...Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)), "SPECIAL"];
 const MODE_LABEL: Record<GlossaryBrowseMode, string> = { letter: "A–Z", category: "Category", author: "Author", date: "Newest" };
 
-function EntryCard({ entry }: { entry: GlossaryEntry }) {
+function EntryCard({ entry, canUpdate, canRemove, onChanged }: { entry: GlossaryEntry; canUpdate: boolean; canRemove: boolean; onChanged: () => void }) {
+	const { client } = useMoodleConnection();
+	const [mode, setMode] = useState<"view" | "edit" | "confirm-delete">("view");
+
+	async function remove() {
+		try {
+			await client?.deleteGlossaryEntry(entry.id);
+			toast.success("Entry deleted");
+			onChanged();
+		} catch (error) {
+			toast.error(error instanceof Error && error.message ? error.message : "Couldn't delete that entry.");
+			setMode("view");
+		}
+	}
+
+	if (mode === "edit") {
+		return (
+			<TitledEditor
+				initialTitle={entry.concept}
+				initialHtml={entry.definition}
+				titleLabel="Concept"
+				contentLabel="Definition"
+				submitLabel="Save entry"
+				onCancel={() => setMode("view")}
+				onSubmit={async (concept, html) => {
+					await client?.updateGlossaryEntry(entry.id, concept, html);
+					setMode("view");
+					toast.success("Entry saved");
+					onChanged();
+				}}
+			/>
+		);
+	}
 	return (
 		<article className="flex flex-col gap-1 rounded-xl border bg-card p-4">
 			<h3 className="text-base font-semibold">{entry.concept}</h3>
@@ -28,6 +63,32 @@ function EntryCard({ entry }: { entry: GlossaryEntry }) {
 				{(entry.modified ?? entry.created) && ` · ${formatDistanceToNow((entry.modified ?? entry.created)!)}`}
 				{!entry.approved && " · awaiting approval"}
 			</p>
+			{((entry.canEdit && canUpdate) || (entry.canDelete && canRemove)) && (
+				<footer className="flex items-center gap-1 pt-1">
+					{entry.canEdit && canUpdate && (
+						<Button variant="ghost" size="xs" onClick={() => setMode("edit")}>
+							<Pencil aria-hidden="true" />
+							Edit
+						</Button>
+					)}
+					{entry.canDelete && canRemove && mode === "view" && (
+						<Button variant="ghost" size="xs" onClick={() => setMode("confirm-delete")}>
+							<Trash2 aria-hidden="true" />
+							Delete
+						</Button>
+					)}
+					{mode === "confirm-delete" && (
+						<>
+							<Button variant="destructive" size="xs" onClick={() => void remove()}>
+								Delete entry
+							</Button>
+							<Button variant="ghost" size="xs" onClick={() => setMode("view")}>
+								Keep
+							</Button>
+						</>
+					)}
+				</footer>
+			)}
 		</article>
 	);
 }
@@ -62,6 +123,11 @@ export function GlossaryView({ glossary }: { glossary: Glossary }) {
 	const [typed, setTyped] = useState("");
 	const [text, setText] = useState("");
 	const [limit, setLimit] = useState(PAGE_SIZE);
+	const [adding, setAdding] = useState(false);
+	// older Moodle sites can add entries but not edit or delete them
+	const canAdd = useSupports("mod_glossary_add_entry") && glossary.canAddEntry;
+	const canUpdate = useSupports("mod_glossary_update_entry");
+	const canRemove = useSupports("mod_glossary_delete_entry");
 
 	useEffect(() => {
 		const t = setTimeout(() => setText(typed.trim()), SEARCH_DELAY_MS);
@@ -92,8 +158,30 @@ export function GlossaryView({ glossary }: { glossary: Glossary }) {
 						))}
 					</div>
 				)}
+				{canAdd && !adding && (
+					<Button variant="outline" size="sm" onClick={() => setAdding(true)}>
+						<Plus aria-hidden="true" />
+						Add entry
+					</Button>
+				)}
 				<SearchInput value={typed} onChange={(e) => setTyped(e.target.value)} placeholder="Search the glossary" aria-label="Search the glossary" className="w-full sm:ml-auto sm:w-64" />
 			</div>
+
+			{adding && (
+				<TitledEditor
+					initialTitle=""
+					titleLabel="Concept"
+					contentLabel="Definition"
+					submitLabel="Add entry"
+					onCancel={() => setAdding(false)}
+					onSubmit={async (concept, html) => {
+						await client?.addGlossaryEntry(glossary.id, concept, html);
+						setAdding(false);
+						toast.success("Entry added", { description: "It may need a teacher's approval before others see it." });
+						refresh();
+					}}
+				/>
+			)}
 
 			{!text && mode === "letter" && <Chips label="Letter" value={letter} onPick={setLetter} items={LETTERS.map((l) => ({ id: l, text: l === "ALL" ? "All" : l === "SPECIAL" ? "#" : l }))} />}
 			{!text && mode === "category" && categories.data && (
@@ -117,7 +205,7 @@ export function GlossaryView({ glossary }: { glossary: Glossary }) {
 					</p>
 					<div className="flex flex-col gap-3">
 						{page.data.entries.map((e) => (
-							<EntryCard key={e.id} entry={e} />
+							<EntryCard key={e.id} entry={e} canUpdate={canUpdate} canRemove={canRemove} onChanged={refresh} />
 						))}
 					</div>
 					{page.data.entries.length < page.data.total && (

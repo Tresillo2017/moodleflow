@@ -5,7 +5,7 @@ import { FileText, Pencil, Plus } from "lucide-react";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
 import { RichContent } from "@/components/content/rich-content";
-import { WikiEditor } from "@/components/wiki/wiki-editor";
+import { TitledEditor } from "@/components/ui/titled-editor";
 import { Button } from "@/components/ui/button";
 import { FileList } from "@/components/files/file-list";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ui/state";
@@ -46,8 +46,9 @@ function PageBody({ pageId, canEdit, onNavigate }: { pageId: number; canEdit: bo
 	if (!page) return null;
 	if (editing) {
 		return (
-			<WikiEditor
+			<TitledEditor
 				initialHtml={editing.content}
+				contentLabel="Page content"
 				submitLabel="Save page"
 				onCancel={() => setEditing(null)}
 				onSubmit={async (_title, html) => {
@@ -151,8 +152,10 @@ export function WikiView({ wiki }: { wiki: Wiki }) {
 			</nav>
 			<div className="flex min-w-0 flex-col gap-4">
 				{creating ? (
-					<WikiEditor
+					<TitledEditor
 						initialTitle=""
+						titleLabel="Page title"
+						contentLabel="Page content"
 						submitLabel="Create page"
 						onCancel={() => setCreating(false)}
 						onSubmit={async (title, html) => {

@@ -46,6 +46,21 @@ export function createMockGlossaryApi(): GlossaryApi {
 			if (query.mode === "author") found.sort((a, b) => a.author.localeCompare(b.author));
 			return wait({ entries: found.slice(0, limit), total: found.length });
 		},
+		addGlossaryEntry: (_id, concept, html) => {
+			const id = Math.max(...entries.map((e) => e.id)) + 1;
+			entries.push({ ...entry(id, concept, "", "Tomas", 0), definition: html, canEdit: true, canDelete: true });
+			return wait(id);
+		},
+		updateGlossaryEntry: (entryId, concept, html) => {
+			const i = entries.findIndex((e) => e.id === entryId);
+			if (i >= 0) entries[i] = { ...entries[i], concept, definition: html, modified: new Date().toISOString() };
+			return wait(undefined);
+		},
+		deleteGlossaryEntry: (entryId) => {
+			const i = entries.findIndex((e) => e.id === entryId);
+			if (i >= 0) entries.splice(i, 1);
+			return wait(undefined);
+		},
 		logGlossaryView: () => wait(undefined, 0),
 	};
 }
