@@ -9,6 +9,7 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ### Added
 - Wikis: read pages, switch between class/group/user wikis, follow wiki links in the app, and see attached files.
+- Wikis: create pages and edit existing ones (the page is locked in Moodle while you edit; pages in non-HTML markup open in Moodle instead).
 
 ## [0.14.0] - 2026-10-07
 

@@ -37,4 +37,12 @@ export interface WikiPage extends WikiPageSummary {
 	version: number;
 }
 
+/** A page opened for editing; Moodle locks it for this user until they save or the lock expires. */
+export interface WikiEditing {
+	content: string;
+	/** Only "html" can be edited here. */
+	format: string;
+	version: number;
+}
+
 export type WikiFiles = MoodleFile[];

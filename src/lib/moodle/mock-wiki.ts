@@ -24,6 +24,20 @@ export function createMockWikiApi(): WikiApi {
 			const p = pages.find((x) => x.id === pageId);
 			return p ? wait(p) : Promise.reject(new Error("Page not found"));
 		},
+		getWikiPageForEditing: (pageId) => {
+			const p = pages.find((x) => x.id === pageId);
+			return p ? wait({ content: p.html, format: "html", version: p.version }) : Promise.reject(new Error("Page not found"));
+		},
+		saveWikiPage: (pageId, html) => {
+			const i = pages.findIndex((x) => x.id === pageId);
+			if (i >= 0) pages[i] = { ...pages[i], html, version: pages[i].version + 1, modified: new Date().toISOString() };
+			return wait(undefined);
+		},
+		createWikiPage: (_subwiki, title, html) => {
+			const id = Math.max(...pages.map((p) => p.id)) + 1;
+			pages.push(page(id, title, html));
+			return wait(id);
+		},
 		getWikiFiles: () => wait([]),
 		logWikiPageView: () => wait(undefined, 0),
 	};

@@ -1,5 +1,5 @@
 import type { MoodleFile } from "@/types/moodle";
-import type { Subwiki, Wiki, WikiPage, WikiPageSummary } from "@/types/wiki";
+import type { Subwiki, Wiki, WikiEditing, WikiPage, WikiPageSummary } from "@/types/wiki";
 import { asArray, asRecord } from "./normalize";
 
 const str = (v: unknown) => (typeof v === "string" && v ? v : undefined);
@@ -85,4 +85,10 @@ export function wikiLinkPageId(href: string | null | undefined): number | null {
 	} catch {
 		return null;
 	}
+}
+
+// mod_wiki_get_page_for_editing
+export function normalizeWikiEditing(raw: unknown): WikiEditing {
+	const r = asRecord(asRecord(raw).pagesection);
+	return { content: String(r.content ?? ""), format: String(r.contentformat ?? "html"), version: Number(r.version ?? 0) };
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeSubwikis, normalizeWikiFiles, normalizeWikiPage, normalizeWikiPages, normalizeWikis, wikiLinkPageId } from "./normalize-wiki";
+import { normalizeSubwikis, normalizeWikiEditing, normalizeWikiFiles, normalizeWikiPage, normalizeWikiPages, normalizeWikis, wikiLinkPageId } from "./normalize-wiki";
 
 describe("wiki", () => {
 	it("maps wiki settings", () => {
@@ -23,6 +23,10 @@ describe("wiki", () => {
 
 	it("keeps only files with a url", () => {
 		expect(normalizeWikiFiles({ files: [{ filename: "a.pdf", fileurl: "https://x/a.pdf", filesize: 3 }, { filename: "b" }] })).toHaveLength(1);
+	});
+
+	it("maps the page being edited", () => {
+		expect(normalizeWikiEditing({ pagesection: { content: "<p>x</p>", contentformat: "html", version: 2 } })).toEqual({ content: "<p>x</p>", format: "html", version: 2 });
 	});
 
 	it("recognises wiki page links", () => {
