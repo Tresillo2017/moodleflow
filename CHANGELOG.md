@@ -12,6 +12,7 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 - Wikis: create pages and edit existing ones (the page is locked in Moodle while you edit; pages in non-HTML markup open in Moodle instead).
 - Glossaries: browse by letter, category, author or date, search entries, and load more as you go.
 - Glossaries: add entries, and edit or delete your own when the site supports it.
+- Databases: browse and search entries shown through the activity's fields, add, edit and delete entries with a form built from those fields (files and pictures included), and approve entries if you can.
 
 ## [0.14.0] - 2026-10-07
 

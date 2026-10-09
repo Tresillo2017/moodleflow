@@ -4,6 +4,7 @@ import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
 import type { MoodleClient } from "@/lib/moodle/client";
 import type { Choice, Feedback, Survey } from "@/types/engage";
+import type { Database } from "@/types/database";
 import type { Glossary } from "@/types/glossary";
 import type { Wiki } from "@/types/wiki";
 
@@ -36,3 +37,4 @@ export const useFeedback = (id: number, courseId: number | null) => useCourseAct
 export const useSurvey = (id: number, courseId: number | null) => useCourseActivity<Survey>((c) => c.getSurveys, id, courseId);
 export const useWiki = (id: number, courseId: number | null) => useCourseActivity<Wiki>((c) => c.getWikis, id, courseId);
 export const useGlossary = (id: number, courseId: number | null) => useCourseActivity<Glossary>((c) => c.getGlossaries, id, courseId);
+export const useDatabase = (id: number, courseId: number | null) => useCourseActivity<Database>((c) => c.getDatabases, id, courseId);

@@ -61,6 +61,7 @@ export type ActivityType =
 	| "survey"
 	| "wiki"
 	| "glossary"
+	| "data"
 	| "h5pactivity"
 	| "scorm"
 	| "lti"
