@@ -7,6 +7,8 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-10-09
+
 ### Added
 - Wikis: read pages, switch between class/group/user wikis, follow wiki links in the app, and see attached files.
 - Wikis: create pages and edit existing ones (the page is locked in Moodle while you edit; pages in non-HTML markup open in Moodle instead).
@@ -16,6 +18,12 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 - Comments and ratings on glossary and database entries, built from reusable widgets that forum ratings now share.
 - Blog (from the profile page or Ctrl+K): read everyone's, yours or a course's entries, filter by tag, write, edit and delete your own, with tags and a draft or site-wide visibility.
 - Notes: private notes to yourself for a course, when your site allows them.
+
+### Changed
+- The course page has a taller banner, rounder section cards and a clearer current-section marker in the sidebar.
+
+### Fixed
+- The bouncy scale-and-blur animation when opening My Courses is gone; pages and course cards now fade in gently.
 
 ## [0.14.0] - 2026-10-07
 
