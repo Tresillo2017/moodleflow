@@ -11,11 +11,11 @@ import { createMockDatabaseApi } from "./mock-database";
 import { createMockCollabApi } from "./mock-collab";
 import { createMockBlogApi } from "./mock-blog";
 import { createMockNotesApi } from "./mock-notes";
+import { createMockCalendarApi, upcomingMockEvents } from "./mock-calendar";
 import { createMockEmbedApi } from "./mock-embed";
 import type {
 	AssignmentConfig,
 	MoodleAssignment,
-	MoodleCalendarEvent,
 	MoodleComment,
 	MoodleCourse,
 	MoodleCourseContent,
@@ -60,13 +60,6 @@ const assignments: MoodleAssignment[] = [
 ];
 
 const mockComments: Record<number, MoodleComment[]> = {};
-
-const calendarEvents: MoodleCalendarEvent[] = [
-	{ id: 1, name: "Problem Set 4 due", courseId: 1, courseName: "Mathematics II", startDate: days(1), type: "assignment" },
-	{ id: 2, name: "Physics Lecture", courseId: 2, courseName: "Physics Fundamentals", startDate: days(0.3), type: "course" },
-	{ id: 3, name: "Quiz: Thermodynamics", courseId: 2, courseName: "Physics Fundamentals", startDate: days(5), type: "quiz" },
-	{ id: 4, name: "Essay: Cold War due", courseId: 3, courseName: "Modern History", startDate: days(7), type: "assignment" },
-];
 
 const courseContents: Record<number, MoodleCourseContent> = {
 	1: {
@@ -241,6 +234,7 @@ export function createMockMoodleClient(): MoodleClient {
 		...createMockCollabApi(),
 		...createMockBlogApi(),
 		...createMockNotesApi(),
+		...createMockCalendarApi(),
 		...createMockEmbedApi(),
 		getSiteInfo: () => delay(siteInfo),
 		getSiteConfig: () => delay({ siteName: siteInfo.siteName, maxUploadBytes: 10_485_760, registrationEnabled: false }),
@@ -287,7 +281,7 @@ export function createMockMoodleClient(): MoodleClient {
 				for (const sec of c.sections) for (const a of sec.activities) if (a.id === cmid) a.completed = completed;
 			return delay(undefined);
 		},
-		getCalendarEvents: () => delay(calendarEvents),
+		getCalendarEvents: () => delay(upcomingMockEvents()),
 		getAssignments: () => delay(assignments),
 		getAssignment: (id) => delay(assignments.find((a) => a.id === id)),
 		saveAssignmentSubmission: (assignment, input) => {

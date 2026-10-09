@@ -22,6 +22,8 @@ import { createDatabaseApi, type DatabaseApi } from "./client-database";
 import { createCollabApi, type CollabApi } from "./client-collab";
 import { createBlogApi, type BlogApi } from "./client-blog";
 import { createNotesApi, type NotesApi } from "./client-notes";
+import { normalizeCourseIds } from "./normalize-calendar";
+import { createCalendarApi, type CalendarApi } from "./client-calendar";
 import { createEmbedApi, type EmbedApi } from "./client-embed";
 import type {
 	CourseBlock,
@@ -61,7 +63,7 @@ import {
 	normalizeSiteInfo,
 } from "./normalize";
 
-export interface MoodleClient extends SocialApi, QuizApi, LessonApi, WorkshopApi, EngageApi, EmbedApi, WikiApi, GlossaryApi, DatabaseApi, CollabApi, BlogApi, NotesApi {
+export interface MoodleClient extends SocialApi, QuizApi, LessonApi, WorkshopApi, EngageApi, EmbedApi, WikiApi, GlossaryApi, DatabaseApi, CollabApi, BlogApi, NotesApi, CalendarApi {
 	getSiteInfo(): Promise<MoodleSiteInfo>;
 	/** Site name, logo, upload limit and registration/policy flags; falls back to site info when the site lacks tool_mobile. */
 	getSiteConfig(): Promise<MoodleSiteConfig>;
@@ -238,6 +240,7 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 		...createCollabApi(socialCtx),
 		...createBlogApi(socialCtx),
 		...createNotesApi(socialCtx),
+		...createCalendarApi(socialCtx),
 		...createEmbedApi(socialCtx),
 		getSiteInfo: fetchSiteInfo,
 
@@ -272,14 +275,20 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 
 		async getCourses() {
 			const info = await this.getSiteInfo();
-			const [raw, images] = await Promise.all([
+			const timeline = (classification: string) =>
+				callMoodle(connection, "core_course_get_enrolled_courses_by_timeline_classification", { classification, limit: 0 });
+			const [raw, all, inProgress] = await Promise.all([
 				callMoodle(connection, "core_enrol_get_users_courses", { userid: info.userId }),
 				// enrol_get_users_courses often omits banners; the timeline API carries them (and Moodle's generated defaults)
-				callMoodle(connection, "core_course_get_enrolled_courses_by_timeline_classification", { classification: "all", limit: 0 })
-					.then(normalizeTimelineImages)
-					.catch(() => new Map<number, string>()),
+				timeline("all").catch(() => null),
+				// Moodle's own verdict on what is current (visibility, dates, completion, user-hidden)
+				timeline("inprogress").then(normalizeCourseIds).catch(() => null),
 			]);
-			return normalizeCourses(raw).map((c) => (c.imageUrl ? c : { ...c, imageUrl: images.get(c.id) }));
+			const images = all ? normalizeTimelineImages(all) : new Map<number, string>();
+			return normalizeCourses(raw).map((c) => ({
+				...(c.imageUrl ? c : { ...c, imageUrl: images.get(c.id) }),
+				inProgress: inProgress ? inProgress.includes(c.id) : undefined,
+			}));
 		},
 
 		async getCompletionDates(courseIds) {

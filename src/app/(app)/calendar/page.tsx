@@ -8,6 +8,9 @@ import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState, ErrorState, ListSkeleton, FeatureGate } from "@/components/ui/state";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { EventDialog } from "@/components/calendar/event-dialog";
+import { EventForm } from "@/components/calendar/event-form";
+import { ExportLink } from "@/components/calendar/export-link";
 import { BookOpen, CalendarDays, ChevronLeft, ChevronRight, ClipboardList, FileQuestion, User } from "lucide-react";
 import { courseHue, formatDayLabel, formatEventTime } from "@/lib/format";
 import { hour12Of } from "@/lib/preferences";
@@ -15,6 +18,24 @@ import { cn } from "@/lib/utils";
 import type { MoodleCalendarEvent } from "@/types/moodle";
 
 type View = "agenda" | "month";
+
+interface EventFilter {
+	courseId: number;
+	type: MoodleCalendarEvent["type"] | "all";
+}
+
+const NO_FILTER: EventFilter = { courseId: 0, type: "all" };
+const TYPE_LABELS: Record<MoodleCalendarEvent["type"], string> = {
+	assignment: "Assignments",
+	quiz: "Quizzes",
+	course: "Course events",
+	personal: "Personal",
+	other: "Other",
+};
+
+function applyFilter(events: MoodleCalendarEvent[], f: EventFilter): MoodleCalendarEvent[] {
+	return events.filter((e) => (!f.courseId || e.courseId === f.courseId) && (f.type === "all" || e.type === f.type));
+}
 
 const TYPE_ICONS: Record<MoodleCalendarEvent["type"], React.ElementType> = {
 	assignment: ClipboardList,
@@ -38,10 +59,10 @@ function groupByDay(events: MoodleCalendarEvent[]): Map<string, MoodleCalendarEv
 	return map;
 }
 
-function EventRow({ event: e, hour12 }: { event: MoodleCalendarEvent; hour12?: boolean }) {
+function EventRow({ event: e, hour12, onOpen }: { event: MoodleCalendarEvent; hour12?: boolean; onOpen: (e: MoodleCalendarEvent) => void }) {
 	const Icon = TYPE_ICONS[e.type];
 	return (
-		<div className="flex items-center gap-4 px-4 py-3 text-sm">
+		<button type="button" onClick={() => onOpen(e)} className="flex w-full items-center gap-4 px-4 py-3 text-left text-sm transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none">
 			<span className="w-16 shrink-0 text-xs text-muted-foreground tabular-nums">{formatEventTime(e.startDate, hour12)}</span>
 			<span
 				className="grid size-7 shrink-0 place-items-center rounded-md"
@@ -56,27 +77,38 @@ function EventRow({ event: e, hour12 }: { event: MoodleCalendarEvent; hour12?: b
 				<p className="truncate font-medium">{e.name}</p>
 				{e.courseName && <p className="truncate text-xs text-muted-foreground">{e.courseName}</p>}
 			</div>
-		</div>
+		</button>
 	);
 }
 
-function EventList({ events, hour12 }: { events: MoodleCalendarEvent[]; hour12?: boolean }) {
+function EventList({ events, hour12, onOpen }: { events: MoodleCalendarEvent[]; hour12?: boolean; onOpen: (e: MoodleCalendarEvent) => void }) {
 	return (
 		<div className="flex flex-col divide-y overflow-hidden rounded-xl border bg-card">
 			{events.map((e) => (
-				<EventRow key={e.id} event={e} hour12={hour12} />
+				<EventRow key={e.id} event={e} hour12={hour12} onOpen={onOpen} />
 			))}
 		</div>
 	);
 }
 
-function MonthView({ events, hour12, weekStartsMonday }: { events: MoodleCalendarEvent[]; hour12?: boolean; weekStartsMonday: boolean }) {
+interface MonthViewProps {
+	filter: EventFilter;
+	hour12?: boolean;
+	weekStartsMonday: boolean;
+	reloadKey: number;
+	onOpen: (e: MoodleCalendarEvent) => void;
+}
+
+function MonthView({ filter, hour12, weekStartsMonday, reloadKey, onOpen }: MonthViewProps) {
+	const { client } = useMoodleConnection();
 	const today = new Date();
 	const [cursor, setCursor] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
 	const [selected, setSelected] = useState(() => dayKey(today));
 
 	const year = cursor.getFullYear();
 	const month = cursor.getMonth();
+	const monthEvents = useMoodleQuery(client ? () => client.getCalendarMonth(year, month + 1) : null, [client, year, month, reloadKey]);
+	const events = applyFilter(monthEvents.data ?? [], filter);
 	const offset = (cursor.getDay() - (weekStartsMonday ? 1 : 0) + 7) % 7;
 	const daysInMonth = new Date(year, month + 1, 0).getDate();
 	const byDay = groupByDay(events);
@@ -122,6 +154,7 @@ function MonthView({ events, hour12, weekStartsMonday }: { events: MoodleCalenda
 					</div>
 				</div>
 
+				{monthEvents.error && <p role="alert" className="text-sm text-danger">{monthEvents.error.message}</p>}
 				<div key={`${year}-${month}`} className="grid grid-cols-7 gap-1 text-center motion-safe:animate-in motion-safe:fade-in duration-200">
 					{weekdays.map((d, i) => (
 						<div key={i} className="pb-1 text-xs font-medium text-muted-foreground" aria-hidden="true">
@@ -188,7 +221,7 @@ function MonthView({ events, hour12, weekStartsMonday }: { events: MoodleCalenda
 					{selectedDate ? formatDayLabel(selectedDate.toISOString()) : "Selected day"}
 				</h2>
 				{selectedEvents.length > 0 ? (
-					<EventList events={selectedEvents} hour12={hour12} />
+					<EventList events={selectedEvents} hour12={hour12} onOpen={onOpen} />
 				) : (
 					<p className="rounded-xl border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
 						Nothing scheduled.
@@ -202,31 +235,61 @@ function MonthView({ events, hour12, weekStartsMonday }: { events: MoodleCalenda
 function CalendarPageContent() {
 	const { client, refresh } = useMoodleConnection();
 	const { prefs } = usePreferences();
-	const events = useMoodleQuery(client ? () => client.getCalendarEvents() : null, [client]);
+	const [reloadKey, setReloadKey] = useState(0);
+	const upcoming = useMoodleQuery(client ? () => client.getCalendarEvents() : null, [client, reloadKey]);
+	const courses = useMoodleQuery(client ? () => client.getCourses() : null, [client]).data ?? [];
 	const [view, setView] = useState<View>("agenda");
+	const [filter, setFilter] = useState<EventFilter>(NO_FILTER);
+	const [open, setOpen] = useState<MoodleCalendarEvent | null>(null);
 	const hour12 = hour12Of(prefs.clock);
-	const grouped = [...groupByDay(events.data ?? []).values()];
+	const events = applyFilter(upcoming.data ?? [], filter);
+	const grouped = [...groupByDay(events).values()];
+	const reload = () => setReloadKey((k) => k + 1);
+	const select = "h-8 rounded-lg border bg-card px-2 text-sm";
 
 	return (
 		<div className="flex flex-col gap-6">
 			<PageHeader
 				title="Calendar"
-				description={events.data ? `${events.data.length} upcoming ${events.data.length === 1 ? "event" : "events"}` : undefined}
+				description={upcoming.data ? `${events.length} upcoming ${events.length === 1 ? "event" : "events"}` : undefined}
 				actions={
-					<Tabs value={view} onValueChange={(v) => setView(v as View)}>
-						<TabsList>
-							<TabsTrigger value="agenda">Agenda</TabsTrigger>
-							<TabsTrigger value="month">Month</TabsTrigger>
-						</TabsList>
-					</Tabs>
+					<div className="flex flex-wrap items-center gap-2">
+						<Tabs value={view} onValueChange={(v) => setView(v as View)}>
+							<TabsList>
+								<TabsTrigger value="agenda">Agenda</TabsTrigger>
+								<TabsTrigger value="month">Month</TabsTrigger>
+							</TabsList>
+						</Tabs>
+						{client?.supports("core_calendar_get_calendar_export_token") && <ExportLink />}
+						{client?.supports("core_calendar_create_calendar_events") && <EventForm onCreated={reload} />}
+					</div>
 				}
 			/>
 
-			{events.loading && <ListSkeleton rows={4} />}
-			{events.error && <ErrorState error={events.error} onRetry={refresh} />}
+			<div className="flex flex-wrap gap-2">
+				<select aria-label="Filter by course" value={filter.courseId} onChange={(e) => setFilter({ ...filter, courseId: Number(e.target.value) })} className={select}>
+					<option value={0}>All courses</option>
+					{courses.map((c) => (
+						<option key={c.id} value={c.id}>
+							{c.shortName}
+						</option>
+					))}
+				</select>
+				<select aria-label="Filter by type" value={filter.type} onChange={(e) => setFilter({ ...filter, type: e.target.value as EventFilter["type"] })} className={select}>
+					<option value="all">All types</option>
+					{(Object.keys(TYPE_LABELS) as MoodleCalendarEvent["type"][]).map((t) => (
+						<option key={t} value={t}>
+							{TYPE_LABELS[t]}
+						</option>
+					))}
+				</select>
+			</div>
 
-			{events.data && view === "agenda" && (
-				events.data.length === 0 ? (
+			{upcoming.loading && <ListSkeleton rows={4} />}
+			{upcoming.error && <ErrorState error={upcoming.error} onRetry={refresh} />}
+
+			{upcoming.data && view === "agenda" && (
+				events.length === 0 ? (
 					<EmptyState icon={CalendarDays} title="No upcoming events" description="Deadlines and course events will appear here." />
 				) : (
 					<div className="flex flex-col gap-6">
@@ -237,16 +300,18 @@ function CalendarPageContent() {
 								style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
 							>
 								<h2 className="text-xl text-muted-foreground">{formatDayLabel(dayEvents[0].startDate)}</h2>
-								<EventList events={dayEvents} hour12={hour12} />
+								<EventList events={dayEvents} hour12={hour12} onOpen={setOpen} />
 							</section>
 						))}
 					</div>
 				)
 			)}
 
-			{events.data && view === "month" && (
-				<MonthView events={events.data} hour12={hour12} weekStartsMonday={prefs.weekStart === "monday"} />
+			{view === "month" && (
+				<MonthView filter={filter} hour12={hour12} weekStartsMonday={prefs.weekStart === "monday"} reloadKey={reloadKey} onOpen={setOpen} />
 			)}
+
+			<EventDialog event={open} hour12={hour12} onClose={() => setOpen(null)} onChanged={reload} />
 		</div>
 	);
 }

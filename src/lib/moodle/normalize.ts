@@ -218,29 +218,42 @@ export function normalizeCourseContent(courseId: number, raw: unknown): MoodleCo
 	return { courseId, sections };
 }
 
+/** Event type for the chip icon: the owning activity wins over Moodle's generic event type. */
+function calendarEventType(ev: Record<string, unknown>): MoodleCalendarEvent["type"] {
+	if (ev.modulename === "quiz") return "quiz";
+	if (ev.modulename === "assign" || ev.eventtype === "due") return "assignment";
+	if (ev.eventtype === "user") return "personal";
+	if (ev.eventtype === "course") return "course";
+	return "other";
+}
+
+export function normalizeCalendarEvent(e: unknown): MoodleCalendarEvent {
+	const ev = asRecord(e);
+	return {
+		id: Number(ev.id),
+		name: String(ev.name ?? ""),
+		description: ev.description ? String(ev.description) : undefined,
+		courseId: ev.courseid ? Number(ev.courseid) : undefined,
+		courseName:
+			ev.course && typeof ev.course === "object"
+				? String(asRecord(ev.course).fullname ?? "")
+				: undefined,
+		startDate: new Date(Number(ev.timestart ?? 0) * 1000).toISOString(),
+		endDate:
+			ev.timestart && ev.timeduration
+				? new Date((Number(ev.timestart) + Number(ev.timeduration)) * 1000).toISOString()
+				: undefined,
+		type: calendarEventType(ev),
+		url: typeof ev.url === "string" ? ev.url : undefined,
+		module: ev.modulename && ev.instance ? { name: String(ev.modulename), instance: Number(ev.instance) } : undefined,
+		canEdit: typeof ev.canedit === "boolean" ? ev.canedit : undefined,
+		canDelete: typeof ev.candelete === "boolean" ? ev.candelete : undefined,
+	};
+}
+
 // core_calendar_get_calendar_upcoming_view
 export function normalizeCalendarEvents(raw: unknown): MoodleCalendarEvent[] {
-	const r = asRecord(raw);
-	return asArray(r.events).map((e) => {
-		const ev = asRecord(e);
-		return {
-			id: Number(ev.id),
-			name: String(ev.name ?? ""),
-			description: ev.description ? String(ev.description) : undefined,
-			courseId: ev.courseid ? Number(ev.courseid) : undefined,
-			courseName:
-				ev.course && typeof ev.course === "object"
-					? String(asRecord(ev.course).fullname ?? "")
-					: undefined,
-			startDate: new Date(Number(ev.timestart ?? 0) * 1000).toISOString(),
-			endDate:
-				ev.timestart && ev.timeduration
-					? new Date((Number(ev.timestart) + Number(ev.timeduration)) * 1000).toISOString()
-					: undefined,
-			type: (ev.eventtype === "due" ? "assignment" : "other") as MoodleCalendarEvent["type"],
-			url: typeof ev.url === "string" ? ev.url : undefined,
-		};
-	});
+	return asArray(asRecord(raw).events).map(normalizeCalendarEvent);
 }
 
 function mapFile(f: unknown): MoodleFile {

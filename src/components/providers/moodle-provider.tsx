@@ -92,6 +92,23 @@ function withCache(client: MoodleClient, persist: boolean): MoodleClient {
 			invalidate("courseCompletion");
 		},
 		getCalendarEvents: cached("events", TTL.events, () => client.getCalendarEvents()),
+		async createCalendarEvent(input) {
+			const id = await client.createCalendarEvent(input);
+			invalidate("events");
+			return id;
+		},
+		async deleteCalendarEvent(id) {
+			await client.deleteCalendarEvent(id);
+			invalidate("events");
+		},
+		async moveCalendarEvent(id, day) {
+			await client.moveCalendarEvent(id, day);
+			invalidate("events");
+		},
+		async setCourseHidden(courseId, hidden) {
+			await client.setCourseHidden(courseId, hidden);
+			invalidate("courses");
+		},
 		getAssignments: cached("assignments", TTL.assignments, (courseIds?: number[]) => client.getAssignments(courseIds)),
 		getAssignment: cached("assignment", TTL.assignments, (id: number) => client.getAssignment(id)),
 		getGrades: cached("grades", TTL.grades, (courseId?: number) => client.getGrades(courseId)),

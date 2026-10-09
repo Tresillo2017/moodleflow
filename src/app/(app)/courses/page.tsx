@@ -12,10 +12,14 @@ import { isCurrentCourse } from "@/lib/moodle/course-filter";
 import { NotebookText, SearchX } from "lucide-react";
 import type { MoodleCourse } from "@/types/moodle";
 
+/** Moodle's own overview groups; `heuristic` is the fallback when the site lacks the classification API. */
 const FILTERS = {
-	current: { label: "In progress", test: isCurrentCourse },
-	starred: { label: "Starred", test: (c: MoodleCourse) => isCurrentCourse(c) && Boolean(c.isFavourite) },
-	all: { label: "All", test: () => true },
+	current: { label: "In progress", classification: "inprogress", heuristic: isCurrentCourse },
+	future: { label: "Future", classification: "future", heuristic: () => false },
+	past: { label: "Past", classification: "past", heuristic: (c: MoodleCourse) => !isCurrentCourse(c) },
+	starred: { label: "Starred", classification: "favourites", heuristic: (c: MoodleCourse) => isCurrentCourse(c) && Boolean(c.isFavourite) },
+	hidden: { label: "Hidden", classification: "hidden", heuristic: () => false },
+	all: { label: "All", classification: "all", heuristic: () => true },
 } as const;
 
 type Filter = keyof typeof FILTERS;
@@ -26,10 +30,17 @@ function CoursesPageContent() {
 	const [filter, setFilter] = useState<Filter>("current");
 	const [query, setQuery] = useState("");
 
+	// Moodle decides what is in progress, past, starred or hidden; null means it couldn't say, so we guess from course dates.
+	const classified = useMoodleQuery(
+		client ? () => client.getCourseIdsByClassification(FILTERS[filter].classification).catch(() => null) : null,
+		[client, filter, courses.data],
+	).data;
+
 	const all = courses.data ?? [];
 	const q = query.trim().toLowerCase();
+	const inGroup = (c: MoodleCourse) => (classified ? classified.includes(c.id) : FILTERS[filter].heuristic(c));
 	const visible = all
-		.filter(FILTERS[filter].test)
+		.filter(inGroup)
 		.filter((c) => !q || c.fullName.toLowerCase().includes(q) || c.shortName.toLowerCase().includes(q));
 	const currentCount = all.filter(isCurrentCourse).length;
 
@@ -79,7 +90,7 @@ function CoursesPageContent() {
 							className="animate-track-in"
 							style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
 						>
-							<CourseCard course={c} />
+							<CourseCard course={c} hidden={filter === "hidden"} />
 						</div>
 					))}
 				</div>

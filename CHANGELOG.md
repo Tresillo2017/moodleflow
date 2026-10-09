@@ -7,6 +7,17 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-10-09
+
+### Added
+- Calendar: month view loaded per month from Moodle, filters by course and type, an event dialog that opens the assignment or quiz in the app, and a subscribe link for external calendars.
+- Calendar: create personal and course events (only the types your site allows), move an event to another day, and delete your own events.
+- Dashboard: a timeline (overdue, next 7 days, next 30 days; sort by date or course; hide a course), recently accessed items, and the Moodle dashboard blocks that have content.
+- Courses: In progress, Future, Past, Starred and Hidden now follow Moodle's own classification; hide or show a course from its right-click menu.
+
+### Changed
+- "In progress" everywhere (assignments, grades, dashboard) uses Moodle's verdict instead of guessing from visibility and end date.
+
 ## [0.15.0] - 2026-10-09
 
 ### Added

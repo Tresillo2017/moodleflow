@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useAssignments } from "@/hooks/use-assignments";
 import Link from "next/link";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
@@ -11,6 +12,9 @@ import { EmptyState, ErrorState, ListSkeleton, FeatureGate } from "@/components/
 import { PageSplit } from "@/components/layout/page-split";
 import { CourseCarousel } from "@/components/dashboard/course-carousel";
 import { NAV_ITEMS, PROFILE_ITEM } from "@/lib/nav";
+import { Timeline } from "@/components/dashboard/timeline";
+import { RecentItems } from "@/components/dashboard/recents";
+import { CourseBlocks } from "@/components/courses/course-blocks";
 import { MoodleActivityCard } from "@/components/dashboard/moodle-activity-card";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -192,6 +196,11 @@ function DashboardPageContent() {
 	const assignments = useAssignments();
 	const events = useMoodleQuery(client ? () => client.getCalendarEvents() : null, [client]);
 	const grades = useMoodleQuery(client ? () => client.getGrades() : null, [client]);
+	const blocks = useMoodleQuery(client && show.blocks ? () => client.getDashboardBlocks().catch(() => []) : null, [client, show.blocks]);
+
+	useEffect(() => {
+		void client?.logDashboardView();
+	}, [client]);
 
 	const currentCourses = courses.data?.filter(isCurrentCourse);
 	const currentCourseIds = new Set(currentCourses?.map((c) => c.id));
@@ -288,6 +297,30 @@ function DashboardPageContent() {
 								</div>
 							)}
 						</section>
+					</Reveal>
+				)}
+
+				{show.timeline && (
+					<Reveal index={3}>
+						<section className="flex flex-col gap-3">
+							<SectionHeading title="Timeline" href="/assignments" linkLabel="All assignments" />
+							<Timeline hour12={hour12} />
+						</section>
+					</Reveal>
+				)}
+
+				{show.recent && (
+					<Reveal index={3}>
+						<section className="flex flex-col gap-3">
+							<SectionHeading title="Recently accessed" />
+							<RecentItems />
+						</section>
+					</Reveal>
+				)}
+
+				{show.blocks && blocks.data && blocks.data.length > 0 && (
+					<Reveal index={3}>
+						<CourseBlocks courseId={0} blocks={blocks.data} />
 					</Reveal>
 				)}
 

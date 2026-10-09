@@ -9,10 +9,10 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { MoodleCourse } from "@/types/moodle";
 
-export function CourseCard({ course }: { course: MoodleCourse }) {
+export function CourseCard({ course, hidden }: { course: MoodleCourse; hidden?: boolean }) {
 	const { isPinned } = usePinnedCourses();
 	return (
-		<CourseContextMenu course={course}>
+		<CourseContextMenu course={course} hidden={hidden}>
 		<Link
 			href={`/courses/${course.id}`}
 			className="group rounded-xl focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"

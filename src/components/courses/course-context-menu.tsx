@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { toast } from "@/lib/toast";
-import { ExternalLink, FolderOpen, Link2, Pin, PinOff, Star, StarOff } from "lucide-react";
+import { ExternalLink, Eye, EyeOff, FolderOpen, Link2, Pin, PinOff, Star, StarOff } from "lucide-react";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { usePinnedCourses } from "@/hooks/use-pinned-courses";
@@ -11,12 +11,14 @@ import type { MoodleCourse } from "@/types/moodle";
 
 interface CourseContextMenuProps {
 	course: MoodleCourse;
+	/** The course is in Moodle's hidden group, so the menu offers to show it again. */
+	hidden?: boolean;
 	children: React.ReactNode;
 	/** Element the right-click area renders as (defaults to a div), e.g. `<SidebarMenuItem />` inside a list. */
 	render?: React.ReactElement;
 }
 
-export function CourseContextMenu({ course, children, render }: CourseContextMenuProps) {
+export function CourseContextMenu({ course, hidden, children, render }: CourseContextMenuProps) {
 	const router = useRouter();
 	const { client, refresh } = useMoodleConnection();
 	const { isPinned, toggle } = usePinnedCourses();
@@ -42,6 +44,16 @@ export function CourseContextMenu({ course, children, render }: CourseContextMen
 		}
 	}
 
+	async function toggleHidden() {
+		if (!client) return;
+		try {
+			await client.setCourseHidden(course.id, !hidden);
+			refresh();
+		} catch {
+			toast.error("Couldn't update the course in Moodle");
+		}
+	}
+
 	return (
 		<ContextMenu>
 			<ContextMenuTrigger render={render}>{children}</ContextMenuTrigger>
@@ -59,6 +71,11 @@ export function CourseContextMenu({ course, children, render }: CourseContextMen
 				{isCurrentCourse(course) && (
 					<ContextMenuItem onClick={toggleStar}>
 						{course.isFavourite ? <StarOff /> : <Star />} {course.isFavourite ? "Unstar in Moodle" : "Star in Moodle"}
+					</ContextMenuItem>
+				)}
+				{client?.supports("core_user_update_user_preferences") && (
+					<ContextMenuItem onClick={toggleHidden}>
+						{hidden ? <Eye /> : <EyeOff />} {hidden ? "Show in overview" : "Hide from overview"}
 					</ContextMenuItem>
 				)}
 				<ContextMenuSeparator />

@@ -65,6 +65,9 @@ export const DASHBOARD_SECTIONS = {
 	courses: "Starred courses",
 	activity: "Activity heatmap",
 	calendar: "Calendar",
+	timeline: "Timeline",
+	recent: "Recently accessed",
+	blocks: "Moodle blocks",
 } as const;
 
 export type DashboardSection = keyof typeof DASHBOARD_SECTIONS;
@@ -102,7 +105,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
 	width: "normal",
 	weekStart: "monday",
 	clock: "auto",
-	dashboard: { stats: true, upcoming: true, courses: true, activity: true, calendar: true },
+	dashboard: { stats: true, upcoming: true, courses: true, activity: true, calendar: true, timeline: true, recent: true, blocks: true },
 	noise: 0.25,
 	vibrancy: 1,
 	pinnedCourses: [],

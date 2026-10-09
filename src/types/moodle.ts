@@ -41,6 +41,8 @@ export interface MoodleCourse {
 	endDate?: string;
 	isFavourite?: boolean;
 	visible: boolean;
+	/** Moodle's own "in progress" verdict (overview classification); undefined when the site couldn't say. */
+	inProgress?: boolean;
 }
 
 export type ActivityType =
@@ -376,6 +378,10 @@ export interface MoodleCalendarEvent {
 	endDate?: string;
 	type: "assignment" | "quiz" | "course" | "personal" | "other";
 	url?: string;
+	/** Activity the event belongs to (assign, quiz, ...), for deep links. */
+	module?: { name: string; instance: number };
+	canEdit?: boolean;
+	canDelete?: boolean;
 }
 
 export interface MoodleGradeItem {
