@@ -45,6 +45,7 @@ const APP_MODULES: Partial<Record<MoodleActivity["type"], string>> = {
 	feedback: "feedback",
 	survey: "survey",
 	wiki: "wiki",
+	glossary: "glossary",
 	h5pactivity: "h5pactivity",
 	scorm: "scorm",
 	lti: "lti",

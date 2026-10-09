@@ -4,6 +4,7 @@ import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
 import type { MoodleClient } from "@/lib/moodle/client";
 import type { Choice, Feedback, Survey } from "@/types/engage";
+import type { Glossary } from "@/types/glossary";
 import type { Wiki } from "@/types/wiki";
 
 type Lister<T> = (courseId: number) => Promise<T[]>;
@@ -34,3 +35,4 @@ export const useChoice = (id: number, courseId: number | null) => useCourseActiv
 export const useFeedback = (id: number, courseId: number | null) => useCourseActivity<Feedback>((c) => c.getFeedbacks, id, courseId);
 export const useSurvey = (id: number, courseId: number | null) => useCourseActivity<Survey>((c) => c.getSurveys, id, courseId);
 export const useWiki = (id: number, courseId: number | null) => useCourseActivity<Wiki>((c) => c.getWikis, id, courseId);
+export const useGlossary = (id: number, courseId: number | null) => useCourseActivity<Glossary>((c) => c.getGlossaries, id, courseId);

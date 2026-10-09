@@ -17,6 +17,7 @@ import { createLessonApi, type LessonApi } from "./client-lesson";
 import { createWorkshopApi, type WorkshopApi } from "./client-workshop";
 import { createEngageApi, type EngageApi } from "./client-engage";
 import { createWikiApi, type WikiApi } from "./client-wiki";
+import { createGlossaryApi, type GlossaryApi } from "./client-glossary";
 import { createEmbedApi, type EmbedApi } from "./client-embed";
 import type {
 	CourseBlock,
@@ -56,7 +57,7 @@ import {
 	normalizeSiteInfo,
 } from "./normalize";
 
-export interface MoodleClient extends SocialApi, QuizApi, LessonApi, WorkshopApi, EngageApi, EmbedApi, WikiApi {
+export interface MoodleClient extends SocialApi, QuizApi, LessonApi, WorkshopApi, EngageApi, EmbedApi, WikiApi, GlossaryApi {
 	getSiteInfo(): Promise<MoodleSiteInfo>;
 	/** Site name, logo, upload limit and registration/policy flags; falls back to site info when the site lacks tool_mobile. */
 	getSiteConfig(): Promise<MoodleSiteConfig>;
@@ -228,6 +229,7 @@ export function createMoodleClient(connection: MoodleConnection): MoodleClient {
 		...createWorkshopApi(socialCtx),
 		...createEngageApi(socialCtx),
 		...createWikiApi(socialCtx),
+		...createGlossaryApi(socialCtx),
 		...createEmbedApi(socialCtx),
 		getSiteInfo: fetchSiteInfo,
 
