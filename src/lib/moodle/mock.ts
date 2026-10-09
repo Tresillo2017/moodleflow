@@ -5,6 +5,7 @@ import { createMockQuizApi } from "./mock-quiz";
 import { createMockLessonApi } from "./mock-lesson";
 import { createMockWorkshopApi } from "./mock-workshop";
 import { createMockEngageApi } from "./mock-engage";
+import { createMockWikiApi } from "./mock-wiki";
 import { createMockEmbedApi } from "./mock-embed";
 import type {
 	AssignmentConfig,
@@ -112,6 +113,7 @@ const courseContents: Record<number, MoodleCourseContent> = {
 						{ id: 24, instance: 1, courseId: 1, sectionId: 2, type: "choice", name: "Choice: Study group time", visible: true },
 						{ id: 25, instance: 1, courseId: 1, sectionId: 2, type: "feedback", name: "Course feedback", visible: true },
 						{ id: 26, instance: 1, courseId: 1, sectionId: 2, type: "survey", name: "Course experience survey", visible: true },
+						{ id: 27, instance: 1, courseId: 1, sectionId: 2, type: "wiki", name: "Class wiki", visible: true },
 						{ id: 27, instance: 1, courseId: 1, sectionId: 2, type: "h5pactivity", name: "Interactive summary", visible: true },
 						{ id: 28, instance: 1, courseId: 1, sectionId: 2, type: "scorm", name: "SCORM: Limits primer", visible: true },
 						{ id: 29, instance: 1, courseId: 1, sectionId: 2, type: "lti", name: "External tool: Plagiarism checker", visible: true },
@@ -226,6 +228,7 @@ export function createMockMoodleClient(): MoodleClient {
 		...createMockLessonApi(),
 		...createMockWorkshopApi(),
 		...createMockEngageApi(),
+		...createMockWikiApi(),
 		...createMockEmbedApi(),
 		getSiteInfo: () => delay(siteInfo),
 		getSiteConfig: () => delay({ siteName: siteInfo.siteName, maxUploadBytes: 10_485_760, registrationEnabled: false }),

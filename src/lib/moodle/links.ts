@@ -60,6 +60,8 @@ export function modulePath(modname: string, instance: number, courseId: number):
 			return `/feedback/${instance}?course=${courseId}`;
 		case "survey":
 			return `/surveys/${instance}?course=${courseId}`;
+		case "wiki":
+			return `/wikis/${instance}?course=${courseId}`;
 		case "h5pactivity":
 			return `/h5p/${instance}?course=${courseId}`;
 		case "scorm":

@@ -125,6 +125,7 @@ const MODNAME_TO_TYPE: Record<string, ActivityType> = {
 	workshop: "workshop",
 	choice: "choice",
 	survey: "survey",
+	wiki: "wiki",
 	h5pactivity: "h5pactivity",
 	scorm: "scorm",
 	lti: "lti",

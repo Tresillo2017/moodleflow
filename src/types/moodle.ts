@@ -59,6 +59,7 @@ export type ActivityType =
 	| "workshop"
 	| "choice"
 	| "survey"
+	| "wiki"
 	| "h5pactivity"
 	| "scorm"
 	| "lti"

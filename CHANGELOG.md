@@ -7,6 +7,9 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 
 ## [Unreleased]
 
+### Added
+- Wikis: read pages, switch between class/group/user wikis, follow wiki links in the app, and see attached files.
+
 ## [0.14.0] - 2026-10-07
 
 ### Added
