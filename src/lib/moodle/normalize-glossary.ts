@@ -1,5 +1,6 @@
 import type { Glossary, GlossaryBrowseMode, GlossaryCategory, GlossaryEntry, GlossaryPage } from "@/types/glossary";
 import { asArray, asRecord } from "./normalize";
+import { normalizeRatings } from "./normalize-rating";
 
 const str = (v: unknown) => (typeof v === "string" && v ? v : undefined);
 const time = (seconds: unknown) => (Number(seconds) > 0 ? new Date(Number(seconds) * 1000).toISOString() : undefined);
@@ -20,6 +21,8 @@ export function normalizeGlossaries(raw: unknown): Glossary[] {
 			// a site that omits the list still supports the alphabet
 			browseModes: modes.length > 0 ? modes : ["letter"],
 			canAddEntry: Boolean(r.canaddentry),
+			assessed: Number(r.assessed ?? 0),
+			allowComments: Boolean(r.allowcomments),
 		};
 	});
 }
@@ -53,5 +56,5 @@ export function normalizeGlossaryEntry(raw: unknown): GlossaryEntry {
 export function normalizeGlossaryPage(raw: unknown): GlossaryPage {
 	const r = asRecord(raw);
 	const entries = asArray(r.entries).map(normalizeGlossaryEntry);
-	return { entries, total: Number(r.count ?? entries.length) };
+	return { entries, total: Number(r.count ?? entries.length), ratings: Object.fromEntries(normalizeRatings(r.ratinginfo)) };
 }

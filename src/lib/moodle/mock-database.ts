@@ -1,10 +1,11 @@
+import { mockRating } from "./mock-collab";
 import type { DatabaseApi } from "./client-database";
 import type { Database, DatabaseContent, DatabaseEntry, DatabaseField, DatabaseSubmission } from "@/types/database";
 
 const wait = <T>(value: T, ms = 200): Promise<T> => new Promise((resolve) => setTimeout(() => resolve(value), ms));
 
 const databases: Database[] = [
-	{ id: 1, cmid: 42, courseId: 1, name: "Project ideas", intro: "<p>Share a project idea and pick one to build.</p>", requiresApproval: true },
+	{ id: 1, cmid: 42, courseId: 1, name: "Project ideas", intro: "<p>Share a project idea and pick one to build.</p>", requiresApproval: true, assessed: 1, allowComments: true },
 ];
 const fields: DatabaseField[] = [
 	{ id: 1, type: "text", name: "Title", required: true, options: [] },
@@ -42,7 +43,8 @@ export function createMockDatabaseApi(): DatabaseApi {
 		getDatabaseEntries: (_id, search, limit) => {
 			const q = search.toLowerCase();
 			const found = entries.filter((e) => !q || Object.values(e.contents).some((c) => c.content.toLowerCase().includes(q)));
-			return wait({ entries: found.slice(0, limit), total: found.length });
+			const shown = found.slice(0, limit);
+			return wait({ entries: shown, total: found.length, ratings: Object.fromEntries(shown.map((e) => [e.id, mockRating("mod_data", "entry", e.id)])) });
 		},
 		addDatabaseEntry: (_id, data) => {
 			const id = nextId++;

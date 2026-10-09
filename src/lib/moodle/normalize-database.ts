@@ -1,6 +1,7 @@
 import type { MoodleFile } from "@/types/moodle";
 import type { Database, DatabaseAccess, DatabaseContent, DatabaseEntry, DatabaseField, DatabaseFieldType, DatabasePage } from "@/types/database";
 import { asArray, asRecord } from "./normalize";
+import { normalizeRatings } from "./normalize-rating";
 
 const str = (v: unknown) => (typeof v === "string" && v ? v : undefined);
 const time = (seconds: unknown) => (Number(seconds) > 0 ? new Date(Number(seconds) * 1000).toISOString() : undefined);
@@ -16,6 +17,8 @@ export function normalizeDatabases(raw: unknown): Database[] {
 			name: String(r.name ?? ""),
 			intro: str(r.intro),
 			requiresApproval: Boolean(r.approval),
+			assessed: Number(r.assessed ?? 0),
+			allowComments: Boolean(r.comments),
 			timeOpen: time(r.timeavailablefrom),
 			timeClose: time(r.timeavailableto),
 		};
@@ -71,7 +74,7 @@ function normalizeEntry(raw: unknown): DatabaseEntry {
 export function normalizeDatabasePage(raw: unknown): DatabasePage {
 	const r = asRecord(raw);
 	const entries = asArray(r.entries).map(normalizeEntry);
-	return { entries, total: Number(r.totalcount ?? entries.length) };
+	return { entries, total: Number(r.totalcount ?? entries.length), ratings: Object.fromEntries(normalizeRatings(r.ratinginfo)) };
 }
 
 // mod_data_get_data_access_information

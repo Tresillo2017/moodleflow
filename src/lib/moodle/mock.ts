@@ -8,6 +8,7 @@ import { createMockEngageApi } from "./mock-engage";
 import { createMockWikiApi } from "./mock-wiki";
 import { createMockGlossaryApi } from "./mock-glossary";
 import { createMockDatabaseApi } from "./mock-database";
+import { createMockCollabApi } from "./mock-collab";
 import { createMockEmbedApi } from "./mock-embed";
 import type {
 	AssignmentConfig,
@@ -235,6 +236,7 @@ export function createMockMoodleClient(): MoodleClient {
 		...createMockWikiApi(),
 		...createMockGlossaryApi(),
 		...createMockDatabaseApi(),
+		...createMockCollabApi(),
 		...createMockEmbedApi(),
 		getSiteInfo: () => delay(siteInfo),
 		getSiteConfig: () => delay({ siteName: siteInfo.siteName, maxUploadBytes: 10_485_760, registrationEnabled: false }),

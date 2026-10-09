@@ -82,7 +82,7 @@ export function DatabaseView({ database }: { database: Database }) {
 					</p>
 					<div className="flex flex-col gap-3">
 						{page.data.entries.map((e) => (
-							<EntryCard key={e.id} entry={e} fields={fields.data!} access={access.data!} canUpdate={canUpdate} canRemove={canRemove} onChanged={refresh} />
+							<EntryCard key={e.id} database={database} entry={e} rating={page.data!.ratings[e.id]} fields={fields.data!} access={access.data!} canUpdate={canUpdate} canRemove={canRemove} onChanged={refresh} />
 						))}
 					</div>
 					{page.data.entries.length < page.data.total && (

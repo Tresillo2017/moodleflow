@@ -1,3 +1,5 @@
+import type { ItemRating } from "./collab";
+
 // Glossary activities (Phase 5).
 
 export type GlossaryBrowseMode = "letter" | "category" | "author" | "date";
@@ -11,6 +13,9 @@ export interface Glossary {
 	/** Ways the teacher left enabled for browsing. */
 	browseModes: GlossaryBrowseMode[];
 	canAddEntry: boolean;
+	/** Rating aggregate type (0 = ratings off). */
+	assessed: number;
+	allowComments: boolean;
 }
 
 export interface GlossaryCategory {
@@ -44,6 +49,8 @@ export type GlossaryQuery =
 export interface GlossaryPage {
 	entries: GlossaryEntry[];
 	total: number;
+	/** Rating widgets by entry id. */
+	ratings: Record<number, ItemRating>;
 }
 
 /** Moodle's category ids for "every category" and "not categorised". */

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Check, Pencil, Trash2 } from "lucide-react";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
+import { Comments } from "@/components/collab/comments";
+import { RatingWidget } from "@/components/collab/rating-widget";
 import { RichContent } from "@/components/content/rich-content";
 import { EntryForm } from "@/components/database/entry-form";
 import { FileList } from "@/components/files/file-list";
@@ -11,7 +13,8 @@ import { MULTI_SEPARATOR } from "@/lib/moodle/database-form";
 import { formatDistanceToNow } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { isHttpUrl } from "@/lib/utils";
-import type { DatabaseAccess, DatabaseContent, DatabaseEntry, DatabaseField } from "@/types/database";
+import type { ItemRating } from "@/types/collab";
+import type { Database, DatabaseAccess, DatabaseContent, DatabaseEntry, DatabaseField } from "@/types/database";
 
 function Value({ field, c }: { field: DatabaseField; c: DatabaseContent }) {
 	const { client } = useMoodleConnection();
@@ -55,7 +58,7 @@ function Value({ field, c }: { field: DatabaseField; c: DatabaseContent }) {
 }
 
 /** One database entry shown through its field definitions, with edit, delete and approve for those who may. */
-export function EntryCard({ entry, fields, access, canUpdate, canRemove, onChanged }: { entry: DatabaseEntry; fields: DatabaseField[]; access: DatabaseAccess; canUpdate: boolean; canRemove: boolean; onChanged: () => void }) {
+export function EntryCard({ database, entry, rating, fields, access, canUpdate, canRemove, onChanged }: { database: Database; entry: DatabaseEntry; rating?: ItemRating; fields: DatabaseField[]; access: DatabaseAccess; canUpdate: boolean; canRemove: boolean; onChanged: () => void }) {
 	const { client } = useMoodleConnection();
 	const [mode, setMode] = useState<"view" | "edit" | "confirm-delete">("view");
 
@@ -129,7 +132,19 @@ export function EntryCard({ entry, fields, access, canUpdate, canRemove, onChang
 						</Button>
 					</>
 				)}
+				<span className="ml-auto">
+					<RatingWidget
+						rating={rating}
+						label="Rate this entry"
+						onRate={async (value) => {
+							if (!client || !rating) return;
+							await client.rateItem({ cmid: database.cmid, component: "mod_data", area: "entry", itemId: entry.id, authorId: entry.userId, scaleId: rating.scaleId, aggregation: database.assessed }, value);
+							onChanged();
+						}}
+					/>
+				</span>
 			</footer>
+			{database.allowComments && <Comments target={{ contextLevel: "module", instanceId: database.cmid, component: "mod_data", area: "database_entry", itemId: entry.id }} />}
 		</article>
 	);
 }

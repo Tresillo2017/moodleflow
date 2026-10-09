@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CornerDownRight, Pencil, Reply, Star, Trash2 } from "lucide-react";
+import { CornerDownRight, Pencil, Reply, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RichContent } from "@/components/content/rich-content";
 import { FileList } from "@/components/files/file-list";
@@ -11,6 +11,7 @@ import { PostEditor } from "@/components/forums/post-editor";
 import { formatDistanceToNow } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
+import { RatingWidget } from "@/components/collab/rating-widget";
 import type { RatingTarget } from "@/lib/moodle/client-social";
 import type { ForumPost, MoodleForum } from "@/types/moodle";
 
@@ -20,34 +21,17 @@ const MAX_INDENT = 4;
 function RatingControl({ post, forum, onRated }: { post: ForumPost; forum: MoodleForum; onRated: () => void }) {
 	const { client } = useMoodleConnection();
 	const rating = post.rating;
-	if (!rating || (!rating.canRate && !rating.aggregate)) return null;
-
-	async function rate(value: number) {
-		if (!client || !rating) return;
-		const target: RatingTarget = { cmid: forum.cmid, postId: post.id, authorId: post.authorId, scaleId: rating.scaleId, aggregation: forum.assessed };
-		try {
-			await client.ratePost(target, value);
-			onRated();
-		} catch {
-			toast.error("Couldn't save your rating.");
-		}
-	}
-
 	return (
-		<span className="flex items-center gap-2 text-xs text-muted-foreground">
-			<Star className="size-3.5" aria-hidden="true" />
-			{rating.aggregate && <span>{rating.aggregate}</span>}
-			{rating.canRate && (
-				<select aria-label="Rate this post" value={rating.mine ?? ""} onChange={(e) => e.target.value && void rate(Number(e.target.value))} className="h-6 rounded-md border bg-background px-1">
-					<option value="">Rate…</option>
-					{rating.options.map((o) => (
-						<option key={o.value} value={o.value}>
-							{o.label}
-						</option>
-					))}
-				</select>
-			)}
-		</span>
+		<RatingWidget
+			rating={rating}
+			label="Rate this post"
+			onRate={async (value) => {
+				if (!client || !rating) return;
+				const target: RatingTarget = { cmid: forum.cmid, postId: post.id, authorId: post.authorId, scaleId: rating.scaleId, aggregation: forum.assessed };
+				await client.ratePost(target, value);
+				onRated();
+			}}
+		/>
 	);
 }
 

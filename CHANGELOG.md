@@ -13,6 +13,7 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 - Glossaries: browse by letter, category, author or date, search entries, and load more as you go.
 - Glossaries: add entries, and edit or delete your own when the site supports it.
 - Databases: browse and search entries shown through the activity's fields, add, edit and delete entries with a form built from those fields (files and pictures included), and approve entries if you can.
+- Comments and ratings on glossary and database entries, built from reusable widgets that forum ratings now share.
 
 ## [0.14.0] - 2026-10-07
 

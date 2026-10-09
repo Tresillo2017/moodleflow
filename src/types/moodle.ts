@@ -1,3 +1,5 @@
+import type { ItemRating } from "./collab";
+
 export interface MoodleSiteInfo {
 	siteName: string;
 	siteUrl: string;
@@ -189,6 +191,8 @@ export interface MoodleComment {
 	/** Moodle HTML */
 	content: string;
 	time: string;
+	/** Set on threads fetched through the comments widget. */
+	canDelete?: boolean;
 }
 
 export interface MoodleForum {
@@ -226,16 +230,7 @@ export interface MoodleForumDiscussion {
 	canFavourite: boolean;
 }
 
-export interface ForumRating {
-	scaleId: number;
-	/** Selectable values, e.g. 1..5 or a custom scale. */
-	options: { value: number; label: string }[];
-	canRate: boolean;
-	/** Current user's rating. */
-	mine?: number;
-	aggregate?: string;
-	count: number;
-}
+export type ForumRating = ItemRating;
 
 export interface ForumPost {
 	id: number;

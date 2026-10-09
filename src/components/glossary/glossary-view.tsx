@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { BookA, Pencil, Plus, Trash2 } from "lucide-react";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { useMoodleQuery } from "@/hooks/use-moodle-query";
+import { Comments } from "@/components/collab/comments";
+import { RatingWidget } from "@/components/collab/rating-widget";
 import { RichContent } from "@/components/content/rich-content";
 import { Button } from "@/components/ui/button";
 import { TitledEditor } from "@/components/ui/titled-editor";
@@ -14,6 +16,7 @@ import { useSupports } from "@/hooks/use-supports";
 import { formatDistanceToNow } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { GLOSSARY_ALL_CATEGORIES, GLOSSARY_NOT_CATEGORISED } from "@/types/glossary";
+import type { ItemRating } from "@/types/collab";
 import type { Glossary, GlossaryBrowseMode, GlossaryEntry, GlossaryQuery } from "@/types/glossary";
 
 const PAGE_SIZE = 20;
@@ -21,7 +24,7 @@ const SEARCH_DELAY_MS = 300;
 const LETTERS = ["ALL", ...Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)), "SPECIAL"];
 const MODE_LABEL: Record<GlossaryBrowseMode, string> = { letter: "A–Z", category: "Category", author: "Author", date: "Newest" };
 
-function EntryCard({ entry, canUpdate, canRemove, onChanged }: { entry: GlossaryEntry; canUpdate: boolean; canRemove: boolean; onChanged: () => void }) {
+function EntryCard({ glossary, entry, rating, canUpdate, canRemove, onChanged }: { glossary: Glossary; entry: GlossaryEntry; rating?: ItemRating; canUpdate: boolean; canRemove: boolean; onChanged: () => void }) {
 	const { client } = useMoodleConnection();
 	const [mode, setMode] = useState<"view" | "edit" | "confirm-delete">("view");
 
@@ -63,7 +66,7 @@ function EntryCard({ entry, canUpdate, canRemove, onChanged }: { entry: Glossary
 				{(entry.modified ?? entry.created) && ` · ${formatDistanceToNow((entry.modified ?? entry.created)!)}`}
 				{!entry.approved && " · awaiting approval"}
 			</p>
-			{((entry.canEdit && canUpdate) || (entry.canDelete && canRemove)) && (
+			{(rating || (entry.canEdit && canUpdate) || (entry.canDelete && canRemove)) && (
 				<footer className="flex items-center gap-1 pt-1">
 					{entry.canEdit && canUpdate && (
 						<Button variant="ghost" size="xs" onClick={() => setMode("edit")}>
@@ -87,8 +90,20 @@ function EntryCard({ entry, canUpdate, canRemove, onChanged }: { entry: Glossary
 							</Button>
 						</>
 					)}
+					<span className="ml-auto">
+						<RatingWidget
+							rating={rating}
+							label="Rate this entry"
+							onRate={async (value) => {
+								if (!client || !rating) return;
+								await client.rateItem({ cmid: glossary.cmid, component: "mod_glossary", area: "entry", itemId: entry.id, authorId: entry.userId, scaleId: rating.scaleId, aggregation: glossary.assessed }, value);
+								onChanged();
+							}}
+						/>
+					</span>
 				</footer>
 			)}
+			{glossary.allowComments && <Comments target={{ contextLevel: "module", instanceId: glossary.cmid, component: "mod_glossary", area: "glossary_entry", itemId: entry.id }} />}
 		</article>
 	);
 }
@@ -205,7 +220,7 @@ export function GlossaryView({ glossary }: { glossary: Glossary }) {
 					</p>
 					<div className="flex flex-col gap-3">
 						{page.data.entries.map((e) => (
-							<EntryCard key={e.id} entry={e} canUpdate={canUpdate} canRemove={canRemove} onChanged={refresh} />
+							<EntryCard key={e.id} glossary={glossary} entry={e} rating={page.data!.ratings[e.id]} canUpdate={canUpdate} canRemove={canRemove} onChanged={refresh} />
 						))}
 					</div>
 					{page.data.entries.length < page.data.total && (

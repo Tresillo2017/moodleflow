@@ -1,10 +1,11 @@
+import { mockRating } from "./mock-collab";
 import type { GlossaryApi } from "./client-glossary";
 import type { Glossary, GlossaryEntry, GlossaryQuery } from "@/types/glossary";
 
 const wait = <T>(value: T, ms = 200): Promise<T> => new Promise((resolve) => setTimeout(() => resolve(value), ms));
 
 const glossaries: Glossary[] = [
-	{ id: 1, cmid: 41, courseId: 1, name: "Key terms", intro: "<p>Definitions you'll meet in this course.</p>", browseModes: ["letter", "category", "author", "date"], canAddEntry: true },
+	{ id: 1, cmid: 41, courseId: 1, name: "Key terms", intro: "<p>Definitions you'll meet in this course.</p>", browseModes: ["letter", "category", "author", "date"], canAddEntry: true, assessed: 1, allowComments: true },
 ];
 const categories = [{ id: 1, name: "Analysis" }, { id: 2, name: "Algebra" }];
 const entryCategory = new Map<number, number>([[1, 1], [2, 1], [3, 2], [4, 2]]);
@@ -44,7 +45,8 @@ export function createMockGlossaryApi(): GlossaryApi {
 			const found = entries.filter((e) => matches(e, query));
 			if (query.mode === "date") found.sort((a, b) => (b.modified ?? "").localeCompare(a.modified ?? ""));
 			if (query.mode === "author") found.sort((a, b) => a.author.localeCompare(b.author));
-			return wait({ entries: found.slice(0, limit), total: found.length });
+			const shown = found.slice(0, limit);
+			return wait({ entries: shown, total: found.length, ratings: Object.fromEntries(shown.map((e) => [e.id, mockRating("mod_glossary", "entry", e.id)])) });
 		},
 		addGlossaryEntry: (_id, concept, html) => {
 			const id = Math.max(...entries.map((e) => e.id)) + 1;

@@ -1,3 +1,4 @@
+import type { ItemRating } from "./collab";
 import type { MoodleFile } from "./moodle";
 
 // Database activities (Phase 5).
@@ -25,6 +26,9 @@ export interface Database {
 	intro?: string;
 	/** Entries by students need a teacher's approval before others see them. */
 	requiresApproval: boolean;
+	/** Rating aggregate type (0 = ratings off). */
+	assessed: number;
+	allowComments: boolean;
 	timeOpen?: string;
 	timeClose?: string;
 }
@@ -67,6 +71,8 @@ export interface DatabaseAccess {
 export interface DatabasePage {
 	entries: DatabaseEntry[];
 	total: number;
+	/** Rating widgets by entry id. */
+	ratings: Record<number, ItemRating>;
 }
 
 /** One value of mod_data_add_entry / update_entry's `data` list; `value` is already JSON-encoded. */

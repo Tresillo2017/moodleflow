@@ -1,4 +1,5 @@
-import type { ForumPost, ForumRating, ForumThread, MoodleFile, MoodleForum, MoodleForumDiscussion } from "@/types/moodle";
+import type { ForumPost, ForumThread, MoodleFile, MoodleForum, MoodleForumDiscussion } from "@/types/moodle";
+import { normalizeRatings } from "./normalize-rating";
 import { asArray, asRecord } from "./normalize";
 
 const iso = (seconds: unknown) => new Date(Number(seconds ?? 0) * 1000).toISOString();
@@ -63,37 +64,10 @@ function normalizeAttachments(raw: unknown): MoodleFile[] {
 		}));
 }
 
-/** Rating widgets by post id, from the thread-level `ratinginfo` block. */
-function ratingsByItem(raw: unknown): Map<number, ForumRating> {
-	const info = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
-	const scales = asArray(info.scales).map(asRecord);
-	const out = new Map<number, ForumRating>();
-	for (const entry of asArray(info.ratings).map(asRecord)) {
-		const scaleId = Number(entry.scaleid);
-		const scale = scales.find((s) => Number(s.id) === scaleId);
-		const items = asArray(scale?.scaleitems).map(asRecord);
-		const max = Number(scale?.max ?? 0);
-		const options = items.length
-			? items.map((i) => ({ value: Number(i.value), label: String(i.name ?? i.value) }))
-			: Array.from({ length: max }, (_, i) => ({ value: i + 1, label: String(i + 1) }));
-		if (!options.length) continue;
-		const mine = entry.rating === undefined || entry.rating === null || entry.rating === "" ? undefined : Number(entry.rating);
-		out.set(Number(entry.itemid), {
-			scaleId,
-			options,
-			canRate: Boolean(entry.canrate),
-			mine: mine && mine > 0 ? mine : undefined,
-			aggregate: entry.canviewaggregate === false ? undefined : str(entry.aggregatestr),
-			count: Number(entry.count ?? 0),
-		});
-	}
-	return out;
-}
-
 // mod_forum_get_discussion_posts
 export function normalizeForumThread(raw: unknown, discussionId: number): ForumThread {
 	const r = asRecord(raw);
-	const ratings = ratingsByItem(r.ratinginfo);
+	const ratings = normalizeRatings(r.ratinginfo);
 	const posts = asArray(r.posts).map((p): ForumPost => {
 		const post = asRecord(p);
 		const author = (post.author && typeof post.author === "object" ? post.author : {}) as Record<string, unknown>;
