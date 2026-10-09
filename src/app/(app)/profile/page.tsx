@@ -10,6 +10,7 @@ import { DitherGradient } from "@/components/dither-kit/gradient";
 import { usePreferences } from "@/components/providers/preferences-provider";
 import { isCurrentCourse } from "@/lib/moodle/course-filter";
 import { ditherHueOf } from "@/lib/preferences";
+import { EXTRA_ITEMS } from "@/lib/nav";
 import { isHttpUrl } from "@/lib/utils";
 import { ExternalLink, Settings } from "lucide-react";
 
@@ -73,6 +74,12 @@ export default function ProfilePage() {
 							<Settings aria-hidden="true" />
 							Settings
 						</Button>
+						{EXTRA_ITEMS.map(({ href, label, icon: Icon }) => (
+							<Button key={href} variant="outline" size="sm" nativeButton={false} render={<Link href={href} />}>
+								<Icon aria-hidden="true" />
+								{label}
+							</Button>
+						))}
 					</div>
 				</div>
 				<div className="grid grid-cols-3 divide-x border-t">

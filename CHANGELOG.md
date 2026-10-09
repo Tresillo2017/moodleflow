@@ -14,6 +14,8 @@ To release: move the `Unreleased` entries under a new `## [x.y.z] - YYYY-MM-DD` 
 - Glossaries: add entries, and edit or delete your own when the site supports it.
 - Databases: browse and search entries shown through the activity's fields, add, edit and delete entries with a form built from those fields (files and pictures included), and approve entries if you can.
 - Comments and ratings on glossary and database entries, built from reusable widgets that forum ratings now share.
+- Blog (from the profile page or Ctrl+K): read everyone's, yours or a course's entries, filter by tag, write, edit and delete your own, with tags and a draft or site-wide visibility.
+- Notes: private notes to yourself for a course, when your site allows them.
 
 ## [0.14.0] - 2026-10-07
 

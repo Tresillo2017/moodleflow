@@ -15,7 +15,7 @@ import {
 	CommandSeparator,
 	CommandShortcut,
 } from "@/components/ui/command";
-import { NAV_ITEMS, PROFILE_ITEM, SETTINGS_ITEM } from "@/lib/nav";
+import { EXTRA_ITEMS, NAV_ITEMS, PROFILE_ITEM, SETTINGS_ITEM } from "@/lib/nav";
 import { ClipboardList, LogOut, Moon, Palette, RotateCw, Search, Sun } from "lucide-react";
 import { useMoodleConnection } from "@/components/providers/moodle-provider";
 import { usePreferences } from "@/components/providers/preferences-provider";
@@ -80,7 +80,7 @@ export function CommandPalette() {
 				<CommandList className="max-h-[min(26rem,60vh)]">
 					<CommandEmpty>No results found.</CommandEmpty>
 					<CommandGroup heading="Navigate">
-						{[...NAV_ITEMS, SETTINGS_ITEM, PROFILE_ITEM].map((item) => (
+						{[...NAV_ITEMS, ...EXTRA_ITEMS, SETTINGS_ITEM, PROFILE_ITEM].map((item) => (
 							<CommandItem key={item.href} onSelect={() => run(() => router.push(item.href))}>
 								<item.icon aria-hidden="true" />
 								{item.label}
