@@ -2,6 +2,7 @@
 
 import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { IconInfoCircle } from "@tabler/icons-react";
 import styles from "./notice.module.css";
 
 interface NoticeProps {
@@ -13,11 +14,11 @@ export function Notice({
 }: NoticeProps) {
 	return (
 		<aside className={styles.notice} role="note">
+			<IconInfoCircle className={styles.icon} size={22} />
 			<div className={styles.body}>
 				<strong className={styles.title}>The moodleflow web app has been discontinued</strong>
 				<p>
-					moodleflow is now a userscript that runs on your Moodle site, so the old web app and its links and bookmarks no longer open an app.
-					Install the script to get the same look back, right inside Moodle.
+					moodleflow is now a userscript that runs right inside your Moodle site. Old app links no longer open an app.
 				</p>
 				<Suspense fallback={null}>
 					<RedirectedFrom />
@@ -37,7 +38,7 @@ function RedirectedFrom() {
 
 	return (
 		<p className={styles.redirected}>
-			You were redirected from the old web app. Install moodleflow below to replace it.
+			Redirected from the old web app
 		</p>
 	)
 }

@@ -24,10 +24,6 @@ export default function Home() {
 							<BrowserButton />
 						</Button>
 					</InstallWizard>
-					<Button link={`${REPO}/releases`} colourful>
-						<IconBrandGithub size={18} />
-						Releases
-					</Button>
 				</Notice>
 			</Content>
 			<Hero>
