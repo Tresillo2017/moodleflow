@@ -16,16 +16,14 @@ const REPO = "https://github.com/Tresillo2017/moodleflow";
 export default function Home() {
 	return (
 		<>
-			<Content outer>
-				<Notice>
-					<InstallWizard>
-						<Button primary>
-							<IconDownload size={18} />
-							<BrowserButton />
-						</Button>
-					</InstallWizard>
-				</Notice>
-			</Content>
+			<Notice>
+				<InstallWizard>
+					<Button primary>
+						<IconDownload size={18} />
+						<BrowserButton />
+					</Button>
+				</InstallWizard>
+			</Notice>
 			<Hero>
 				<Content column={false} outer>
 					<SideLeft>

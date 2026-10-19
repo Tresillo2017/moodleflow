@@ -1,9 +1,12 @@
 "use client";
 
-import React, { Suspense } from "react";
+import { Dialog } from "radix-ui";
+import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { IconInfoCircle } from "@tabler/icons-react";
+import { IconInfoCircle, IconX } from "@tabler/icons-react";
 import styles from "./notice.module.css";
+
+const SEEN = "mf-notice-seen";
 
 interface NoticeProps {
 	children: React.ReactNode
@@ -12,22 +15,41 @@ interface NoticeProps {
 export function Notice({
 	children
 }: NoticeProps) {
+	const [open, setOpen] = useState(false);
+
+	useEffect(() => {
+		// ponytail: once per tab session, redirected visitors always see it
+		const redirected = new URLSearchParams(location.search).get("from") === "app";
+		if (redirected || !sessionStorage.getItem(SEEN)) setOpen(true);
+	}, []);
+
 	return (
-		<aside className={styles.notice} role="note">
-			<IconInfoCircle className={styles.icon} size={22} />
-			<div className={styles.body}>
-				<strong className={styles.title}>The moodleflow web app has been discontinued</strong>
-				<p>
-					moodleflow is now a userscript that runs right inside your Moodle site. Old app links no longer open an app.
-				</p>
-				<Suspense fallback={null}>
-					<RedirectedFrom />
-				</Suspense>
-			</div>
-			<div className={styles.actions}>
-				{children}
-			</div>
-		</aside>
+		<Dialog.Root open={open} onOpenChange={(o) => {
+			if (!o) sessionStorage.setItem(SEEN, "1");
+			setOpen(o);
+		}}>
+			<Dialog.Portal>
+				<Dialog.Overlay className={styles.overlay}>
+					<Dialog.Content className={styles.notice} aria-describedby={undefined} onOpenAutoFocus={(e) => e.preventDefault()}>
+						<Dialog.Close className={styles.close} aria-label="Close">
+							<IconX size={18} />
+						</Dialog.Close>
+						<IconInfoCircle className={styles.icon} size={32} />
+						<Dialog.Title className={styles.title}>The moodleflow web app has been discontinued</Dialog.Title>
+						<p>
+							moodleflow is now a userscript that runs right inside your Moodle site.
+							The old web app and its links no longer open an app; install the script to get the same look back.
+						</p>
+						<Suspense fallback={null}>
+							<RedirectedFrom />
+						</Suspense>
+						<div className={styles.actions}>
+							{children}
+						</div>
+					</Dialog.Content>
+				</Dialog.Overlay>
+			</Dialog.Portal>
+		</Dialog.Root>
 	)
 }
 
@@ -36,9 +58,5 @@ function RedirectedFrom() {
 
 	if (from !== "app") return null;
 
-	return (
-		<p className={styles.redirected}>
-			Redirected from the old web app
-		</p>
-	)
+	return <span className={styles.redirected}>Redirected from the old web app</span>
 }
