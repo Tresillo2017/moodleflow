@@ -11,9 +11,10 @@ jobs:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
-      - run: bun run test
       - run: bunx tsc --noEmit
       - run: bun run build
+      - run: bun check.ts
+        working-directory: userscript
 
   # Dependabot PRs (minor/patch only, see dependabot.yml) merge themselves once CI is green.
   automerge:

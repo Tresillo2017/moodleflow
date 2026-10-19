@@ -1,281 +1,443 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+/* http://meyerweb.com/eric/tools/css/reset/
+   v2.0 | 20110126
+   License: none (public domain)
+*/
 
-/* bleh (https://github.com/katelyynn/bleh, GPL-3.0): theme engine, keyframes, snow, and component styles */
-@import "../styles/bleh/fonts.css";
-@import "../styles/bleh/theme.css";
-@import "../styles/bleh/keyframes.css";
-@import "../styles/bleh/snow.css";
-@import "../styles/bleh/components.css";
-@import "../components/layout/shell.css";
-
-@custom-variant dark (&:is(.dark *));
-
-@theme inline {
-	--color-background: var(--background);
-	--color-foreground: var(--foreground);
-	--font-sans: var(--app-font);
-	--font-mono: var(--font-code);
-	--font-heading: var(--font-head);
-	--color-sidebar-ring: var(--sidebar-ring);
-	--color-sidebar-border: var(--sidebar-border);
-	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-	--color-sidebar-accent: var(--sidebar-accent);
-	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-	--color-sidebar-primary: var(--sidebar-primary);
-	--color-sidebar-foreground: var(--sidebar-foreground);
-	--color-sidebar: var(--sidebar);
-	--color-chart-5: var(--chart-5);
-	--color-chart-4: var(--chart-4);
-	--color-chart-3: var(--chart-3);
-	--color-chart-2: var(--chart-2);
-	--color-chart-1: var(--chart-1);
-	--color-ring: var(--ring);
-	--color-input: var(--input);
-	--color-border: var(--border);
-	--color-destructive: var(--destructive);
-	--color-accent-foreground: var(--accent-foreground);
-	--color-accent: var(--accent);
-	--color-muted-foreground: var(--muted-foreground);
-	--color-muted: var(--muted);
-	--color-secondary-foreground: var(--secondary-foreground);
-	--color-secondary: var(--secondary);
-	--color-primary-foreground: var(--primary-foreground);
-	--color-primary: var(--primary);
-	--color-popover-foreground: var(--popover-foreground);
-	--color-popover: var(--popover);
-	--color-card-foreground: var(--card-foreground);
-	--color-card: var(--card);
-	--radius-sm: calc(var(--radius) * 0.6);
-	--radius-md: calc(var(--radius) * 0.8);
-	--radius-lg: var(--radius);
-	--radius-xl: calc(var(--radius) * 1.4);
-	--radius-2xl: calc(var(--radius) * 1.8);
-	--radius-3xl: calc(var(--radius) * 2.2);
-	--radius-4xl: calc(var(--radius) * 2.6);
-	--color-success: var(--success);
-	--color-success-foreground: var(--success-foreground);
-	--color-warning: var(--warning);
-	--color-warning-foreground: var(--warning-foreground);
-	--color-danger: var(--danger);
-	--color-danger-foreground: var(--danger-foreground);
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+embed,
+figure,
+figcaption,
+footer,
+header,
+hgroup,
+menu,
+nav,
+output,
+ruby,
+section,
+summary,
+time,
+mark,
+audio,
+video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
 }
 
-/*
- * shadcn tokens, mapped onto bleh's colour scale (see styles/bleh/theme.css):
- * b2-b8 surfaces, c1-c3 text, h2-h4 accent, l3-c readable accent text.
- * The active theme (dark, darker, oled, light, ink, Rosé Pine, Kanagawa...) and season only change those variables.
- */
-:root {
-	--app-font: var(--font);
-	--radius: 0.625rem;
-
-	--background: oklch(var(--b6));
-	--foreground: oklch(var(--c2));
-	--card: oklch(var(--b5));
-	--card-foreground: oklch(var(--c2));
-	--popover: oklch(var(--b6));
-	--popover-foreground: oklch(var(--c2));
-	--primary: oklch(var(--h3));
-	--primary-foreground: oklch(var(--b7));
-	--secondary: oklch(var(--b3));
-	--secondary-foreground: oklch(var(--c2));
-	--muted: oklch(var(--b4) / 60%);
-	--muted-foreground: oklch(var(--c3));
-	--accent: oklch(var(--h4) / 20%);
-	--accent-foreground: oklch(var(--l3-c));
-	--destructive: oklch(0.68 0.19 var(--hue-neg));
-	--border: oklch(var(--b4) / 70%);
-	--input: oklch(var(--b3) / 70%);
-	--ring: oklch(var(--h3) / 50%);
-	--success: oklch(0.72 0.15 var(--hue-pos));
-	--success-foreground: oklch(var(--b7));
-	--warning: oklch(0.78 0.15 var(--hue-fav));
-	--warning-foreground: oklch(var(--b7));
-	--danger: oklch(0.68 0.19 var(--hue-neg));
-	--danger-foreground: oklch(var(--b7));
-	--chart-1: oklch(var(--h3));
-	--chart-2: oklch(0.72 0.15 var(--hue-pos));
-	--chart-3: oklch(0.78 0.15 var(--hue-fav));
-	--chart-4: oklch(0.68 0.15 var(--hue-brand-ig));
-	--chart-5: oklch(var(--c3));
-	--sidebar: var(--sidebar-bg);
-	--sidebar-foreground: oklch(var(--c2));
-	--sidebar-primary: oklch(var(--h3));
-	--sidebar-primary-foreground: oklch(var(--b7));
-	--sidebar-accent: oklch(var(--h4) / 20%);
-	--sidebar-accent-foreground: oklch(var(--l3-c));
-	--sidebar-ring: oklch(var(--h3) / 50%);
+/* HTML5 display-role reset for older browsers */
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
+	display: block;
 }
 
-/* On light themes h3 is a pale fill, so accent text (links, text-primary) uses bleh's readable l3-c instead. */
-html[data-bleh--theme_type="light"] {
-	--primary: oklch(var(--l3-c));
-	--primary-foreground: oklch(var(--b6));
-	--sidebar-primary: oklch(var(--l3-c));
+body {
+	line-height: 1;
 }
 
-/* Preference overrides: attributes set on <html> by lib/preferences.ts */
-[data-radius="none"] { --radius: 0rem; --button-radius: 0px; --input-radius: 0px; --card-radius: 0px; }
-[data-radius="sm"] { --radius: 0.375rem; --button-radius: 5px; --input-radius: 5px; --card-radius: 5px; }
-[data-radius="lg"] { --radius: 0.9rem; --button-radius: 14px; --input-radius: 14px; --card-radius: 14px; }
-
-[data-font="bleh"] { --app-font: var(--font); }
-[data-font="system"] { --app-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-[data-font="serif"] { --app-font: ui-serif, "Iowan Old Style", Charter, Georgia, Cambria, serif; }
-[data-font="mono"] { --app-font: var(--font-code); }
-
-html[data-scale="sm"] { font-size: 93.75%; }
-html[data-scale="lg"] { font-size: 106.25%; }
-html[data-scale="xl"] { font-size: 112.5%; }
-
-/* Spinners keep turning: they signal work in progress, not decoration. */
-[data-motion="reduced"] *:not(.animate-spin),
-[data-motion="reduced"] *::before,
-[data-motion="reduced"] *::after {
-	animation-duration: 1ms !important;
-	animation-delay: 0s !important;
-	animation-iteration-count: 1 !important;
-	transition-duration: 1ms !important;
-	transition-delay: 0s !important;
-	scroll-behavior: auto !important;
+ol,
+ul {
+	list-style: none;
 }
 
-/*
- * Light mode: bleh's light surfaces are near-white on near-white, so cards blend into the page.
- * Tint the page, keep cards white, and strengthen borders, shadows and muted text.
- */
-html[data-bleh--theme_type="light"] {
-	--card: oklch(0.995 0.004 var(--hue));
-	--border: color-mix(in oklch, oklch(var(--b4)) 78%, oklch(var(--c2)) 22%);
-	--muted: color-mix(in oklch, oklch(var(--b4)) 45%, transparent);
-	--muted-foreground: color-mix(in oklch, oklch(var(--c3)) 78%, black);
-}
-html[data-bleh--theme_type="light"] body {
-	background-color: color-mix(in oklch, oklch(var(--b6)) 50%, oklch(0.94 0.035 var(--hue)));
-	background-image:
-		radial-gradient(60rem 38rem at 92% -8%, oklch(var(--h4) / 26%), transparent 70%),
-		radial-gradient(48rem 34rem at -6% 108%, oklch(var(--h4) / 18%), transparent 70%);
-}
-html[data-bleh--theme_type="light"] .bg-card {
-	box-shadow:
-		0 1px 2px oklch(0.3 0.03 var(--hue) / 7%),
-		0 6px 18px -6px oklch(0.3 0.04 var(--hue) / 10%);
+blockquote,
+q {
+	quotes: none;
 }
 
-@layer base {
-	* {
-		@apply border-border outline-ring/50;
-	}
-	html {
-		font-family: var(--app-font);
-		scrollbar-color: oklch(var(--b2) / 60%) transparent;
-	}
-	body {
-		background-color: oklch(var(--b6));
-		color: oklch(var(--c2));
-		font-size: var(--font-size);
-		line-height: var(--line-height);
-		font-weight: var(--font-weight);
-		color-scheme: dark;
-		accent-color: oklch(var(--l3-c));
-		text-underline-offset: 3px;
-		/* bleh's blurred cards need something behind them; a faint accent glow stands in for its artwork */
-		background-image:
-			radial-gradient(60rem 38rem at 92% -8%, oklch(var(--h4) / 16%), transparent 70%),
-			radial-gradient(48rem 34rem at -6% 108%, oklch(var(--h4) / 10%), transparent 70%);
-		background-attachment: fixed;
-		transition: background-color var(--trans) var(--trans-function), color var(--trans) var(--trans-function);
-	}
-	html[data-bleh--theme_type="light"] body {
-		color-scheme: light;
-	}
-	/* bleh headings: Instrument Serif, italic, light */
-	h1 {
-		font-family: var(--font-head);
-		font-style: var(--font-style-head);
-		font-weight: var(--font-weight-head);
-		font-size: calc(var(--font-size-head-3) + 6px);
-		line-height: 1.1;
-	}
-	h2 {
-		font-family: var(--font-head);
-		font-style: var(--font-style-head);
-		font-weight: var(--font-weight-head);
-		font-size: var(--font-size-head-3);
-		line-height: var(--line-height-head-3);
-	}
-	b, strong {
-		font-weight: var(--font-weight-bold);
-	}
-	::selection {
-		background: oklch(var(--h4) / 30%);
-		color: var(--select-colour, oklch(var(--l3-c)));
-	}
-	:focus-visible {
-		outline: var(--focus-outline, 2px solid oklch(var(--l3-c)));
-	}
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+	content: '';
+	content: none;
 }
 
-@utility animate-track-in { animation: var(--motion, track_in 0.3s var(--trans-function) backwards); }
-@utility animate-blur-in { animation: var(--blur-in); }
-/*
- * Page enter (app/(app)/template.tsx remounts per navigation). Navigation happens tens of times a day,
- * so it is a short fade with a 6px rise, strong ease-out, no exit. `--motion: none` (bleh's reduced-motion
- * setting) turns it off; the OS setting keeps the fade and drops the movement.
- * ponytail: enter-only, App Router can't hold the old page for an exit without View Transitions.
- */
-@keyframes page_in {
-	from {
-		opacity: 0;
-		transform: translateY(6px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
 }
-@keyframes page_in_reduced {
-	from {
-		opacity: 0;
-	}
-	to {
-		opacity: 1;
-	}
+
+* {
+	box-sizing: border-box;
 }
-@utility animate-page-in {
-	animation: var(--motion, page_in 0.3s var(--trans-function) backwards);
-	@media (prefers-reduced-motion: reduce) {
-		animation: var(--motion, page_in_reduced 0.15s ease);
+
+
+body {
+	--font: Hanken Grotesk, Inter, Roboto, Funnel Sans, Lucida Grande, Geneva, Arial, Verdana, sans-serif;
+	--font-size: 16px;
+	--line-height: calc(var(--font-size) + 4px);
+
+	--font-weight: 400;
+	--font-weight-medium: 500;
+	--font-weight-bold: 600;
+
+	--content-width: 1200px;
+
+	--noise: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHhtbG5zOnN2Z2pzPSJodHRwOi8vc3ZnanMuZGV2L3N2Z2pzIiB2aWV3Qm94PSIwIDAgNzAwIDcwMCIgd2lkdGg9IjcwMCIgaGVpZ2h0PSI3MDAiPjxkZWZzPjxmaWx0ZXIgaWQ9Im5ubm9pc2UtZmlsdGVyIiB4PSItMjAlIiB5PSItMjAlIiB3aWR0aD0iMTQwJSIgaGVpZ2h0PSIxNDAlIiBmaWx0ZXJVbml0cz0ib2JqZWN0Qm91bmRpbmdCb3giIHByaW1pdGl2ZVVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJsaW5lYXJSR0IiPg0KCTxmZVR1cmJ1bGVuY2UgdHlwZT0idHVyYnVsZW5jZSIgYmFzZUZyZXF1ZW5jeT0iMC4xMDIiIG51bU9jdGF2ZXM9IjQiIHNlZWQ9IjE1IiBzdGl0Y2hUaWxlcz0ic3RpdGNoIiB4PSIwJSIgeT0iMCUiIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIHJlc3VsdD0idHVyYnVsZW5jZSI+PC9mZVR1cmJ1bGVuY2U+DQoJPGZlU3BlY3VsYXJMaWdodGluZyBzdXJmYWNlU2NhbGU9IjE1IiBzcGVjdWxhckNvbnN0YW50PSIwLjc1IiBzcGVjdWxhckV4cG9uZW50PSIyMCIgbGlnaHRpbmctY29sb3I9IiM2ZTZlNmUiIHg9IjAlIiB5PSIwJSIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgaW49InR1cmJ1bGVuY2UiIHJlc3VsdD0ic3BlY3VsYXJMaWdodGluZyI+DQogICAgCQk8ZmVEaXN0YW50TGlnaHQgYXppbXV0aD0iMyIgZWxldmF0aW9uPSIxMDAiPjwvZmVEaXN0YW50TGlnaHQ+DQogIAk8L2ZlU3BlY3VsYXJMaWdodGluZz4NCiAgDQo8L2ZpbHRlcj48L2RlZnM+PHJlY3Qgd2lkdGg9IjcwMCIgaGVpZ2h0PSI3MDAiIGZpbGw9InRyYW5zcGFyZW50Ij48L3JlY3Q+PHJlY3Qgd2lkdGg9IjcwMCIgaGVpZ2h0PSI3MDAiIGZpbGw9IiM2ZTZlNmUiIGZpbHRlcj0idXJsKCNubm5vaXNlLWZpbHRlcikiPjwvcmVjdD48L3N2Zz4=");
+}
+
+.colourful,
+body {
+	font-family: var(--font);
+	font-size: var(--font-size);
+	line-height: var(--line-height);
+	font-weight: var(--font-weight);
+
+	background-color: oklch(var(--b6));
+	color: oklch(var(--c2));
+	color-scheme: dark;
+	accent-color: oklch(var(--l3-c));
+
+	text-underline-offset: 3px;
+
+	--default-hue: 298;
+	--default-sat: 1.28;
+	--default-lit: 0.9;
+
+	--hue: var(--hue-over, var(--hue-album, var(--hue-user, var(--hue-seasonal, var(--default-hue)))));
+	--sat-raw: var(--sat-over, var(--sat-album, var(--sat-user, var(--sat-seasonal, var(--default-sat)))));
+	--lit-raw: var(--lit-over, var(--lit-album, var(--lit-user, var(--lit-seasonal, var(--default-lit)))));
+
+	--sat: calc(var(--sat-raw) * var(--sat-multiply));
+	--lit: calc(var(--lit-raw) * var(--lit-multiply));
+
+	--sat-multiply: 0.18;
+	--lit-multiply: 1.25;
+
+	--trans-short: 0.2s;
+	--trans: 0.2s;
+	--trans-function: cubic-bezier(0.095, 0.410, 0.055, 0.960);
+	--trans-function-ani: cubic-bezier(0.205, 0.060, 0.050, 0.965);
+
+	--interactable-inset: inset oklch(var(--b3)) 0 -1px 0;
+	--interactable-outer: 0 1px 2px 0 oklch(0 0 0 / 0.3);
+	--interactable-active-outer: oklch(var(--c1) / 0.03) 0 2px 25px 0;
+
+	--highlight-shadow: oklch(var(--b3) / 0.25) 0 0 2px 1px;
+	--menu-shadow: 0 5px 15px 11px oklch(0 0 0 / 0.4);
+	--overlay-shadow: 0 20px 40px 20px oklch(0 0 0 / 0.4);
+	--menu-overlay-shadow: 0 -250px 10px 100px oklch(var(--b6) / 70%);
+	--avatar-shadow: 0 6px 15px 10px oklch(0 0 0 / 0.05);
+	--standout-shadow: 0 6px 20px 7px oklch(0 0 0 / 0.2);
+	--subtle-shadow: 0 6px 20px 2px oklch(0 0 0 / 0.2);
+
+	--interact-shadow: var(--interactable-outer);
+	--active-shadow: var(--interactable-outer), var(--interactable-active-outer);
+
+	--blur-saturate: 240%;
+	--blur-brightness: 0.7;
+	--blur-contrast: 1;
+
+	--solarium: var(--card-blur);
+	--card-blur: blur(6px) saturate(var(--blur-saturate)) brightness(var(--blur-brightness)) contrast(1);
+}
+
+body {
+	&:after {
+		content: "";
+		display: block;
+		position: fixed;
+		inset: 0;
+		z-index: 9999999999999999999;
+		pointer-events: none;
+		opacity: var(--noise-opacity, 0.35);
+		mix-blend-mode: soft-light;
+		background-image: var(--noise);
+		background-repeat: repeat;
+		background-size: 128px;
 	}
 }
 
-/* Sileo capitalises titles; keep version numbers like "v0.6.0" intact. */
-[data-sileo-viewport] [data-sileo-title] {
-	text-transform: none;
+body {
+	--b2: 0.37 calc(var(--sat) * 0.04 * var(--sat-bg, 1)) var(--hue);
+	--b3: 0.31 calc(var(--sat) * 0.04 * var(--sat-bg, 1)) var(--hue);
+
+	/* card border */
+	--b4: 0.26 calc(var(--sat) * 0.03 * var(--sat-bg, 1)) var(--hue);
+
+	/* card */
+	--b5: 0.21 calc(var(--sat) * 0.03 * var(--sat-bg, 1)) var(--hue);
+
+	/* root */
+	--b6: 0.18 calc(var(--sat) * 0.02 * var(--sat-bg, 1)) var(--hue);
+	--b8: 0.23 calc(var(--sat) * 0.02 * var(--sat-bg, 1)) var(--hue);
+	--b7: 0 0 0;
+
+	--card-border: inset 0 0 0 1px oklch(var(--b4) / 0.6);
+	--card-border-base: oklch(var(--b3) / 0.6);
+	--card-border-base-highlight: oklch(var(--b2) / 0.55);
+
+	--menu-border: oklch(var(--b3) / 0.6);
+
+	--separator: var(--separator-base);
+	--separator-base: oklch(var(--b3) / 0.8);
+
+	--textarea: oklch(var(--b6) / 20%);
+	--textarea-hov: oklch(var(--b6) / 40%);
+
+	--banner-overlay: transparent;
+	--banner-mix: none;
+
+	--normal-shadow: 0 0 transparent;
+
+	--tooltip: var(--b2);
+
+	--input-shadow:
+		inset 0 0 0 1px oklch(var(--b3) / 70%),
+		inset 0 1px 2px 1px oklch(var(--b6) / 80%);
+	--focused-input-shadow:
+		inset 0 0 0 1px oklch(var(--h3) / 0.4),
+		var(--input-shadow);
+	--group-shadow:
+		inset 0 0 0 1px oklch(var(--b2) / 0.36),
+		0 1px 2px 0 oklch(0.01 calc(var(--sat) * 0.02 * var(--sat-bg, 1)) var(--hue) / 0.3);
+
+	--separator-shadow: 0 1px 2px 0 oklch(0.01 calc(var(--sat) * 0.02 * var(--sat-bg, 1)) var(--hue) / 0.15);
+
+	--card-shadow: 0 8px 35px oklch(0.01 calc(var(--sat) * 0.02 * var(--sat-bg, 1)) var(--hue) / 0.3);
 }
 
-/*
- * Toast contrast. The popover colour is nearly the page colour in dark and OLED themes, so the toast lifts
- * off it with a lighter surface, a hairline ring and a deep shadow. Sileo's data-theme names the text tone:
- * "light" text = dark app, "dark" text = light app.
- */
-:root {
-	--toast-surface: color-mix(in oklch, var(--popover) 86%, white);
+.colourful,
+body {
+	--c1: 2 0 var(--hue);
+	--c2: 0.87 calc(clamp(min(0), var(--sat), max(1)) * 0.07) var(--hue);
+	--c3: 0.6 calc(clamp(min(0), var(--sat), max(1)) * 0.07) var(--hue);
+	--ov-c1: var(--c1);
+
+	--l2: calc(var(--lit) * 0.83) calc(var(--sat) * 0.5) var(--hue);
+	--l3: calc(var(--lit) * 0.7) calc(var(--sat) * 0.6) var(--hue);
+	--l4: calc(var(--lit) * 0.5) calc(var(--sat) * 0.7) var(--hue);
+
+	--l2-c: calc(var(--lit) * 0.92) calc(clamp(min(0), var(--sat), max(2)) * 0.4) var(--hue);
+	--l3-c: var(--l3-c-lit) var(--l3-c-sat) var(--hue);
+	--l4-c: calc(clamp(min(0.5), var(--lit), max(2)) * 0.49) calc(clamp(min(0), var(--sat), max(2)) * 0.46) var(--hue);
+
+	--l3-c-sat: calc(clamp(min(0), var(--sat), max(2)) * 0.46);
+	--l3-c-lit: calc(clamp(min(0.5), var(--lit), max(2)) * 0.72);
+
+	--h2: var(--l2-c);
+	--h3: var(--h3-lit) var(--h3-sat) var(--hue);
+	--h3-s: var(--hue), 50%, 70%;
+	--h3-sat: var(--l3-c-sat);
+	--h3-lit: calc(var(--lit) * 0.7);
+	--h4: var(--l4-c);
+
+	--f4: calc(var(--lit) * 0.42) calc(clamp(min(0), var(--sat), max(2)) * 0.4) var(--hue);
+	--f5: calc(var(--lit) * 0.36) calc(clamp(min(0), var(--sat), max(2)) * 0.6) var(--hue);
+	--k4: calc(var(--lit) * 0.45) calc(clamp(min(0), var(--sat), max(2)) * 0.38) var(--hue);
+	--g4: calc(var(--lit) * 0.15) calc(clamp(min(0), var(--sat), max(2)) * 0.6) var(--hue);
 }
-.dark {
-	--toast-surface: color-mix(in oklch, var(--popover) 82%, white);
+
+::selection {
+	background: oklch(var(--h4) / 30%);
+	color: oklch(var(--l3-c));
 }
-[data-sileo-viewport][data-theme="light"] [data-sileo-svg] {
-	filter: drop-shadow(0 0 0.75px rgb(255 255 255 / 0.55)) drop-shadow(0 10px 28px rgb(0 0 0 / 0.75));
+
+::-moz-selection {
+	background: oklch(var(--h4) / 30%);
+	color: oklch(var(--l3-c));
 }
-[data-sileo-viewport][data-theme="dark"] [data-sileo-svg] {
-	filter: drop-shadow(0 0 0.75px rgb(0 0 0 / 0.4)) drop-shadow(0 10px 28px rgb(0 0 0 / 0.22));
+
+h1,
+h2,
+h3 {
+	color: oklch(var(--c1));
+	font-weight: var(--font-weight-medium);
+
+	cursor: default;
 }
-[data-sileo-viewport][data-theme="light"] [data-sileo-description] {
-	color: rgb(255 255 255 / 0.82);
+
+p {
+	cursor: default;
 }
-[data-sileo-viewport][data-theme="dark"] [data-sileo-description] {
-	color: rgb(0 0 0 / 0.72);
+
+h1 {
+	font-size: 50px;
+	line-height: 50px;
+	font-weight: var(--font-weight-bold);
+}
+
+.brand {
+	font-family: Darumadrop One, var(--font);
+	font-weight: 900;
+}
+
+.accented {
+	color: oklch(var(--l3-c));
+}
+
+h2 {
+	font-size: 24px;
+	line-height: 28px;
+	font-weight: var(--font-weight-bold);
+}
+
+h3 {
+	font-size: 20px;
+	line-height: 24px;
+}
+
+
+em {
+	color: color-mix(in oklch, oklch(var(--c1)) 20%, oklch(var(--l3-c)));
+	font-weight: var(--font-weight-medium);
+}
+
+br {
+	display: block;
+	margin-bottom: 6px;
+}
+
+.banner {
+	position: absolute;
+	top: -100px;
+	right: -160px;
+	z-index: -1;
+
+	height: 563px;
+
+	img {
+		height: 100%;
+	}
+
+	--mask: linear-gradient(90deg, transparent 0%, white 30%, white 70%, transparent 100%);
+	mask-image: var(--mask);
+	-webkit-mask-image: var(--mask);
+
+	@media (max-width: 1300px) {
+		top: -100px;
+		left: 0;
+		right: 0;
+		opacity: 0.6;
+	}
+}
+
+
+.images-wrap {
+	&>div {
+		transition-property: scale, opacity;
+		transition-duration: var(--trans);
+		transition-timing-function: var(--trans-function-ani);
+
+		&:not(.active) {
+			scale: 0.9;
+			opacity: 0.7;
+		}
+	}
+}
+
+@media (max-width: 1300px) {
+	.react-slideshow-container {
+		overflow: hidden;
+		width: 90vw;
+		margin: 0 auto;
+	}
+}
+
+.each-slideshow-indicator:before {
+	background: oklch(var(--c2)) !important;
+}
+
+img {
+	user-select: none;
+	pointer-events: none;
+}
+
+a {
+	color: oklch(var(--l3-c));
+
+	&:hover {
+		color: oklch(var(--l2-c));
+	}
+}
+
+
+.notice {
+	color: oklch(var(--l3-c));
+	width: 100%;
+	text-align: center;
+	font-size: 14px;
+	margin-top: 10px;
+}
+
+i {
+	color: oklch(var(--l3-c));
+	font-weight: var(--font-weight-medium);
 }

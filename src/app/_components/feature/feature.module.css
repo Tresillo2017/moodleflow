@@ -1,0 +1,50 @@
+.icon {
+	--w: 36px;
+	width: var(--w);
+	height: var(--w);
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	background: oklch(var(--h4) / 15%);
+	color: oklch(var(--l3-c));
+
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.icon_large {
+	--w: 46px;
+}
+
+.feature {
+	display: flex;
+	gap: 10px;
+}
+
+.body {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+
+	br {
+		margin-bottom: 3px;
+	}
+}
+
+.title {
+	color: oklch(var(--c1));
+	font-weight: var(--font-weight-medium);
+	cursor: default;
+}
+
+.list {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+
+	&:not(:first-child) {
+		margin-top: 10px;
+	}
+}

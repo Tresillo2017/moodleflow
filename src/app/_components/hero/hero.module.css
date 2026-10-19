@@ -1,0 +1,8 @@
+.hero {
+	display: flex;
+	justify-content: center;
+	padding: 100px 0;
+	overflow: hidden;
+
+	background: linear-gradient(180deg, transparent, oklch(var(--k4) / 20%));
+}

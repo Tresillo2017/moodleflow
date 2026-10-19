@@ -1,0 +1,17 @@
+.section {
+	display: flex;
+	justify-content: center;
+	padding: 40px 0;
+	overflow: hidden;
+}
+
+.alternate {
+	background: linear-gradient(0deg, oklch(var(--k4) / 12%), oklch(var(--b5)));
+	border-top: 1px solid var(--card-border-base);
+	border-bottom: 1px solid var(--card-border-base);
+	box-shadow: var(--card-shadow);
+}
+
+.section:not(.alternate)+.section:not(.alternate) {
+	padding-top: 0;
+}

@@ -1,0 +1,46 @@
+.notice {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px 24px;
+
+	width: 100%;
+	max-width: 1200px;
+	box-sizing: border-box;
+	padding: 20px 24px;
+	border-radius: 16px;
+
+	background: oklch(var(--b3));
+	color: oklch(var(--c2));
+	box-shadow: var(--normal-shadow);
+}
+
+.body {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	max-width: 680px;
+
+	p {
+		margin: 0;
+	}
+}
+
+.title {
+	font-size: 18px;
+	font-weight: 600;
+	color: oklch(var(--l3-c));
+}
+
+.redirected {
+	margin-top: 4px !important;
+	font-weight: 600;
+	color: oklch(var(--l3-c));
+}
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+}

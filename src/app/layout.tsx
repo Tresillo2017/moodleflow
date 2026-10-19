@@ -1,24 +1,41 @@
 import type { Metadata } from "next";
-import { Hanken_Grotesk, Instrument_Serif, Inconsolata } from "next/font/google";
+import { Darumadrop_One, Geist_Mono, Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/providers/theme-provider";
-import { PreferencesProvider } from "@/components/providers/preferences-provider";
-import { MoodleProvider } from "@/components/providers/moodle-provider";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "@/components/ui/toaster";
-import { WhatsNew } from "@/components/whats-new";
-import { UpdatePrompt } from "@/components/update-prompt";
-import { PREFERENCES_SCRIPT } from "@/lib/preferences";
+import { Footer } from "./_components/footer/footer";
+import { Header } from "./_components/header/header";
 
-const hanken = Hanken_Grotesk({ variable: "--font-hanken", subsets: ["latin"] });
+const funnel = Hanken_Grotesk({
+	variable: "--font-funnel",
+	subsets: ["latin"]
+});
 
-const instrumentSerif = Instrument_Serif({ variable: "--font-instrument", subsets: ["latin"], weight: "400", style: ["normal", "italic"] });
+const brand = Darumadrop_One({
+	weight: "400",
+	subsets: ["latin"]
+});
 
-const inconsolata = Inconsolata({ variable: "--font-inconsolata", subsets: ["latin"] });
+const geistMono = Geist_Mono({
+	variable: "--font-geist-mono",
+	subsets: ["latin"],
+});
+
+const SITE_URL = "https://moodleflow.tomasps.workers.dev";
+const TITLE = "moodleflow, bleh for Moodle";
+const DESCRIPTION = "A fresh coat of paint for Moodle, bringing you closer to the courses that matter. A userscript port of bleh by katelyn.";
 
 export const metadata: Metadata = {
-	title: { default: "MoodleFlow", template: "%s · MoodleFlow" },
-	description: "A modern interface for Moodle.",
+	metadataBase: new URL(SITE_URL),
+	title: TITLE,
+	description: DESCRIPTION,
+	keywords: ["moodle", "moodle userscript", "moodle theme", "dark mode", "dark theme", "light theme", "violentmonkey", "tampermonkey", "userscript", "bleh", "bleh for moodle", "katelyn", "glass", "student", "course", "classroom"],
+	openGraph: {
+		images: "/shots/hero.webp",
+		type: "website",
+		url: SITE_URL,
+		title: TITLE,
+		description: DESCRIPTION,
+		siteName: "moodleflow"
+	}
 };
 
 export default function RootLayout({
@@ -27,24 +44,13 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		// Font variables live on <html> because --app-font resolves them at :root.
-		<html lang="en" suppressHydrationWarning className={`${hanken.variable} ${instrumentSerif.variable} ${inconsolata.variable}`}>
-			<head>
-				<script dangerouslySetInnerHTML={{ __html: PREFERENCES_SCRIPT }} />
-			</head>
-			<body className="antialiased">
-				<ThemeProvider>
-					<PreferencesProvider>
-						<MoodleProvider>
-							<TooltipProvider>
-								{children}
-								<Toaster />
-								<UpdatePrompt />
-								<WhatsNew />
-							</TooltipProvider>
-						</MoodleProvider>
-					</PreferencesProvider>
-				</ThemeProvider>
+		<html lang="en">
+			<body className={`${funnel.variable} ${geistMono.variable}`}>
+				<Header />
+				<main>
+					{children}
+				</main>
+				<Footer />
 			</body>
 		</html>
 	);

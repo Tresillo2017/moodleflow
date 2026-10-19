@@ -203,3 +203,8 @@ dist
 next-env.d.ts
 .playwright-mcp/
 .serena/
+
+# static export (next build) and generated userscript copies (bun run build)
+/out/
+/public/moodleflow.user.js
+/public/moodleflow.meta.js
