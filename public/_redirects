@@ -3,6 +3,3 @@
 /info           /moodleflow.meta.js               302
 /issues         https://github.com/Tresillo2017/moodleflow/issues/new/choose   302
 /contributors   https://github.com/Tresillo2017/moodleflow/graphs/contributors 302
-
-# old web app URLs (and anything else unknown) land on the home page, which explains the change
-/*              /?from=app                        302

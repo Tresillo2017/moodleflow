@@ -3,6 +3,7 @@
 	"name": "moodleflow",
 	"compatibility_date": "2026-10-01",
 	"assets": {
-		"directory": "./out"
+		"directory": "./out",
+		"not_found_handling": "404-page"
 	}
 }
