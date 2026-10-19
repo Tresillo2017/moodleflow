@@ -1,0 +1,230 @@
+.custom-selector select {
+	display: none;
+}
+
+.select-button {
+	display: flex;
+	align-items: center;
+	gap: var(--icon-gap);
+	width: max-content;
+	position: relative;
+
+	--btn-right: calc(var(--button-sides) + var(--select-arrow-icon-size) + 4px) !important;
+
+	--select-arrow-icon-size: 12px;
+
+	&.with-query {
+		--value-opacity: 0 !important;
+	}
+
+	&:before {
+		display: block !important;
+		--mask: var(--icon-16-dropdown);
+		--mask-size: var(--select-arrow-icon-size);
+		--margin-top: -6px;
+		--right: var(--button-sides-icon);
+
+		transition-property: transform !important;
+		transition-duration: 0.2s !important;
+		transition-timing-function: var(--trans-function-ani);
+		color: oklch(var(--c3));
+	}
+
+	&:active {
+		&:before,
+		& > .select-indicator {
+			transform: scaleY(1) translateY(1px) !important;
+		}
+	}
+
+	&[aria-expanded="true"] {
+		&:before,
+		& > .select-indicator {
+			transform: scaleY(-1) translateY(0) !important;
+		}
+
+		&:active {
+			&:before,
+			& > .select-indicator {
+				transform: scaleY(-1) translateY(-1px) !important;
+			}
+		}
+
+		--value-opacity: 0.5;
+	}
+
+	&[data-hide="true"] {
+		--bg: transparent;
+		--bg-hov: transparent;
+		--bg-atv: transparent;
+		--button-verts: 0px;
+		--button-sides: 0px;
+		--button-sides-icon: 0;
+		--radius: 0;
+		--shadow: none;
+	}
+}
+
+.select-value-indicator {
+	display: flex;
+	align-items: center;
+	gap: var(--icon-gap);
+
+	opacity: var(--value-opacity, 1);
+}
+
+.select-indicator {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	transition-property: transform;
+	transition-duration: 0.2s;
+	transition-timing-function: var(--trans-function-ani);
+}
+
+.select-input {
+	appearance: none;
+	background: none;
+	color: inherit;
+	border: none;
+	padding: unset;
+	--focus-outline: none;
+	position: absolute;
+	inset: var(--button-verts) calc(var(--button-sides) + 12px + 4px)
+		var(--button-verts) var(--button-sides);
+	pointer-events: none;
+
+	/*&:not(.with-query) {
+		opacity: 0.7;
+	}*/
+}
+
+.select-item {
+	display: flex;
+	align-items: center;
+	gap: var(--icon-gap);
+	width: 100% !important;
+}
+
+.select-in-settings {
+	--bg: transparent;
+	--bg-hov: oklch(var(--b2) / 20%);
+	--bg-atv: oklch(var(--b2) / 40%);
+	--col: inherit;
+	--shadow: none;
+
+	&:after {
+		content: '';
+		position: absolute;
+		display: block !important;
+		right: calc(var(--button-sides-icon) - (var(--margin) / 2));
+
+		--size: calc(var(--select-arrow-icon-size) + 2px);
+		--margin: calc(var(--size) - var(--select-arrow-icon-size));
+
+		background-color: oklch(var(--b2) / 20%);
+		border-radius: 4px;
+		width: var(--size);
+		height: var(--size);
+
+		top: 50%;
+		margin-top: calc(-1 * (var(--size) / 2));
+
+		transition-property: opacity;
+		transition-duration: var(--trans);
+		transition-timing-function: var(--trans-function);
+	}
+
+	&:hover {
+		&:after {
+			transition: none;
+		}
+	}
+
+	&:hover,
+	&:active,
+	&[aria-expanded="true"] {
+		&:after {
+			opacity: 0;
+		}
+	}
+}
+
+.select-header {
+	font-size: calc(var(--font-size) - 1px);
+	color: oklch(var(--c3));
+	padding: 3px var(--button-sides) 4px;
+	cursor: default;
+}
+
+.display-options-clickable-button,
+.dropdown-menu-list-button,
+.dropdown-menu-clickable-button:not(.report-dropdown-button),
+.dropdown-menu-clickable-button-js-only {
+	--mask: var(--icon-16-dropdown);
+
+	&:not(.link-select) {
+		--btn-right: calc(var(--button-sides) + 12px + 4px) !important;
+		--mask-size: 12px;
+		--margin-top: -6px;
+		--right: var(--button-sides-icon);
+
+		&:after {
+			color: oklch(var(--c3));
+		}
+	}
+
+	&:after {
+		transition-property: transform !important;
+		transition-duration: var(--trans) !important;
+		transition-timing-function: var(--trans-function) !important;
+	}
+
+	&:active {
+		&:after {
+			transform: translateY(1px) !important;
+		}
+	}
+
+	&.disclose-active {
+		&:after {
+			transform: scaleY(-1) !important;
+		}
+
+		&:active {
+			&:after {
+				transform: scaleY(-1) translateY(-1px) !important;
+			}
+		}
+	}
+}
+
+.form-group-controls:has(select):before,
+.dropdown-menu-list-button::after,
+.dropdown-menu-clickable-button:not(.link-select)::after,
+.dropdown-menu-clickable-button-js-only::after {
+	--mask: var(--icon-16-dropdown);
+	opacity: unset !important;
+	--top: 15px;
+	/* 50% breaks if theres form-row-help-text below it eg. time zone selector */
+	z-index: 20;
+	/* stay above dropdown if active */
+}
+
+.content-form select {
+	background-image: none !important;
+}
+
+.select-wrap {
+	position: relative;
+	height: fit-content;
+}
+
+.link-select {
+	padding-right: calc(var(--select-arrow-icon-size) + 4px) !important;
+
+	&:before {
+		--right: 0 !important;
+	}
+}

@@ -1,0 +1,59 @@
+.activity-list {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.activity-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+
+	color: oklch(var(--c2));
+	text-decoration: var(--force-underline, none) !important;
+
+	animation: activity 0.35s var(--trans-function);
+
+	&:after {
+		display: none;
+	}
+}
+
+.activity-icon {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 5px;
+	aspect-ratio: 1 / 1;
+	background: oklch(var(--b2) / 26%);
+	--icon-size: 16px;
+	border-radius: var(--radius-xs);
+	flex-shrink: 0;
+
+	&.activity-icon-bookmark,
+	&.activity-icon-love {
+		background: oklch(var(--k4) / 30%);
+		color: oklch(var(--l3-c));
+	}
+}
+
+.activity-info {
+	flex: 1;
+}
+
+.activity-top {
+	display: flex;
+	flex-wrap: wrap;
+	font-size: calc(var(--font-size) - 1px);
+	color: oklch(var(--c3));
+}
+
+.activity-type {
+	flex: 1;
+	color: oklch(var(--c2));
+}
+
+.wiki-link-smart-title {
+	display: flex;
+	gap: 6px;
+}

@@ -1,0 +1,23 @@
+// ==UserScript==
+// @name         moodleflow
+// @namespace    https://github.com/Tresillo2017/moodleflow
+// @version      0.5.0
+// @description  bleh (by katelyn) for Moodle: the same themes, glass, motion and layout
+// @updateURL    https://moodleflow.tomasps.workers.dev/moodleflow.meta.js
+// @downloadURL  https://moodleflow.tomasps.workers.dev/moodleflow.user.js
+// @license      GPL-3.0-or-later
+// @match        https://fpsanantonio.alexiaclassroom.com/*
+// @run-at       document-start
+// @noframes
+// @grant        GM_addStyle
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM_registerMenuCommand
+// @grant        GM_xmlhttpRequest
+// @connect      moodleflow.tomasps.workers.dev
+// ==/UserScript==
+/*
+ * moodleflow — a port of bleh (https://github.com/katelyynn/bleh) to Moodle.
+ * bleh: Copyright (c) 2024-2026 katelyn and contributors, GPL-3.0-or-later.
+ * The stylesheets in this script are bleh's own, copied unmodified.
+ */

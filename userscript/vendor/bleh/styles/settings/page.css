@@ -1,0 +1,50 @@
+@import './profile_sidebar.css';
+
+.bleh--panel:not(.bleh--profile-note-panel) {
+	display: flex;
+	flex-direction: column;
+	gap: var(--card-gap);
+	flex: unset;
+
+	h4 {
+		color: oklch(var(--c1));
+
+		font-size: var(--font-size-subheading);
+		line-height: var(--line-height-subheading);
+
+		&.top-header {
+			width: fit-content;
+			padding-bottom: calc(var(--card-gap) + 1px);
+			position: relative;
+
+			display: none;
+
+			&:after {
+				content: "";
+				position: absolute;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				height: 1px;
+				background-color: var(--card-border-base);
+			}
+		}
+	}
+
+	h5 {
+		margin: unset;
+		color: oklch(var(--c1));
+		font-weight: var(--font-weight-medium);
+	}
+
+	& > .alert {
+		margin: unset !important;
+	}
+
+	.subtext {
+		color: oklch(var(--c3));
+		font-size: var(--font-size-sm);
+		line-height: var(--line-height-sm);
+		margin-top: -5px;
+	}
+}

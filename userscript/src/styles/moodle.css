@@ -1,0 +1,351 @@
+/* Adapter between bleh's stylesheets and Moodle's own markup. bleh's css is untouched; this only
+   (a) hides the Moodle chrome bleh's shell replaces,
+   (b) undoes Moodle/Bootstrap rules that collide with bleh's generic class names (.icon, .btn, .row …),
+   (c) re-skins Moodle widgets with bleh's tokens (--b2…b6 surfaces, --c1…c3 text, --h/l* accent). */
+
+/* ---- (a) chrome replaced by the shell ---- */
+body.mf #page[data-mf-hidden],
+body.mf nav.navbar.fixed-top,
+body.mf #page-footer,
+body.mf .drawer-toggles { display: none !important; }
+body.mf { background: oklch(var(--b6)); }
+
+/* ---- (b) collisions ---- */
+/* Moodle sizes .icon as a 24px FontAwesome box; bleh's .icon is a button that grows with its label */
+body.mf .icon { width: auto; max-width: none; height: auto; margin: 0; }
+body.mf .icon.fa, body.mf i.icon { width: auto; max-width: none; }
+
+/* ---- (c) Moodle surfaces become transparent so bleh's card behind shows through ---- */
+body.mf #page, body.mf #page-wrapper, body.mf #page-content, body.mf #region-main, body.mf #region-main-box,
+body.mf .main-inner, body.mf .bg-white, body.mf .bg-light, body.mf .bg-body, body.mf #topofscroll,
+body.mf .course-content, body.mf [role=main] { background: transparent !important; color: oklch(var(--c2)); }
+body.mf :is(h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6, label, legend, .card-title) { color: oklch(var(--c1)); }
+body.mf :is(.text-muted, .small, .dimmed_text, .text-secondary, small) { color: oklch(var(--c3)) !important; }
+body.mf a:not(.btn):not([class*=nav]) { color: oklch(var(--l3-c)); }
+body.mf :is(.card, .block, .generalbox, .box) { background: transparent !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; color: oklch(var(--c2)); padding: 0; }
+body.mf :is(.card-body, .block .card-body) { padding: 0; }
+body.mf .block .card-title, body.mf .block h3.card-title { font-size: var(--font-size-subheading); font-weight: var(--font-weight-medium); color: oklch(var(--c1)); margin: 0 0 8px; }
+body.mf .list-group-item { background: transparent !important; border-color: var(--card-border-base) !important; color: oklch(var(--c2)); }
+body.mf aside#block-region-side-pre { display: block; }
+body.mf .col-sidebar > aside { display: none; }
+body.mf :is(.card-header, .card-footer) { background: transparent !important; border-color: var(--card-border-base) !important; }
+body.mf :is(hr, .dropdown-divider, .border, .border-top, .border-bottom) { border-color: var(--card-border-base) !important; }
+body.mf :is(.form-control, .custom-select, .form-select, input[type=text], input[type=search], input[type=password],
+	input[type=email], input[type=number], input[type=url], input[type=date], textarea) {
+	background: var(--textarea) !important; color: oklch(var(--c2)) !important; border: 0 !important;
+	box-shadow: var(--input-shadow) !important; border-radius: var(--item-med-radius) !important;
+}
+body.mf :is(.form-control, textarea, input[type=text], input[type=search], input[type=password]):focus { box-shadow: var(--focused-input-shadow) !important; outline: none; }
+body.mf .alert { background: oklch(var(--b6) / 50%) !important; color: oklch(var(--c2)) !important; border: 1px solid var(--card-border-base) !important; border-radius: var(--item-big-radius); }
+body.mf :is(.table, table.generaltable, .generaltable) { color: oklch(var(--c2)); }
+body.mf :is(.table th, .table td, .generaltable th, .generaltable td) { border-color: var(--card-border-base) !important; background: transparent !important; }
+
+/* ---- shell positioning: bleh's masthead is fixed, content starts below it ---- */
+#mf-root { padding-top: 48px; }
+#mf-root .masthead-controls { display: flex; gap: var(--button-list-gap); align-items: center; }
+#mf-root .masthead-controls .popover-region { position: relative; }
+#mf-root .masthead-controls .count-container.hidden { display: none; }
+#mf-root .masthead-controls .count-container { position: absolute; top: -2px; right: -2px; margin: 0; padding: 0 5px; font-size: 10px; line-height: 14px; min-width: 14px; text-align: center; }
+#mf-root .popover-region-toggle i, #mf-root .popover-region-toggle .icon { display: none; }
+
+/* ---- Moodle icons: FontAwesome glyphs by default, bleh masks where bleh has the icon ---- */
+body.mf i.mf-icon { display: inline-block; margin-right: .5rem; font-size: 14px; width: 1em; height: 1em; text-align: center; vertical-align: -.125em; }
+body.mf .icon-no-margin i.mf-icon, body.mf i.mf-icon.icon-no-margin { margin-right: 0; }
+body.mf i.mf-icon:is(.fa-xmark, .fa-magnifying-glass, .fa-bell, .fa-check, .fa-gear, .fa-message, .fa-ellipsis-v, .fa-ellipsis-vertical,
+	.fa-ellipsis, .fa-angles-down, .fa-angles-right, .fa-angles-left, .fa-chevron-right, .fa-chevron-left, .fa-chevron-down,
+	.fa-chevron-up, .fa-lock, .fa-circle-question, .fa-question, .fa-list, .fa-arrow-up-right-from-square, .fa-user, .fa-person,
+	.fa-trash-can, .fa-plus, .fa-minus, .fa-eye, .fa-pen, .fa-calendar, .fa-star, .fa-download, .fa-upload, .fa-copy, .fa-house,
+	.fa-clock, .fa-circle-info, .fa-triangle-exclamation, .fa-envelope, .fa-link, .fa-trash, .fa-arrow-up, .fa-arrow-down) {
+	font-size: 0; width: 16px; height: 16px; background: var(--mask-colour, currentColor);
+	-webkit-mask: var(--mf-i, var(--icon-16-placeholder)) center / 16px no-repeat; mask: var(--mf-i, var(--icon-16-placeholder)) center / 16px no-repeat;
+}
+body.mf i.mf-icon:is(.fa-xmark, .fa-magnifying-glass, .fa-bell, .fa-check, .fa-gear, .fa-message, .fa-ellipsis-v, .fa-ellipsis-vertical,
+	.fa-ellipsis, .fa-angles-down, .fa-angles-right, .fa-angles-left, .fa-chevron-right, .fa-chevron-left, .fa-chevron-down,
+	.fa-chevron-up, .fa-lock, .fa-circle-question, .fa-question, .fa-list, .fa-arrow-up-right-from-square, .fa-user, .fa-person,
+	.fa-trash-can, .fa-plus, .fa-minus, .fa-eye, .fa-pen, .fa-calendar, .fa-star, .fa-download, .fa-upload, .fa-copy, .fa-house,
+	.fa-clock, .fa-circle-info, .fa-triangle-exclamation, .fa-envelope, .fa-link, .fa-trash, .fa-arrow-up, .fa-arrow-down)::before { content: none; }
+body.mf i.mf-icon.fa-xmark { --mf-i: var(--icon-16-x); }
+body.mf i.mf-icon.fa-magnifying-glass { --mf-i: var(--icon-16-search); }
+body.mf i.mf-icon.fa-bell { --mf-i: var(--icon-16-notifications); }
+body.mf i.mf-icon.fa-check { --mf-i: var(--icon-16-check); }
+body.mf i.mf-icon.fa-gear { --mf-i: var(--icon-16-settings); }
+body.mf i.mf-icon:is(.fa-message, .fa-envelope) { --mf-i: var(--icon-16-mail); }
+body.mf i.mf-icon:is(.fa-ellipsis-v, .fa-ellipsis-vertical) { --mf-i: var(--icon-16-dots-v); }
+body.mf i.mf-icon.fa-ellipsis { --mf-i: var(--icon-16-dots); }
+body.mf i.mf-icon:is(.fa-angles-down, .fa-chevron-down, .fa-arrow-down) { --mf-i: var(--icon-16-arrow-down); }
+body.mf i.mf-icon:is(.fa-angles-right, .fa-chevron-right) { --mf-i: var(--icon-16-arrow-right); }
+body.mf i.mf-icon:is(.fa-angles-left, .fa-chevron-left) { --mf-i: var(--icon-16-arrow-left); }
+body.mf i.mf-icon:is(.fa-chevron-up, .fa-arrow-up) { --mf-i: var(--icon-16-arrow-up); }
+body.mf i.mf-icon.fa-lock { --mf-i: var(--icon-16-lock); }
+body.mf i.mf-icon:is(.fa-circle-question, .fa-question) { --mf-i: var(--icon-16-question); }
+body.mf i.mf-icon.fa-list { --mf-i: var(--icon-16-list); }
+body.mf i.mf-icon.fa-arrow-up-right-from-square { --mf-i: var(--icon-16-external); }
+body.mf i.mf-icon:is(.fa-user, .fa-person) { --mf-i: var(--icon-16-user); }
+body.mf i.mf-icon:is(.fa-trash-can, .fa-trash) { --mf-i: var(--icon-16-trash); }
+body.mf i.mf-icon.fa-plus { --mf-i: var(--icon-16-plus); }
+body.mf i.mf-icon.fa-minus { --mf-i: var(--icon-16-minus); }
+body.mf i.mf-icon.fa-eye { --mf-i: var(--icon-16-preview); }
+body.mf i.mf-icon.fa-pen { --mf-i: var(--icon-16-edit); }
+body.mf i.mf-icon.fa-calendar { --mf-i: var(--icon-16-calendar); }
+body.mf i.mf-icon.fa-star { --mf-i: var(--icon-16-star); }
+body.mf i.mf-icon.fa-download { --mf-i: var(--icon-16-download); }
+body.mf i.mf-icon.fa-upload { --mf-i: var(--icon-16-upload); }
+body.mf i.mf-icon.fa-copy { --mf-i: var(--icon-16-copy); }
+body.mf i.mf-icon.fa-house { --mf-i: var(--icon-16-home); }
+body.mf i.mf-icon.fa-clock { --mf-i: var(--icon-16-clock); }
+body.mf i.mf-icon.fa-circle-info { --mf-i: var(--icon-16-info); }
+body.mf i.mf-icon.fa-triangle-exclamation { --mf-i: var(--icon-16-warning); }
+body.mf i.mf-icon.fa-link { --mf-i: var(--icon-16-link); }
+
+/* course index / block drawers are replaced by the tab row and sidebar */
+body.mf :is(#theme_boost-drawers-courseindex, #theme_boost-drawers-blocks, [data-region=fixed-drawer]:not([data-region=right-hand-drawer]), .drawer-toggles, .drawertoggle) { display: none !important; }
+
+/* settings mode hides Moodle's own nodes instead of removing them (its JS looks them up by selector) */
+body.mf [data-mf-away] { display: none !important; }
+
+/* ---- popouts: Moodle dropdowns / popovers / tooltips / modals wear bleh's menu + modal tokens ---- */
+@keyframes mf-menu { from { scale: 1 .95; filter: blur(calc(var(--solarium-percent, 1) * 3px)); transform-origin: top; } to { scale: 1; filter: blur(0); } }
+body.mf :is(.dropdown-menu, .popover-region-container, .popover) {
+	background-color: oklch(var(--menu-bg) / var(--solarium-opacity, var(--menu-opacity))) !important;
+	backdrop-filter: var(--solarium); -webkit-backdrop-filter: var(--solarium);
+	border: 1px solid var(--menu-border) !important; border-radius: var(--menu-radius) !important;
+	box-shadow: var(--override-full-shadow, var(--menu-shadow)) !important; color: oklch(var(--c2));
+	padding: var(--vertical-menu-padding, 4px) var(--horizontal-menu-padding, 4px);
+	font-size: var(--font-size); text-align: left;
+}
+body.mf :is(.dropdown-menu.show, .popover-region.collapsed:not(.collapsed) .popover-region-container, .popover.show) { animation: mf-menu .22s var(--trans-function); }
+body.mf .dropdown-menu { display: none; flex-direction: column; gap: var(--menu-gap); min-width: 180px; }
+body.mf .dropdown-menu.show { display: flex; }
+body.mf .dropdown-menu .dropdown-menu-clickable-item { min-width: 170px; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+body.mf :is(.popover .arrow, .popover .popover-arrow, .tooltip .arrow) { display: none; }
+body.mf .popover-region-container .popover-region-header-container, body.mf .popover-region-container .popover-region-footer-container { background: transparent !important; border-color: var(--menu-border) !important; }
+body.mf .popover-region-container .content-item-container { border-color: var(--menu-border) !important; }
+body.mf .popover-region-container .content-item-container:hover, body.mf .popover-region-container .content-item-container.unread { background: var(--menu-item-hov) !important; }
+body.mf .tooltip-inner {
+	background-color: oklch(var(--tooltip) / var(--solarium-opacity, 80%)) !important; backdrop-filter: var(--solarium); -webkit-backdrop-filter: var(--solarium);
+	border-radius: var(--radius-s); box-shadow: var(--avatar-shadow); padding: 3px 6px; font-size: calc(var(--font-size) - 1px); color: oklch(var(--c2));
+}
+body.mf .tooltip { transition: opacity .22s var(--trans-function-ani), translate .22s var(--trans-function-ani) !important; }
+body.mf .tooltip.bs-tooltip-top, body.mf .tooltip.bs-tooltip-auto[x-placement^=top] { translate: 0 4px; }
+body.mf .tooltip.bs-tooltip-bottom, body.mf .tooltip.bs-tooltip-auto[x-placement^=bottom] { translate: 0 -4px; }
+body.mf .tooltip.show { translate: 0 0; }
+
+/* modals (bleh's .bleh-modal) */
+body.mf .modal-backdrop { background: var(--modal-bg) !important; opacity: 1 !important; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+body.mf .modal-backdrop.fade:not(.show) { opacity: 0 !important; }
+body.mf .modal-content {
+	background: oklch(var(--b5) / var(--solarium-opacity, 90%)) !important; backdrop-filter: var(--solarium); -webkit-backdrop-filter: var(--solarium);
+	border: 1px solid var(--card-border-base) !important; border-radius: var(--item-big-radius) !important; box-shadow: var(--overlay-shadow) !important; color: oklch(var(--c2));
+}
+body.mf :is(.modal-header, .modal-footer) { border-color: var(--card-border-base) !important; background: transparent !important; }
+body.mf .modal-title { color: oklch(var(--c1)); font-size: var(--font-size-subheading); font-weight: var(--font-weight-medium); }
+body.mf .modal.fade .modal-dialog { transform: none !important; translate: 0 6px; opacity: 0; transition: translate .3s var(--trans-function-ani), opacity .3s var(--trans-function-ani) !important; }
+body.mf .modal.show .modal-dialog { translate: 0 0; opacity: 1; }
+body.mf .close { color: oklch(var(--c3)); text-shadow: none; opacity: 1; }
+
+/* notification/message popovers hang from the masthead's right edge like bleh's account menu */
+#mf-root .masthead-controls .popover-region-container { position: fixed; top: 54px; right: calc((100vw - var(--cards-width)) / 2 + 6px); width: 380px; max-width: calc(100vw - 24px); left: auto; }
+#mf-root .masthead-controls .popover-region-toggle { --mask-size: 16px; --icon-size: 16px; }
+#mf-root .masthead-controls .popover-region-toggle::before { -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+#mf-root .masthead-controls .popover-region-toggle::before { -webkit-mask-size: contain !important; mask-size: contain !important; -webkit-mask-position: center !important; mask-position: center !important; }
+#mf-root .masthead-controls .popover-region-container { height: auto !important; max-height: min(70vh, 520px); overflow: hidden; display: flex; flex-direction: column; }
+#mf-root .masthead-controls .popover-region-content-container { overflow-y: auto; }
+
+/* ---- course page: flat sections like bleh's panels, activities as list rows ---- */
+body.mf :is(.course-section, li.section) { background: transparent !important; border: 0 !important; border-bottom: 1px solid var(--separator-base) !important; border-radius: 0 !important; box-shadow: none; padding: var(--card-padding) 0; margin: 0; }
+body.mf :is(.course-section, li.section):last-child { border-bottom: 0 !important; }
+body.mf :is(.sectionname, .sectionname a, .course-section-header h3) { color: oklch(var(--c1)) !important; font-size: var(--font-size-subheading); font-weight: var(--font-weight-medium); }
+body.mf .activity-item { background: transparent !important; border: 0 !important; border-radius: var(--item-med-radius) !important; box-shadow: none; padding: 6px 8px; transition: background-color var(--trans) var(--trans-function); }
+body.mf .activity-item:hover { background: var(--menu-item-hov) !important; }
+body.mf .activityname a, body.mf .activity-instance a { color: oklch(var(--c1)) !important; }
+body.mf .activity-altcontent, body.mf .text-muted { color: oklch(var(--c3)); }
+
+/* ---- text on Moodle-coloured elements: tables, calendar, dl/dt, captions ---- */
+body.mf :is(.generaltable, .table, .calendarmonth, .calendartable, .gradereport-grader-table) :is(td, th) { color: oklch(var(--c2)); border-color: var(--card-border-base) !important; }
+body.mf :is(.generaltable th, .table thead th) { color: oklch(var(--c1)); font-weight: var(--font-weight-medium); }
+body.mf :is(.table-striped tbody tr:nth-of-type(odd), .generaltable tr.r1, .generaltable .r1 > *) { background: oklch(var(--b6) / 30%) !important; }
+body.mf :is(.table-hover tbody tr:hover, .generaltable tbody tr:hover) > * { background: var(--menu-item-hov) !important; }
+body.mf :is(.calendarmonth td.today, .calendartable td.today) { background: oklch(var(--h4) / 18%) !important; }
+body.mf :is(.calendarmonth td.dayblank, .calendarmonth td.weekend) { background: oklch(var(--b6) / 25%) !important; }
+body.mf .calendarwrapper, body.mf .calendar-controls { color: oklch(var(--c2)); }
+body.mf :where(p, li, span, div, small, label, dd, dt, legend) { color: inherit; }
+body.mf { color: oklch(var(--c2)); }
+body.mf .nav-tabs, body.mf .nav-pills { border-color: var(--card-border-base); }
+body.mf .nav-tabs .nav-link, body.mf .nav-pills .nav-link { color: oklch(var(--c2)) !important; border-radius: var(--item-med-radius) var(--item-med-radius) 0 0; background: transparent !important; border-color: transparent !important; }
+body.mf .nav-tabs .nav-link.active, body.mf .nav-pills .nav-link.active { color: oklch(var(--l3-c)) !important; background: oklch(var(--h4) / 15%) !important; }
+body.mf .badge { border-radius: 99px; font-weight: var(--font-weight-medium); }
+body.mf :is(.badge-primary, .bg-primary, .badge-info) { background: oklch(var(--h4) / 22%) !important; color: oklch(var(--l3-c)) !important; }
+body.mf :is(.badge-secondary, .badge-light, .bg-secondary) { background: oklch(var(--b3)) !important; color: oklch(var(--c2)) !important; }
+body.mf :is(.badge-danger, .bg-danger) { background: oklch(var(--b6) / 60%) !important; color: oklch(0.8 0.15 23) !important; }
+body.mf :is(.badge-success, .bg-success) { background: oklch(var(--b6) / 60%) !important; color: oklch(0.82 0.15 150) !important; }
+body.mf .progress { background: oklch(var(--b6) / 60%) !important; border-radius: 99px; box-shadow: var(--inset-shadow); }
+body.mf .progress-bar { background: oklch(var(--l3-c)) !important; }
+body.mf .breadcrumb, body.mf .breadcrumb-item, body.mf .breadcrumb-item a { background: transparent !important; color: oklch(var(--c3)) !important; }
+body.mf pre, body.mf code, body.mf kbd { background: oklch(var(--b6) / 60%) !important; color: oklch(var(--c1)) !important; border-radius: var(--item-med-radius); }
+body.mf blockquote { border-left: 3px solid oklch(var(--l3-c) / 60%); color: oklch(var(--c2)); padding-left: 12px; }
+
+/* ---- bleh class collisions: bleh's `.content` is its main+sidebar wrapper, Moodle uses `.content` for plain blocks ---- */
+body.mf .content:not(main, .collapse) { display: block; justify-content: initial; width: auto; position: static; flex-direction: initial; }
+
+/* ---- course cards (My courses / dashboard) as bleh grid tiles ---- */
+body.mf .card.course-card, body.mf .card.dashboard-card {
+	background: oklch(var(--b5) / 55%) !important; border: 0 !important; border-radius: var(--item-big-radius) !important; overflow: hidden;
+	box-shadow: var(--group-shadow) !important; transition: translate .25s var(--trans-function-ani), box-shadow .25s var(--trans-function-ani); position: relative;
+}
+body.mf .card.course-card:hover, body.mf .card.dashboard-card:hover { translate: 0 -2px; box-shadow: var(--group-shadow), 0 8px 24px oklch(var(--b7) / 35%) !important; }
+body.mf .course-card :is(.coursename, a.aalink, .multiline) { color: oklch(var(--c1)) !important; font-weight: var(--font-weight-medium); }
+body.mf .course-card :is(.categoryname, .text-muted, .course-summary, .small) { color: oklch(var(--c3)) !important; }
+body.mf .course-card :is(.card-body, .card-footer) { background: transparent !important; padding: 10px 12px; }
+body.mf [data-region=card-deck] { row-gap: var(--card-gap); }
+body.mf [data-region=card-deck] > .col { padding: 0 6px; }
+
+/* ---- forms: bleh's input look everywhere, primary actions as bleh's accent buttons ---- */
+body.mf :is(.btn-secondary, .btn-outline-secondary, .btn-light, .btn-link) { background: var(--bg) !important; }
+body.mf :is(.btn-link) { --bg: transparent; --bg-hov: var(--menu-item-hov); --col: oklch(var(--l3-c)) !important; }
+body.mf .form-control:disabled, body.mf .form-control[readonly] { opacity: .6; }
+body.mf :is(.form-check-input, input[type=checkbox], input[type=radio]) { accent-color: oklch(var(--l3-c)); }
+body.mf .fitem .col-form-label, body.mf .fitem label { color: oklch(var(--c2)) !important; }
+body.mf :is(.pagination .page-link) { background: oklch(var(--b3)) !important; color: oklch(var(--c2)) !important; border: 0 !important; border-radius: var(--item-med-radius) !important; margin: 0 2px; }
+body.mf :is(.pagination .page-item.active .page-link) { background: oklch(var(--h4) / 30%) !important; color: oklch(var(--l3-c)) !important; }
+body.mf :is(.tox-tinymce, .editor_atto, .editor_atto_content_wrap, .filemanager, .fp-content) { border: 0 !important; box-shadow: var(--input-shadow); border-radius: var(--item-med-radius) !important; background: var(--textarea) !important; }
+body.mf iframe.tox-edit-area__iframe { color-scheme: normal; background: oklch(0.98 0 0); }
+body.mf select, body.mf .custom-select { background-color: oklch(var(--b3)) !important; color: oklch(var(--c2)) !important; }
+body.mf option { background: oklch(var(--b6)); color: oklch(var(--c2)); }
+
+/* ---- tab rows with many tabs scroll sideways instead of wrapping ---- */
+body.mf .page-content > .navlist .navlist-items { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; max-width: 100% !important; width: auto !important; }
+body.mf .page-content > .navlist .secondary-nav-item-link { white-space: nowrap; flex-shrink: 0; }
+body.mf .page-content > .navlist .secondary-nav-item { flex-shrink: 0; }
+
+/* ---- grader / gradebook tables: opaque cells (their sticky headers need a solid fill) ---- */
+body.mf .gradereport-grader-table :is(th, td, .cell) { background-color: oklch(var(--b5)) !important; color: oklch(var(--c2)) !important; }
+body.mf .gradereport-grader-table :is(thead th, th.header, .topleft, .lastrow th, .lastrow td) { background-color: oklch(var(--b6)) !important; color: oklch(var(--c1)) !important; }
+body.mf .gradereport-grader-table .btn-icon, body.mf .gradereport-grader-table .btn-link { background: transparent !important; box-shadow: none !important; }
+body.mf .stickyfooter, body.mf .sticky-footer { background: oklch(var(--b6) / 92%) !important; border-color: var(--card-border-base) !important; color: oklch(var(--c2)); backdrop-filter: var(--solarium); }
+body.mf :is(.user-grade, .gradingform_rubric, .generaltable) :is(th, td) { background-color: transparent; }
+
+/* ---- borders: Bootstrap's light utility borders become bleh's card border ---- */
+body.mf :is(.border, .border-top, .border-bottom, .border-start, .border-end, .border-left, .border-right, table, .table, .generaltable, hr, .dropdown-divider) { border-color: var(--card-border-base) !important; }
+body.mf hr { opacity: 1; }
+
+/* ---- login: bleh's modal surface ---- */
+body.mf .login-container, body.mf .loginform, body.mf .login-form {
+	background: oklch(var(--b5) / var(--solarium-opacity, 90%)) !important; backdrop-filter: var(--solarium); -webkit-backdrop-filter: var(--solarium);
+	border: 1px solid var(--card-border-base) !important; border-radius: var(--item-big-radius) !important; box-shadow: var(--overlay-shadow) !important;
+	color: oklch(var(--c2)); animation: modal_in .3s var(--trans-function-ani);
+}
+body.mf .login-container .loginform, body.mf .login-container .login-form { background: transparent !important; border: 0 !important; box-shadow: none !important; animation: none; backdrop-filter: none; }
+body.mf :is(.login-container h1, .login-container h2, .login-heading) { color: oklch(var(--c1)); font-size: var(--font-size-subheading); font-weight: var(--font-weight-medium); }
+body.mf #loginbtn { width: 100%; height: auto !important; aspect-ratio: auto; }
+body.mf .login-divider { border-color: var(--separator-base); color: oklch(var(--c3)); }
+
+@media (max-width: 980px) { #mf-root { padding-bottom: 76px; } }
+
+/* ---- masthead sizing for sites with a big logo / avatar + name in the user button ---- */
+#mf-root .home-logo-container img { height: 26px; width: auto; max-width: 140px; display: block; }
+#mf-root .home-link { padding-inline: 10px; }
+#mf-root .usermenu .userbutton, #mf-root .usermenu .usertext { display: flex; align-items: center; gap: 6px; }
+#mf-root .usermenu .avatars, #mf-root .usermenu .avatar { display: inline-flex; width: auto; height: auto; }
+#mf-root .usermenu :is(img.userpicture, .userinitials, .avatar img) { width: 28px !important; height: 28px !important; border-radius: 50% !important; font-size: 12px; margin: 0 !important; }
+#mf-root .usermenu .usertext { font-size: var(--font-size); color: oklch(var(--c2)); white-space: nowrap; max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+#mf-root .usermenu .dropdown-toggle::after { display: none; }
+#mf-root .usermenu .userbutton { flex-direction: row !important; flex-wrap: nowrap; }
+
+/* ---- activity pages ---- */
+body.mf .activity-header, body.mf .activity-description, body.mf .activity-information, body.mf [data-region=activity-information] { background: oklch(var(--b6) / 35%) !important; border: 1px solid var(--card-border-base) !important; border-radius: var(--item-big-radius); color: oklch(var(--c2)); }
+body.mf .activity-header { padding: 12px 14px; margin-bottom: var(--card-gap); }
+body.mf .activity-description { border: 0 !important; background: transparent !important; padding: 0; }
+body.mf :is(.bg-light, .bg-lighter, .bg-secondary-subtle, .bg-body-secondary, .bg-body-tertiary) { background: oklch(var(--b6) / 35%) !important; color: oklch(var(--c2)); }
+
+/* ---- keep Moodle's semantic colours and the (light) quiz boxes legible ---- */
+body.mf :is(.invalid-feedback, .text-danger, .error, .required .text-danger, .is-invalid ~ .invalid-feedback) { color: oklch(0.78 0.16 23) !important; }
+body.mf :is(.form-control.is-invalid, .is-invalid) { box-shadow: inset 0 0 0 1px oklch(0.7 0.19 23) !important; }
+body.mf .que .info { color: #1d2125; }
+body.mf .que .formulation :is(label, .qtext, .answer *) { color: inherit; }
+body.mf .que .formulation { color: #1d2125; }
+
+/* ---- bleh makes every <a> inline-flex (fine on Last.fm); Moodle wraps whole cards/blocks in anchors, which would collapse them.
+   :where() keeps this at the same specificity as bleh's own `a` rule, so it only undoes that rule and never beats a site's class styles ---- */
+:where(body.mf) :where(.col-main, .col-sidebar, .modal, .popover-region-container) a:where(:not(.btn, .dropdown-menu-clickable-item, .secondary-nav-item-link, .side-action, .see-more, [class*="d-flex"], [class*="d-inline-flex"])) { display: inline; }
+:where(body.mf) :where(.col-main, .col-sidebar) a:where(:has(> :is(div, figure, img, section, ul, h1, h2, h3, h4))) { display: block; }
+body.mf a::after { pointer-events: none; }
+
+/* bleh's .badge draws an absolutely-positioned icon; Moodle's badges are plain pills */
+body.mf .badge { position: relative; }
+body.mf .badge::before, body.mf .badge::after { display: none !important; }
+
+/* settings search: hide rows that don't match */
+body.mf [data-mf-nomatch] { display: none !important; }
+
+/* settings show the user's own accent, not the page artwork's */
+body.mf[data-mf-settings-open] { --hue-album: unset !important; --sat-album: unset !important; --lit-album: unset !important; }
+
+/* bleh's `.footer` is a page footer (120px padding, fixed width); Moodle uses it for empty block/card footers */
+body.mf .footer:not(#page-footer) { padding: 0; width: auto; margin: 0; display: block; gap: 0; min-width: 0; }
+
+/* leftovers found by fix.ts on dark themes (see src/fix.ts) */
+body.mf [data-mf-fix~=bg]:not(#_) { background-color: oklch(var(--b5) / 70%) !important; }
+body.mf [data-mf-fix~=tx]:not(#_) { color: oklch(var(--c2)) !important; }
+body.mf [data-mf-fix~=bd]:not(#_) { border-color: var(--card-border-base) !important; }
+
+/* the original page wrapper (hidden #page, header, dot-nav) would still reserve a viewport of height below our shell */
+body.mf #page-wrapper { height: 0 !important; min-height: 0 !important; overflow: hidden !important; }
+
+/* more bleh class collisions: Moodle's `.label` (the Label activity!), `.calendar` and `.time` */
+body.mf .label:not(.badge) { height: auto !important; max-height: none !important; padding: 0 !important; border-radius: 0 !important; display: block !important; font-size: inherit !important; overflow: visible !important; line-height: inherit !important; color: inherit !important; align-items: initial; min-height: 0 !important; }
+body.mf .label::before, body.mf .label::after { display: none !important; }
+body.mf :is(.calendarwrapper, .calendartable, .block_calendar_month, .minicalendar) .calendar, body.mf .calendar:not(.page-header *) { height: auto; display: revert; flex-direction: initial; gap: 0; }
+body.mf .time:not(.masthead *) { background: transparent; padding: 0; font-family: inherit; color: inherit; }
+body.mf .page-banner { opacity: .65; }
+
+/* the content region sat beside a themed sidebar column (col-xl-8…); our sidebar is separate, so it spans the whole main column */
+body.mf #region-main-box, body.mf #region-main-box[class*="col-"] { width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; padding-left: 0; padding-right: 0; }
+body.mf #page-content, body.mf .mf-moodle > #region-main-box { margin: 0; }
+
+/* kept hidden between the first parse and the shell being built (main.ts hideUntilReady) */
+html.mf-pending body { opacity: 0; } /* opacity, not visibility: visibility is inherited, so toggling it restyles every element */
+
+/* ---- course navigation (src/coursenav.ts) ---- */
+body.mf [data-mf-replaced] { display: none !important; }
+body.mf .mf-coursenav { display: flex; flex-direction: column; gap: 8px; }
+body.mf .mf-coursenav > h4 { margin: 0; font-size: var(--font-size-subheading); font-weight: var(--font-weight-medium); color: oklch(var(--c1)); }
+body.mf .mf-sections { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; max-height: min(60vh, 520px); overflow-y: auto; scrollbar-width: thin; }
+body.mf .mf-sections li[hidden] { display: none; }
+body.mf .mf-section {
+	display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: var(--radius-s); color: oklch(var(--c2)); text-decoration: none;
+	transition: background .15s var(--trans-function-ani), color .15s var(--trans-function-ani);
+}
+body.mf .mf-section:hover { background: var(--menu-item-hov); color: oklch(var(--c1)); }
+body.mf .mf-section[aria-current]:not([aria-current="false"]) { background: oklch(var(--h4) / 16%); color: oklch(var(--c1)); font-weight: var(--font-weight-medium); }
+body.mf .mf-section-thumb { flex: none; width: 32px; height: 32px; border-radius: 8px; background: oklch(var(--b3)) center / cover no-repeat; box-shadow: var(--avatar-shadow); }
+body.mf .mf-section[href^="#"] .mf-section-thumb { display: none; }
+body.mf .mf-section-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.mf .mf-section-count { flex: none; font-size: calc(var(--font-size) - 2px); color: oklch(var(--c3)); }
+/* the theme's prev / next pair becomes two tidy buttons */
+body.mf .section-navigation { display: flex; justify-content: space-between; gap: var(--button-list-gap); margin: 0 0 var(--card-gap) !important; padding: 0 !important; }
+body.mf .mf-moodle #region-main { margin-top: 0 !important; }
+body.mf .section-navigation .btn { max-width: 48vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---- update toast ---- */
+.mf-toast {
+	position: fixed; right: var(--card-gap, 16px); bottom: var(--card-gap, 16px); z-index: 9997; display: flex; align-items: center; gap: 10px; padding: 10px 12px 10px 16px;
+	background: oklch(var(--b5) / var(--solarium-opacity, 90%)); backdrop-filter: var(--solarium); -webkit-backdrop-filter: var(--solarium);
+	border: 1px solid var(--card-border-base); border-radius: var(--item-big-radius); box-shadow: var(--overlay-shadow); color: oklch(var(--c2));
+	animation: modal_in .3s var(--trans-function-ani); transition: opacity .3s, translate .3s;
+}
+.mf-toast.to-remove { opacity: 0; translate: 0 6px; }
+.mf-toast-text { display: flex; flex-direction: column; margin-right: 6px; }
+.mf-toast-text strong { color: oklch(var(--c1)); font-weight: var(--font-weight-medium); }
+.mf-toast-text span { color: oklch(var(--c3)); font-size: calc(var(--font-size) - 1px); }
+
+/* ---- file preview (src/preview.ts) ---- */
+.bleh-modal[data-modal-type="preview"] { width: min(1100px, 94vw); height: min(88vh, 900px); max-width: none; max-height: none; }
+[data-modal-type="preview"] > .bleh-modal-body { flex: 1; min-height: 0; display: flex; }
+.mf-preview-stage { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; overflow: auto; border-radius: var(--item-radius, 10px); background: oklch(var(--b3)); }
+.mf-preview-stage > iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+.mf-preview-stage > img, .mf-preview-stage > video { max-width: 100%; max-height: 100%; object-fit: contain; }
+.mf-preview-stage > audio { width: min(520px, 90%); }
+.mf-preview-note { color: oklch(var(--c3)); }
+.mf-preview-text { align-self: stretch; flex: 1; margin: 0; padding: var(--card-gap); overflow: auto; white-space: pre-wrap; word-break: break-word; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: oklch(var(--c2)); text-align: left; }
+.mf-preview-bar { display: flex; align-items: center; gap: 8px; }
+.mf-preview-bar .mf-spacer { flex: 1; }

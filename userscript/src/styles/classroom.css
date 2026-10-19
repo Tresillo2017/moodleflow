@@ -1,0 +1,76 @@
+/* Site-specific: the "classroom" theme (Alexia Classroom) login. Selectors come from its compiled stylesheet. */
+body.mf-login#page-login-index { background: oklch(var(--b6)) !important; }
+body#page-login-index #home-anim, body#page-login-index #masque, body#page-login-index #cache { opacity: .12; filter: saturate(.4); pointer-events: none; }
+body#page-login-index #xts-login-page { background: transparent !important; }
+body#page-login-index .xts-login-box {
+	background: oklch(var(--b5) / var(--solarium-opacity, 90%)) !important; backdrop-filter: var(--solarium); -webkit-backdrop-filter: var(--solarium);
+	border: 1px solid var(--card-border-base) !important; border-radius: var(--item-big-radius) !important; box-shadow: var(--overlay-shadow);
+	padding: 18px 6px 6px; animation: modal_in .3s var(--trans-function-ani); color: oklch(var(--c2));
+}
+body#page-login-index .xts-logo-login { margin-bottom: 14px; }
+body[data-bleh--theme_type="dark"]#page-login-index .xts-logo-login { filter: brightness(0) invert(1) opacity(.9); }
+body#page-login-index form#login input.textcolour, body#page-login-index form#login .form-input input {
+	background: var(--textarea) !important; color: oklch(var(--c1)) !important; border: 0 !important; box-shadow: var(--input-shadow) !important;
+	border-radius: var(--item-med-radius) !important; font-size: 15px !important; height: 46px !important; margin-bottom: 6px;
+}
+body#page-login-index form#login input:focus { box-shadow: var(--focused-input-shadow) !important; outline: none; }
+body#page-login-index form#login .submiting button, body#page-login-index #loginbtn {
+	background: oklch(var(--h3)) !important; color: oklch(var(--b7)) !important; border: 0 !important; border-radius: var(--item-big-radius) !important;
+	box-shadow: var(--shadow, none); transition: background-color var(--trans) var(--trans-function), scale .15s var(--trans-function);
+}
+body#page-login-index #loginbtn:hover { background: color-mix(in oklch, oklch(var(--h4)), oklch(var(--h3)) 80%) !important; }
+body#page-login-index #loginbtn:active { scale: .97; }
+body#page-login-index .desc .cookies { color: oklch(var(--c3)) !important; }
+body#page-login-index .desc .cookies a.btn > i { color: oklch(var(--l3-c)) !important; }
+body#page-login-index .classroom-multicenter-center { background: oklch(var(--b3)) !important; border-color: var(--card-border-base) !important; border-radius: var(--item-med-radius); color: oklch(var(--c2)); }
+
+/* ---- logged-in pages of the "classroom" theme ---- */
+body.mf #mf-root .masthead-nav-control { white-space: nowrap; }
+body.mf #mf-root .usermenu .dropdown-toggle { display: flex; align-items: center; gap: 8px; color: oklch(var(--c2)); white-space: nowrap; }
+body.mf #mf-root .usermenu .dropdown-toggle img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+body.mf #mf-root .usermenu .dropdown-toggle::after { display: none; }
+
+/* page toolbar (view toggle, history, search) */
+body.mf .classroom-actions { display: flex; align-items: center; gap: var(--button-list-gap); margin: 0 0 var(--card-gap); padding: 0; background: transparent !important; border: 0 !important; }
+body.mf .classroom-actions > a { display: flex; }
+body.mf .classroom-rounded-button-icon {
+	display: grid; place-items: center; width: auto !important; height: var(--button-height) !important; min-width: var(--button-height); padding: 0 8px; margin: 0 !important;
+	background: oklch(var(--b3)) !important; color: oklch(var(--c2)) !important; border-radius: var(--button-radius) !important; border: 0 !important; box-shadow: var(--interact-shadow) !important; cursor: pointer;
+	transition: background-color var(--trans) var(--trans-function);
+}
+body.mf .classroom-rounded-button-icon:hover { background: color-mix(in oklch, oklch(var(--b6)), oklch(var(--b3)) 90%) !important; }
+body.mf .classroom-rounded-button-icon .btn { background: transparent !important; box-shadow: none !important; padding: 0 !important; min-height: 0 !important; color: inherit !important; }
+body.mf .classroom-rounded-button-icon i { color: oklch(var(--c2)); font-size: 14px; }
+body.mf .classroom-input-search { display: flex !important; align-items: center; gap: 8px; flex: 1; max-width: 340px; height: var(--button-height); padding: 0 10px; background: var(--textarea) !important; box-shadow: var(--input-shadow); border-radius: var(--button-radius) !important; border: 0 !important; }
+body.mf .classroom-input-search input { background: transparent !important; border: 0 !important; box-shadow: none !important; color: oklch(var(--c1)) !important; height: 100%; padding: 0; flex: 1; outline: none; }
+body.mf .classroom-input-search i { color: oklch(var(--c3)); }
+
+/* course cards */
+body.mf .ac-course-card, body.mf .ac-course {
+	background: oklch(var(--b5) / 55%) !important; border: 0 !important; border-radius: var(--item-big-radius) !important; overflow: hidden; box-shadow: var(--group-shadow) !important;
+	transition: translate .25s var(--trans-function-ani), box-shadow .25s var(--trans-function-ani); position: relative;
+}
+body.mf .ac-course-card:hover { translate: 0 -2px; box-shadow: var(--group-shadow), 0 8px 24px oklch(var(--b7) / 35%) !important; }
+body.mf .ac-course-card-info { position: absolute; top: 8px; right: 8px; z-index: 2; width: auto !important; }
+body.mf .ac-course-card-img { border-radius: 0 !important; background-size: cover; background-position: center; margin: 0; }
+body.mf .ac-course-card-content { padding: 12px 14px; background: transparent !important; }
+body.mf .ac-course-card-content :is(h2, h2 a, a) { color: oklch(var(--c1)) !important; font-size: var(--font-size-subheading); font-weight: var(--font-weight-medium); }
+body.mf .ac-course-card :is(.badge, [class*="tag"], .ac-course-card-desc, .rounded-pill) { background: oklch(var(--b3)) !important; color: oklch(var(--c2)) !important; border-radius: 99px; }
+body.mf .classroom-avatar { box-shadow: 0 0 0 2px oklch(var(--b5)); }
+
+/* the theme's right-side panel toggle (white circle) */
+body.mf .toggle-side-right-toggle > span, body.mf [class*="toggle-side-right"] > span {
+	background: oklch(var(--b3)) !important; color: oklch(var(--c2)) !important; border-radius: 50% !important; box-shadow: var(--interact-shadow) !important; border: 0 !important;
+}
+body.mf [class*="toggle-side-right"] i { color: oklch(var(--c2)) !important; }
+body.mf .section-navigation { gap: var(--button-list-gap); }
+body.mf .section-navigation .larrow, body.mf .section-navigation .rarrow { color: inherit; }
+body.mf #page-wrapper .toggle-side-right-toggle > span, body.mf #page-wrapper .toggle-side-right-toggle > span:hover { background: oklch(var(--b3)) !important; }
+body.mf #mf-root .usermenu .dropdown-toggle { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+
+/* the theme's own header is replaced by the masthead (its popovers/user menu were moved into it) */
+body.mf #classroom-header { display: none !important; }
+
+/* sidebar "Navegación" tiles: let captions size themselves instead of overlapping the next tile */
+body.mf [data-block="xtend_course_navigation"] .classroom-course-section { height: auto !important; margin-bottom: 14px; }
+body.mf [data-block="xtend_course_navigation"] .classroom-course-section * { white-space: normal; }

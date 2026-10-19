@@ -1,0 +1,115 @@
+.setting-lists {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px var(--card-gap);
+
+	.setting-list-sep {
+		width: 1px;
+		background: oklch(var(--b4) / 60%);
+		display: none;
+	}
+}
+
+.setting-list-item {
+	display: flex;
+	align-items: center;
+	gap: var(--icon-gap);
+	text-align: left;
+
+	&:not(.current) {
+		color: var(--col-alt, oklch(var(--c3)));
+	}
+
+	--bg: oklch(var(--b2) / 40%);
+	--bg-hov: oklch(var(--b2) / 50%);
+	--bg-atv: oklch(var(--b2) / 60%);
+	--shadow: var(--normal-shadow);
+	color: var(--col, oklch(var(--c2)));
+
+	--button-height: 22px;
+	--button-sides: 6px;
+	--button-verts: 2px;
+	--radius: var(--radius-s);
+
+	& > .info {
+		flex: 1;
+		margin-right: 4px;
+	}
+
+	& > .bleh-icon {
+		--icon: var(--mask);
+		--icon-size: 16px;
+	}
+
+	.indicator {
+		--icon-size: 14px;
+	}
+
+	&.current + .setting-list-item:not(.current) {
+		margin-left: var(--card-gap);
+	}
+
+	&.current:not(.btn) {
+		cursor: grab;
+	}
+}
+
+.setting-list-item-ghost {
+	opacity: 0;
+}
+
+.setting-list-icon {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 2px;
+	background: oklch(var(--b2) / 30%);
+	border-radius: var(--radius-xs);
+	margin-right: 2px;
+
+	&[data-host] {
+		--icon: var(--mask);
+	}
+}
+
+.setting-list-item-btn {
+	--bg: transparent;
+	--bg-hov: oklch(var(--b2) / 30%);
+	--bg-atv: oklch(var(--b2) / 40%);
+	--shadow: none;
+	--col: inherit;
+
+	--button-height: 16px;
+	--button-sides: 0;
+	height: var(--button-height);
+	--icon-size: 12px !important;
+	--radius: var(--radius-xs);
+
+	&.big {
+		--button-height: 22px;
+		--icon-size: 14px;
+	}
+}
+
+.setting-list-buttons {
+	display: flex;
+	gap: 2px;
+
+	padding: 4px 0;
+
+	margin: -2px -4px;
+}
+
+.setting-list-item-info {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+
+	--icon-size: 14px;
+	pointer-events: none;
+}
+
+.empty-list-text {
+	color: oklch(var(--c3));
+	font-size: calc(var(--font-size) - 1px);
+}
