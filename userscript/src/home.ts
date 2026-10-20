@@ -203,12 +203,15 @@ async function render(): Promise<void> {
 	if (sig !== lastSig || current.loading) { lastSig = sig; paint({ list, name, events, loading: false }); }
 }
 
-/** Moodle's own dashboard content is hidden (attribute, not removal) while the new layout is on; late AJAX blocks too. */
+/** Moodle's own dashboard content is hidden (attribute, not removal) while the new layout is on; late AJAX blocks too.
+ *  Walks up from our root to the main box and hides every sibling on the way, so a site's own plugin content, wherever it
+ *  sits in the main region, goes too. */
 function hideMoodle(): void {
 	const on = settings.get().home && isDashboard() && !document.body.classList.contains("editing");
-	for (const el of document.querySelectorAll("#region-main > *, #region-main-box > *")) {
-		if (el.classList.contains("mf-home")) continue;
-		el.toggleAttribute("data-mf-replaced", on);
+	let node: Element | null = document.querySelector(".mf-home");
+	while (node?.parentElement && node.id !== "region-main-box" && !node.parentElement.classList.contains("mf-moodle")) {
+		for (const sib of node.parentElement.children) if (sib !== node) sib.toggleAttribute("data-mf-replaced", on);
+		node = node.parentElement;
 	}
 }
 

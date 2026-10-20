@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.16.10] - 2026-10-20
+### Changed
+- The dashboard's calendar is interactive: the week strip no longer opens the calendar page. Pick a day to list just its deadlines, page through weeks with the arrows, and jump back with "Today".
+
+### Fixed
+- The course grid and "Continue" were hidden on sites where the main region is wrapped twice (our own container was being hidden along with Moodle's); the site's own toolbar on the home page is hidden too.
+
 ## [0.16.9] - 2026-10-20
 ### Fixed
 - The dashboard and the user-menu icons now work on this site's page markup: pages without `#region-main` use `#region-main-box`, and the user menu's icons (and the update dot) also match the classroom theme's `.usermenu` dropdown.

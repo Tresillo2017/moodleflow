@@ -72,8 +72,10 @@ body.mf .mf-count { font-size: calc(var(--font-size) - 2px); padding: 0 8px; bor
 
 /* week strip */
 body.mf .mf-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-body.mf a.mf-day { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 4px; border-radius: var(--item-radius); color: oklch(var(--c3)); font-size: calc(var(--font-size) - 2px); text-decoration: none; transition: background .2s, translate .2s; }
-body.mf a.mf-day:hover { background: var(--menu-item-hov); translate: 0 -2px; }
+body.mf button.mf-day { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 4px; border: 0; background: none; border-radius: var(--item-radius); color: oklch(var(--c3)); font: inherit; font-size: calc(var(--font-size) - 2px); cursor: pointer; transition: background .2s, translate .2s, box-shadow .2s; }
+body.mf button.mf-day:hover { background: var(--menu-item-hov); translate: 0 -2px; }
+body.mf button.mf-day.picked { background: oklch(var(--h4) / 26%); box-shadow: inset 0 0 0 1px oklch(var(--h4)); }
+body.mf button.mf-day.picked .mf-day-num { color: oklch(var(--c1)); }
 body.mf .mf-day-num { font-size: var(--font-size); color: oklch(var(--c2)); font-weight: var(--font-weight-medium); }
 body.mf .mf-day.today { box-shadow: inset 0 0 0 1px oklch(var(--h4) / 50%); background: oklch(var(--h4) / 12%); }
 body.mf .mf-day.today .mf-day-num, body.mf .mf-day.busy .mf-day-num { color: oklch(var(--c1)); }
@@ -94,3 +96,9 @@ body.mf .mf-skel :is(.mf-tile-cover, .mf-skel-line)::before { content: ""; posit
 }
 body[data-bleh--reduced_motion="true"].mf :is(.mf-enter [data-i]) { animation: none; }
 @media (max-width: 760px) { body.mf .mf-block-head { flex-wrap: wrap; } body.mf .mf-filter { margin-left: 0; width: 100%; } }
+
+/* the calendar controls */
+body.mf .mf-cal-nav { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; padding: 0 8px; border: 0; border-radius: 99px; background: oklch(var(--b3) / 70%); color: oklch(var(--c2)); font: inherit; font-size: calc(var(--font-size) - 1px); cursor: pointer; transition: background .15s, color .15s; }
+body.mf .mf-cal-nav:hover { background: oklch(var(--h4) / 24%); color: oklch(var(--c1)); }
+body.mf .mf-week-range { margin: -4px 0 -2px; font-size: calc(var(--font-size) - 2px); color: oklch(var(--c3)); }
+body[data-mf-home].mf .mf-moodle > .classroom-actions { display: none; }
