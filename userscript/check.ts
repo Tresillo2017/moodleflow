@@ -10,6 +10,10 @@ const { lightness, tagsFor } = await import("./src/fix");
 const { isNewer, parseVersion } = await import("./src/updater");
 const { kindFor, isFileLink } = await import("./src/preview");
 const { neighbours } = await import("./src/coursenav");
+const { bucket } = await import("./src/deadlines");
+const { pushVisit } = await import("./src/resume");
+const { unseen } = await import("./src/unread");
+const { step, GO } = await import("./src/keys");
 
 // bleh's accent-from-image maths
 assert.equal(accentFromRgb(128, 128, 128).sat, 0);
@@ -87,3 +91,19 @@ assert.deepEqual(neighbours([{ active: false }, { active: true }, { active: fals
 assert.deepEqual(neighbours([{ active: true }, { active: false }]), { prev: undefined, next: 1 });
 assert.deepEqual(neighbours([{ active: false }]), {});
 console.log("ok");
+
+// dashboard / course extras
+{
+	const now = Date.UTC(2026, 9, 20, 12) / 1000;
+	assert.equal(bucket(now - 60, now), "Overdue");
+	assert.equal(bucket(now + 86400 * 10, now), "Later");
+	assert.ok(["Today", "Tomorrow"].includes(bucket(now + 600, now)));
+	const v = (url: string) => ({ url, title: url, sub: "", at: 0 });
+	assert.deepEqual(pushVisit([v("a"), v("b")], v("b")).map((x) => x.url), ["b", "a"]);
+	assert.equal(pushVisit([v("a"), v("b"), v("c")], v("d"), 3).length, 3);
+	assert.deepEqual(unseen(undefined, [1, 2]), []);
+	assert.deepEqual(unseen([1], [1, 2, 3]), [2, 3]);
+	assert.equal(step(-1, 1, 3), 0); assert.equal(step(-1, -1, 3), 2); assert.equal(step(2, 1, 3), 2); assert.equal(step(0, -1, 3), 0); assert.equal(step(-1, 1, 0), -1);
+	assert.ok(Object.keys(GO).every((k) => k.length === 1 && GO[k][1].startsWith("/")));
+}
+console.log("extras ok");

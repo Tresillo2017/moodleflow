@@ -10,7 +10,7 @@ export type KnownCourse = { title: string; url: string };
 let titles: Record<string, KnownCourse> = {};
 /** Courses seen on list pages, for the quick switcher. */
 export const knownCourses = (): KnownCourse[] => Object.values(titles);
-const CARD = ".course-card, .dashboard-card, .classroom-course-item, .coursebox, .ac-course-card, [data-course-id]";
+export const CARD = ".course-card, .dashboard-card, .classroom-course-item, .coursebox, .ac-course-card, [data-course-id]";
 
 export const cssUrl = (bg: string | null | undefined): string | null =>
 	bg?.match(/url\(\s*["']?([^"')]+)["']?\s*\)/)?.[1] ?? null;
@@ -134,6 +134,10 @@ export async function pickImage(): Promise<string | null> {
 	if (found) { cache[id] = found; GM_setValue(COURSE_CACHE, JSON.stringify(cache)); }
 	return found;
 }
+
+/** The course a card belongs to: its data attribute, else the id in its first link. */
+export const cardCourseId = (card: HTMLElement): string | undefined =>
+	card.dataset.courseId ?? card.querySelector<HTMLAnchorElement>('a.courselink[href*="id="], a[href*="course/view.php?id="], a[href*="id="]')?.href.match(/[?&]id=(\d+)/)?.[1];
 
 /** Remember each course card's image so other pages can show it. */
 function harvest(roots: ParentNode[]): void {

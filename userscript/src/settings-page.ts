@@ -234,7 +234,12 @@ export const TABS: Tab[] = [
 		panel(panelHead("layout-manage", "Courses"), group(
 			switchRow("course_nav", "Section list", "Replace the theme's tile carousel with a compact list of the course's sections"),
 			switchRow("file_preview", "Preview files", "Open PDFs, images, video, audio and text in a dialog (Ctrl/⌘/Shift-click opens normally)"),
-			switchRow("shortcuts", "Keyboard shortcuts", "[ and ] for the previous / next section, / for the quick switcher"))),
+			switchRow("unread", "New markers", "Flag activities that appeared since you last looked, and count them on course cards (courses you have opened)"),
+			switchRow("shortcuts", "Keyboard shortcuts", "[ ] sections · g then d/c/a/g/m/p to go places · j k through activities · ? for the full list"))),
+		panel(panelHead("layout-manage", "Dashboard"), group(
+			switchRow("deadlines", "Due soon", "List upcoming and overdue deadlines at the top of the dashboard"),
+			switchRow("resume", "Continue where you left off", "Jump back to the last pages you opened, and remember how far you scrolled"),
+			switchRow("course_tools", "Course card tools", "Pin, rename or hide courses on your dashboard and course list (stored in this browser)"))),
 	] },
 	{ id: "accessibility", name: "Accessibility", icon: "accessibility", build: () => [
 		panel(panelHead("accessibility", "Motion"), group(switchRow("reduced_motion", "Reduced motion", "Cut back on animations and transitions (also follows your device)"), switchRow("reduced_flashing", "Reduced flashing", "Tone down flashes, glows and quick pulses"))),

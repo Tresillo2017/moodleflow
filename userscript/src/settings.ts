@@ -66,8 +66,12 @@ export type Settings = {
 	wide: boolean;
 	course_nav: boolean; // sections list in the sidebar instead of the theme's tile carousel
 	file_preview: boolean; // open pdfs, images, video, audio and text in a dialog instead of leaving the page
-	shortcuts: boolean; // [ ] for previous / next section, / for the quick switcher
+	shortcuts: boolean; // [ ] sections, / switcher, g-then-letter to go places, j k activities, ? cheat sheet
 	update_check: boolean; // look for a newer moodleflow now and then
+	deadlines: boolean; // "Due soon" card on the dashboard
+	resume: boolean; // "Continue" card on the dashboard + scroll position restore
+	unread: boolean; // "new" markers on activities and course cards
+	course_tools: boolean; // pin / hide / rename buttons on course cards
 };
 
 export const DEFAULTS: Settings = {
@@ -80,6 +84,7 @@ export const DEFAULTS: Settings = {
 	seasonal: false, seasonal_particles: "all", seasonal_particles_fps: false, seasonal_overlays: true, seasonal_masks: true,
 	rabbit: true, branding_type: "logo", banner: true, bannerUrl: "", wide: false,
 	course_nav: true, file_preview: true, shortcuts: true, update_check: true,
+	deadlines: true, resume: true, unread: true, course_tools: true,
 };
 
 const KEY = "settings";

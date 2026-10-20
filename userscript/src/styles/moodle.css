@@ -349,3 +349,40 @@ body.mf .section-navigation .btn { max-width: 48vw; overflow: hidden; text-overf
 .mf-preview-text { align-self: stretch; flex: 1; margin: 0; padding: var(--card-gap); overflow: auto; white-space: pre-wrap; word-break: break-word; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: oklch(var(--c2)); text-align: left; }
 .mf-preview-bar { display: flex; align-items: center; gap: 8px; }
 .mf-preview-bar .mf-spacer { flex: 1; }
+
+/* ---- dashboard cards, new markers, course tools, shortcuts (deadlines / resume / unread / courses / keys .ts) ---- */
+body.mf .mf-home { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--card-gap); margin-bottom: var(--card-gap); }
+body.mf .mf-card { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border: 1px solid var(--card-border-base); border-radius: var(--item-big-radius); background: oklch(var(--b5) / var(--solarium-opacity, 90%)); }
+body.mf .mf-card > h4 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: var(--font-size-subheading); font-weight: var(--font-weight-medium); color: oklch(var(--c1)); }
+body.mf .mf-count, body.mf .mf-new-dot { font-size: calc(var(--font-size) - 2px); padding: 0 7px; border-radius: 99px; background: oklch(var(--h4) / 22%); color: oklch(var(--c1)); font-weight: var(--font-weight-medium); }
+body.mf .mf-due-list { display: flex; flex-direction: column; gap: 2px; max-height: 320px; overflow-y: auto; scrollbar-width: thin; }
+body.mf .mf-due-list h5 { margin: 8px 0 2px; font-size: calc(var(--font-size) - 1px); color: oklch(var(--c3)); text-transform: uppercase; letter-spacing: .04em; }
+body.mf .mf-due-list h5.mf-overdue { color: oklch(0.72 0.17 25); }
+body.mf .mf-due-group { list-style: none; margin: 0; padding: 0; }
+body.mf .mf-due { display: flex; align-items: center; gap: 10px; }
+body.mf .mf-due a, body.mf .mf-resume-main { display: flex; flex-direction: column; min-width: 0; padding: 4px 6px; border-radius: var(--radius-s); color: oklch(var(--c2)); text-decoration: none; flex: 1; }
+body.mf .mf-due a:hover, body.mf .mf-resume-main:hover { background: var(--menu-item-hov); color: oklch(var(--c1)); }
+body.mf .mf-due-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.mf .mf-due-meta { color: oklch(var(--c3)); font-size: calc(var(--font-size) - 2px); }
+body.mf .mf-due-tick { flex: none; width: 18px; height: 18px; border-radius: 50%; border: 2px solid oklch(var(--c3)); background: none; padding: 0; cursor: pointer; }
+body.mf .mf-due-tick:hover { border-color: oklch(var(--h4)); background: oklch(var(--h4) / 30%); }
+body.mf .mf-resume-more { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; font-size: calc(var(--font-size) - 1px); }
+body.mf .mf-resume-more a { display: block; padding: 3px 6px; color: oklch(var(--c3)); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.mf .mf-resume-more a:hover { color: oklch(var(--c1)); }
+body.mf li.activity[data-mf-new] { box-shadow: inset 3px 0 0 oklch(var(--h4)); }
+body.mf li.activity[data-mf-new] .activityname::after, body.mf li.activity[data-mf-new] .instancename::after { content: "new"; margin-left: 8px; padding: 0 6px; border-radius: 99px; font-size: calc(var(--font-size) - 3px); background: oklch(var(--h4) / 22%); color: oklch(var(--c1)); }
+body.mf li.activity[data-mf-focus] { outline: 2px solid oklch(var(--h4)); outline-offset: 2px; border-radius: var(--radius-s); }
+body.mf .mf-new-chip { display: flex; }
+body.mf .mf-new-dot { position: absolute; top: 8px; left: 8px; z-index: 3; }
+body.mf :is(.course-card, .dashboard-card, .classroom-course-item, .coursebox, [data-course-id]) { position: relative; }
+body.mf .mf-card-tools { position: absolute; top: 8px; right: 8px; z-index: 4; display: flex; gap: 4px; opacity: 0; transition: opacity .15s; }
+body.mf :is(.course-card, .dashboard-card, .classroom-course-item, .coursebox, [data-course-id]):is(:hover, :focus-within) > .mf-card-tools { opacity: 1; }
+body.mf .mf-card-tools button { width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; background: oklch(var(--b5) / 85%); color: oklch(var(--c1)); backdrop-filter: blur(6px); }
+body.mf .mf-card-tools button:hover { background: oklch(var(--h4) / 30%); }
+body.mf .mf-pinned > .mf-card-tools button:first-child { color: oklch(var(--h4)); }
+body.mf [data-mf-hidden] { display: none !important; }
+body.mf[data-mf-show-hidden] [data-mf-hidden] { display: revert !important; opacity: .5; }
+body.mf .mf-hidden-bar { margin-bottom: 8px; }
+body.mf .mf-keys { display: grid; grid-template-columns: max-content 1fr; gap: 8px 20px; margin: 0; }
+body.mf .mf-keys dt { font-family: var(--font-mono, monospace); color: oklch(var(--c1)); }
+body.mf .mf-keys dd { margin: 0; color: oklch(var(--c2)); }
