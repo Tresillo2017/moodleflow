@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         moodleflow
 // @namespace    https://github.com/Tresillo2017/moodleflow
-// @version      0.16.6
+// @version      0.16.7
 // @description  bleh (by katelyn) for Moodle: the same themes, glass, motion and layout
 // @updateURL    https://moodleflow.tomasps.workers.dev/moodleflow.meta.js
 // @downloadURL  https://moodleflow.tomasps.workers.dev/moodleflow.user.js
@@ -12,6 +12,7 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_registerMenuCommand
+// @grant        GM_setClipboard
 // @grant        GM_xmlhttpRequest
 // @connect      moodleflow.tomasps.workers.dev
 // ==/UserScript==

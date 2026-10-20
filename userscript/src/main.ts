@@ -114,7 +114,32 @@ function copyStructure(): void {
 		for (const c of el.children) walk(c, d + 1);
 	};
 	walk(document.body, 0);
-	void navigator.clipboard.writeText(lines.join("\n")).then(() => alert(`Copied ${lines.length} lines`), () => alert("Clipboard blocked; open the console instead"));
+	const text = lines.join("\n");
+	// the page's clipboard permission is often denied from a menu command: try the script manager's clipboard, and if that
+	// fails too, show the text in a box to copy by hand (or save as a file)
+	try { GM_setClipboard(text, "text"); alert(`Copied ${lines.length} lines`); return; } catch { /* fall through */ }
+	void navigator.clipboard.writeText(text).then(() => alert(`Copied ${lines.length} lines`), () => showStructure(text));
+}
+function showStructure(text: string): void {
+	const area = document.createElement("textarea");
+	area.value = text; area.readOnly = true; area.className = "input"; area.style.cssText = "width:100%;height:55vh;font:12px/1.4 ui-monospace,monospace;white-space:pre";
+	const save = document.createElement("a");
+	save.className = "btn flex-button"; save.textContent = "Save as file"; save.download = "moodleflow-structure.txt"; save.href = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+	const copy = document.createElement("button");
+	copy.type = "button"; copy.className = "btn flex-button"; copy.textContent = "Copy";
+	copy.onclick = () => { area.select(); copy.textContent = document.execCommand("copy") ? "Copied" : "Press Ctrl+C"; };
+	const close = document.createElement("button");
+	close.type = "button"; close.className = "btn flex-button"; close.textContent = "Close";
+	const wrap = document.createElement("div");
+	wrap.className = "bleh-modals has-dialog";
+	const modal = document.createElement("div");
+	modal.className = "bleh-modal"; modal.setAttribute("role", "dialog"); modal.style.cssText = "width:min(900px,94vw)";
+	const title = document.createElement("div"); title.className = "bleh-modal-title"; title.textContent = "Page structure";
+	const body = document.createElement("div"); body.className = "bleh-modal-body"; body.append(area);
+	const bar = document.createElement("div"); bar.className = "mf-preview-bar"; bar.append(copy, save, close);
+	modal.append(title, body, bar); wrap.append(modal); document.body.append(wrap);
+	close.onclick = () => wrap.remove();
+	area.focus(); area.select();
 }
 GM_registerMenuCommand("moodleflow: copy page structure", copyStructure);
 document.addEventListener("moodleflow:copy-structure", copyStructure);

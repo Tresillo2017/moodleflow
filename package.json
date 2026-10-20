@@ -1,6 +1,6 @@
 {
 	"name": "moodleflow",
-	"version": "0.16.6",
+	"version": "0.16.7",
 	"private": true,
 	"description": "Landing site for moodleflow, a Violentmonkey/Tampermonkey userscript that brings bleh's look to Moodle.",
 	"scripts": {

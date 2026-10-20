@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.16.7] - 2026-10-20
+### Fixed
+- "Copy page structure" no longer fails with "Clipboard blocked": it uses the script manager's clipboard, and otherwise shows the text in a box with Copy / Save as file buttons.
+
 ## [0.16.6] - 2026-10-20
 ### Fixed
 - The new dashboard now also replaces the "current subjects" page (`/local/docencia/actual/`) that this site lands on after login.
