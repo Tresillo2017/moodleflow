@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.16.5] - 2026-10-20
+### Changed
+- The in-app updater checks every 30 minutes (and when you come back to the tab) instead of every 12 hours, shows a dot on your avatar and an "Update to vX" entry in the user menu while an update is waiting, and walks you through it: Update opens the install dialog, then offers "Reload now" once it closes. "Later" snoozes the toast for 6 hours instead of forever.
+
 ## [0.16.4] - 2026-10-20
 ### Changed
 - The new dashboard also loads on the site front page (when logged in), paints instantly from what it remembers (skeleton cards on the first visit), and has a polished look: drifting accent glow, staggered entrance, pointer-follow highlights, covers that zoom, progress bars that grow, clickable week days, and a course filter. All of it respects reduced motion.

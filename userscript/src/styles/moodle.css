@@ -628,3 +628,12 @@ body.mf .mf-skel :is(.mf-course-cover, .mf-skel-line)::before { content: ""; pos
 }
 body[data-bleh--reduced_motion="true"].mf :is(.mf-blob, .mf-enter [data-i], .mf-enter .mf-chip, .mf-enter .mf-quick-link) { animation: none; }
 body.mf .mf-home-courses-head h4 + .mf-see-all { margin-left: auto; }
+
+/* ---- updater: menu entry, avatar dot, install / reload states ---- */
+body.mf #user-action-menu #mf-update { --mask: var(--icon-16-download); color: oklch(var(--h4)); font-weight: var(--font-weight-medium); }
+body[data-mf-update].mf #user-menu-toggle { position: relative; }
+body.mf #user-menu-toggle .mf-update-dot { position: absolute; top: 2px; right: 2px; width: 9px; height: 9px; border-radius: 50%; background: oklch(var(--h4)); box-shadow: 0 0 0 2px oklch(var(--b5)); animation: mf-ping 2s ease-out infinite; }
+@keyframes mf-ping { 0% { box-shadow: 0 0 0 2px oklch(var(--b5)), 0 0 0 2px oklch(var(--h4) / 60%); } 100% { box-shadow: 0 0 0 2px oklch(var(--b5)), 0 0 0 10px oklch(var(--h4) / 0%); } }
+.mf-update-toast.ready { border-color: oklch(0.72 0.17 150 / 60%); }
+.mf-update-toast .mf-spinner { flex: none; width: 20px; height: 20px; }
+@media (prefers-reduced-motion: reduce) { body.mf #user-menu-toggle .mf-update-dot { animation: none; } }

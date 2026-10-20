@@ -5,7 +5,7 @@ import * as s from "./settings";
 import { DEFAULTS, Settings, THEMES } from "./settings";
 import { h, Kid } from "./dom";
 import { SEASONS, seasonState, rangeLabel } from "./seasonal";
-import { checkForUpdate, current, INSTALL_URL } from "./updater";
+import { checkForUpdate, current, startUpdate } from "./updater";
 
 type Cond = (st: Settings) => boolean;
 const updaters: ((st: Settings) => void)[] = [];
@@ -119,7 +119,7 @@ function updateRow(): HTMLElement {
 	const body = h("p", { class: "setting-body" }, `You have v${current()}`);
 	let latest = "";
 	b.onclick = async () => {
-		if (latest) { window.open(INSTALL_URL, "_blank", "noopener"); return; }
+		if (latest) { startUpdate(latest); return; }
 		b.textContent = "Checking…";
 		const r = await checkForUpdate(true);
 		if (r.error) { body.textContent = `Couldn't check (${r.error})`; b.textContent = "Try again"; }
