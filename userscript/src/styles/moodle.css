@@ -476,3 +476,30 @@ body.mf .submissionstatus:not(.submissionstatussubmitted) { color: oklch(0.8 0.1
 body.mf .singlebutton .btn, body.mf form.singlebutton button[type="submit"] { border-radius: 99px; padding-inline: 20px; }
 body.mf .col-sidebar a.mf-section { color: oklch(var(--c2)); }
 body.mf .col-sidebar a.mf-section:hover, body.mf .col-sidebar a.mf-section[aria-current]:not([aria-current="false"]) { color: oklch(var(--c1)); }
+
+/* ---- user menu: an icon in front of every entry, picked from where the link goes (bleh's own icon masks) ---- */
+body.mf #user-action-menu .dropdown-item { display: flex; align-items: center; gap: 10px; --mask: var(--icon-16-dot); }
+body.mf #user-action-menu .dropdown-item::before {
+	content: ""; flex: none; width: 16px; height: 16px; background: currentColor; opacity: .75;
+	-webkit-mask: var(--mask) center / contain no-repeat; mask: var(--mask) center / contain no-repeat;
+}
+body.mf #user-action-menu .dropdown-item:is(:hover, :focus-visible)::before { opacity: 1; }
+body.mf #user-action-menu .dropdown-item[href*="/my/courses"] { --mask: var(--icon-16-library); }
+body.mf #user-action-menu .dropdown-item[href$="/my/"], body.mf #user-action-menu .dropdown-item[href*="/my/index"] { --mask: var(--icon-16-layout-manage); }
+body.mf #user-action-menu .dropdown-item:is([href*="/user/profile.php"], [href*="/user/view.php"]) { --mask: var(--icon-16-profile); }
+body.mf #user-action-menu .dropdown-item[href*="/grade/report"] { --mask: var(--icon-16-chart-bar); }
+body.mf #user-action-menu .dropdown-item[href*="/calendar/"] { --mask: var(--icon-16-calendar); }
+body.mf #user-action-menu .dropdown-item[href*="/user/files.php"] { --mask: var(--icon-16-page); }
+body.mf #user-action-menu .dropdown-item[href*="/message/index.php"] { --mask: var(--icon-16-inbox); }
+body.mf #user-action-menu .dropdown-item:is([href*="/reportbuilder/"], [href*="/report/"]) { --mask: var(--icon-16-chart-line); }
+body.mf #user-action-menu .dropdown-item[href*="/badges/"] { --mask: var(--icon-16-obsession); }
+body.mf #user-action-menu .dropdown-item:is([href*="/user/preferences.php"], [href*="/user/edit.php"]) { --mask: var(--icon-16-settings); }
+body.mf #user-action-menu .dropdown-item[href*="#moodleflow"] { --mask: var(--icon-16-bleh); }
+body.mf #user-action-menu .dropdown-item[href*="/course/switchrole.php"] { --mask: var(--icon-16-profile-shortcut); }
+body.mf #user-action-menu .dropdown-item[href*="/admin/"] { --mask: var(--icon-16-advanced); }
+body.mf #user-action-menu .dropdown-item[href*="/login/logout.php"] { --mask: var(--icon-16-logout); }
+body.mf #user-action-menu .dropdown-item[href*="/login/logout.php"]:hover { color: oklch(0.72 0.17 25); }
+/* the language submenu: its entry in the main menu gets the globe, its back link an arrow, the languages themselves no icon */
+body.mf #user-action-menu .carousel-item:first-child .carousel-navigation-link { --mask: var(--icon-16-language); }
+body.mf #user-action-menu .carousel-item:not(:first-child) .carousel-navigation-link { --mask: var(--icon-16-arrow-left); }
+body.mf #user-action-menu .dropdown-item[href*="lang="]::before { display: none; }

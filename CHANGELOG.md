@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Added
+- Icons in the user menu: every entry (profile, grades, calendar, messages, files, reports, preferences, language, log out) gets one of bleh's icons.
+
 ## [0.16.2] - 2026-10-20
 ### Added
 - Activities (assignments, forums, pages, books …) open in a popout over the course instead of a new page; Ctrl/⌘/Shift-click still opens normally. Toggle: "Open activities in a popout".
