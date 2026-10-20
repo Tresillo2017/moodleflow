@@ -96,7 +96,7 @@ export function startUpdate(latest = read().latest ?? ""): void {
 // ---- the user-menu entry, kept in sync with what we know ----
 function syncMenu(latest: string | undefined, newer: boolean): void {
 	document.body.toggleAttribute("data-mf-update", newer);
-	const toggle = document.getElementById("user-menu-toggle");
+	const toggle = document.getElementById("user-menu-toggle") ?? document.querySelector<HTMLElement>(".usermenu .dropdown-toggle, .usermenu .action-menu-trigger a");
 	toggle?.querySelector(".mf-update-dot")?.remove();
 	if (newer && toggle) toggle.append(h("span", { class: "mf-update-dot", title: "A moodleflow update is available" }));
 	document.getElementById("mf-update")?.remove();

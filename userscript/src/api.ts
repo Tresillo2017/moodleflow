@@ -39,7 +39,7 @@ export function homeSlot(zone: Zone = "main"): HTMLElement | null {
 	if (!isDashboard() || document.body.classList.contains("editing")) return null;
 	let root = document.querySelector<HTMLElement>(".mf-home");
 	if (!root) {
-		const main = document.querySelector("#region-main");
+		const main = document.querySelector("#region-main") ?? document.querySelector("#region-main-box"); // this site's plugin pages have no #region-main
 		if (!main) return null;
 		root = document.createElement("div");
 		root.className = "mf-home";

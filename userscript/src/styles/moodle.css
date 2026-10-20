@@ -478,32 +478,32 @@ body.mf .col-sidebar a.mf-section { color: oklch(var(--c2)); }
 body.mf .col-sidebar a.mf-section:hover, body.mf .col-sidebar a.mf-section[aria-current]:not([aria-current="false"]) { color: oklch(var(--c1)); }
 
 /* ---- user menu: an icon in front of every entry, picked from where the link goes (bleh's own icon masks) ---- */
-body.mf #user-action-menu .dropdown-item { display: flex; align-items: center; gap: 10px; --mask: var(--icon-16-dot); }
-body.mf #user-action-menu .dropdown-item::before {
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item { display: flex; align-items: center; gap: 10px; --mask: var(--icon-16-dot); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item::before {
 	content: ""; flex: none; width: 16px; height: 16px; background: currentColor; opacity: .75;
 	-webkit-mask: var(--mask) center / contain no-repeat; mask: var(--mask) center / contain no-repeat;
 }
-body.mf #user-action-menu .dropdown-item:is(:hover, :focus-visible)::before { opacity: 1; }
-body.mf #user-action-menu .dropdown-item[href*="/my/courses"] { --mask: var(--icon-16-library); }
-body.mf #user-action-menu .dropdown-item[href$="/my/"], body.mf #user-action-menu .dropdown-item[href*="/my/index"] { --mask: var(--icon-16-layout-manage); }
-body.mf #user-action-menu .dropdown-item:is([href*="/user/profile.php"], [href*="/user/view.php"]) { --mask: var(--icon-16-profile); }
-body.mf #user-action-menu .dropdown-item[href*="/grade/report"] { --mask: var(--icon-16-chart-bar); }
-body.mf #user-action-menu .dropdown-item[href*="/calendar/"] { --mask: var(--icon-16-calendar); }
-body.mf #user-action-menu .dropdown-item[href*="/user/files.php"] { --mask: var(--icon-16-page); }
-body.mf #user-action-menu .dropdown-item[href*="/message/index.php"] { --mask: var(--icon-16-inbox); }
-body.mf #user-action-menu .dropdown-item:is([href*="/reportbuilder/"], [href*="/report/"]) { --mask: var(--icon-16-chart-line); }
-body.mf #user-action-menu .dropdown-item[href*="/badges/"] { --mask: var(--icon-16-obsession); }
-body.mf #user-action-menu .dropdown-item:is([href*="/user/preferences.php"], [href*="/user/edit.php"]) { --mask: var(--icon-16-settings); }
-body.mf #user-action-menu .dropdown-item[href*="#moodleflow"] { --mask: var(--icon-16-bleh); }
-body.mf #user-action-menu #mf-news { --mask: var(--icon-16-changelog); }
-body.mf #user-action-menu .dropdown-item[href*="/course/switchrole.php"] { --mask: var(--icon-16-profile-shortcut); }
-body.mf #user-action-menu .dropdown-item[href*="/admin/"] { --mask: var(--icon-16-advanced); }
-body.mf #user-action-menu .dropdown-item[href*="/login/logout.php"] { --mask: var(--icon-16-logout); }
-body.mf #user-action-menu .dropdown-item[href*="/login/logout.php"]:hover { color: oklch(0.72 0.17 25); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item:is(:hover, :focus-visible)::before { opacity: 1; }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item[href*="/my/courses"] { --mask: var(--icon-16-library); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item[href$="/my/"], body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item[href*="/my/index"] { --mask: var(--icon-16-layout-manage); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item:is([href*="/user/profile.php"], [href*="/user/view.php"]) { --mask: var(--icon-16-profile); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item[href*="/grade/report"] { --mask: var(--icon-16-chart-bar); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item[href*="/calendar/"] { --mask: var(--icon-16-calendar); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item[href*="/user/files.php"] { --mask: var(--icon-16-page); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item[href*="/message/index.php"] { --mask: var(--icon-16-inbox); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item:is([href*="/reportbuilder/"], [href*="/report/"]) { --mask: var(--icon-16-chart-line); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item[href*="/badges/"] { --mask: var(--icon-16-obsession); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item:is([href*="/user/preferences.php"], [href*="/user/edit.php"]) { --mask: var(--icon-16-settings); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item[href*="#moodleflow"] { --mask: var(--icon-16-bleh); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) #mf-news { --mask: var(--icon-16-changelog); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item[href*="/course/switchrole.php"] { --mask: var(--icon-16-profile-shortcut); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item[href*="/admin/"] { --mask: var(--icon-16-advanced); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item[href*="/login/logout.php"] { --mask: var(--icon-16-logout); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item[href*="/login/logout.php"]:hover { color: oklch(0.72 0.17 25); }
 /* the language submenu: its entry in the main menu gets the globe, its back link an arrow, the languages themselves no icon */
-body.mf #user-action-menu .carousel-item:first-child .carousel-navigation-link { --mask: var(--icon-16-language); }
-body.mf #user-action-menu .carousel-item:not(:first-child) .carousel-navigation-link { --mask: var(--icon-16-arrow-left); }
-body.mf #user-action-menu .dropdown-item[href*="lang="]::before { display: none; }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .carousel-item:first-child .carousel-navigation-link { --mask: var(--icon-16-language); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .carousel-item:not(:first-child) .carousel-navigation-link { --mask: var(--icon-16-arrow-left); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) .dropdown-item[href*="lang="]::before { display: none; }
 
 /* ---- our own text buttons: centred content and even padding (bleh's .btn assumes its own fixed-height markup) ---- */
 body.mf :is(.mf-quick-link, .mf-continue-go, .mf-toast .btn, .news-update-action, .mf-preview-bar .btn, .mf-new-chip .btn, .mf-hidden-bar .btn, .mf-coursenav .btn, .mf-popout-frame ~ .btn) {
@@ -520,10 +520,10 @@ body.mf .mf-chip { display: inline-flex; align-items: center; min-height: 26px; 
 body.mf .mf-count { display: inline-flex; align-items: center; min-height: 20px; padding-inline: 8px; }
 
 /* ---- updater: menu entry, avatar dot, install / reload states ---- */
-body.mf #user-action-menu #mf-update { --mask: var(--icon-16-download); color: oklch(var(--h4)); font-weight: var(--font-weight-medium); }
+body.mf :is(#user-action-menu, .usermenu .dropdown-menu) #mf-update { --mask: var(--icon-16-download); color: oklch(var(--h4)); font-weight: var(--font-weight-medium); }
 body[data-mf-update].mf #user-menu-toggle { position: relative; }
-body.mf #user-menu-toggle .mf-update-dot { position: absolute; top: 2px; right: 2px; width: 9px; height: 9px; border-radius: 50%; background: oklch(var(--h4)); box-shadow: 0 0 0 2px oklch(var(--b5)); animation: mf-ping 2s ease-out infinite; }
+body.mf :is(#user-menu-toggle, .usermenu .dropdown-toggle) .mf-update-dot { position: absolute; top: 2px; right: 2px; width: 9px; height: 9px; border-radius: 50%; background: oklch(var(--h4)); box-shadow: 0 0 0 2px oklch(var(--b5)); animation: mf-ping 2s ease-out infinite; }
 @keyframes mf-ping { 0% { box-shadow: 0 0 0 2px oklch(var(--b5)), 0 0 0 2px oklch(var(--h4) / 60%); } 100% { box-shadow: 0 0 0 2px oklch(var(--b5)), 0 0 0 10px oklch(var(--h4) / 0%); } }
 .mf-update-toast.ready { border-color: oklch(0.72 0.17 150 / 60%); }
 .mf-update-toast .mf-spinner { flex: none; width: 20px; height: 20px; }
-@media (prefers-reduced-motion: reduce) { body.mf #user-menu-toggle .mf-update-dot { animation: none; } }
+@media (prefers-reduced-motion: reduce) { body.mf :is(#user-menu-toggle, .usermenu .dropdown-toggle) .mf-update-dot { animation: none; } }

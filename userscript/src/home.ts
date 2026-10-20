@@ -206,7 +206,7 @@ async function render(): Promise<void> {
 /** Moodle's own dashboard content is hidden (attribute, not removal) while the new layout is on; late AJAX blocks too. */
 function hideMoodle(): void {
 	const on = settings.get().home && isDashboard() && !document.body.classList.contains("editing");
-	for (const el of document.querySelectorAll("#region-main > *")) {
+	for (const el of document.querySelectorAll("#region-main > *, #region-main-box > *")) {
 		if (el.classList.contains("mf-home")) continue;
 		el.toggleAttribute("data-mf-replaced", on);
 	}
