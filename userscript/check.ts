@@ -14,6 +14,8 @@ const { bucket } = await import("./src/deadlines");
 const { pushVisit } = await import("./src/resume");
 const { unseen } = await import("./src/unread");
 const { step, GO } = await import("./src/keys");
+const { isActivityLink } = await import("./src/popout");
+const { isFresh, burst } = await import("./src/celebrate");
 
 // bleh's accent-from-image maths
 assert.equal(accentFromRgb(128, 128, 128).sat, 0);
@@ -107,3 +109,14 @@ console.log("ok");
 	assert.ok(Object.keys(GO).every((k) => k.length === 1 && GO[k][1].startsWith("/")));
 }
 console.log("extras ok");
+
+{
+	const o = "https://x.test";
+	assert.ok(isActivityLink(new URL(o + "/mod/assign/view.php?id=5"), o));
+	assert.ok(!isActivityLink(new URL(o + "/mod/quiz/view.php?id=5"), o));
+	assert.ok(!isActivityLink(new URL(o + "/mod/resource/view.php?id=5"), o));
+	assert.ok(!isActivityLink(new URL("https://evil.test/mod/assign/view.php?id=5"), o));
+	assert.ok(isFresh(1000, 5000) && !isFresh(1000, 1000 + 3 * 60e3) && !isFresh(5000, 1000));
+	assert.equal(burst(1000, 800, 200, 20, () => 0.5).length, 20);
+}
+console.log("popout/celebrate ok");

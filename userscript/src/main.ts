@@ -17,6 +17,8 @@ import { mountResume } from "./resume";
 import { mountUnread } from "./unread";
 import { mountCourseTools } from "./courses";
 import { mountKeys } from "./keys";
+import { mountPopout, FRAME_NAME } from "./popout";
+import { mountCelebrate } from "./celebrate";
 import { applyLazy } from "./lazy";
 import { loadFonts } from "./fonts";
 import * as settings from "./settings";
@@ -28,6 +30,9 @@ mark("script");
 // debug: localStorage["mf:off"] = "shell,fix,backdrop,…" skips those modules (used to bisect performance problems)
 const OFF = new Set((localStorage.getItem("mf:off") ?? "").split(",").filter(Boolean));
 const on = (m: string) => !OFF.has(m);
+// iframes are only ours when they are the activity popout (H5P, embeds and the like must stay untouched)
+const FRAME = window.top !== window && window.name === FRAME_NAME;
+const SKIP = window.top !== window && !FRAME;
 let active = false; // false on layouts we leave alone
 
 /** Until the shell is built the page shows Moodle's own layout, which then jumps into bleh's. Keep it hidden (on a
@@ -54,9 +59,10 @@ function when(ready: () => unknown, fn: () => void): void {
 
 // The <body> element (and its class list) exists before any content paints, so we can decide per page type up front:
 // embedded/popup/print/secure layouts are left completely untouched.
-when(() => document.body, () => {
+when(() => document.body && !SKIP, () => {
 	if (NO_SHELL_LAYOUTS.test(document.body.className)) return;
 	settings.load();
+	if (FRAME) document.documentElement.classList.add("mf-frame");
 	const style = timed("inject-css", () => GM_addStyle(bleh + moodle + classroom));
 	// Moodle's stylesheets load after ours and win equal-specificity ties against bleh's rules, so keep ours last
 	const keepLast = () => { if (style.parentNode && style.nextElementSibling) style.parentNode.append(style); };
@@ -77,8 +83,9 @@ function start(): void {
 	timed("icons", () => { if (on("icons")) { mountIcons(); mountDecorate(); } });
 	if (on("shell")) timed("shell", buildShell);
 	mark("shell");
+	if (FRAME) { mountCelebrate(); if (on("fix")) timed("fix", mountFix); reveal(); return; } // the popout shows just the page's content
 	timed("settings-route", installSettingsRoute);
-	timed("extras", () => { if (on("extras")) { mountSeasonal(); mountEffects(); mountRabbit(); mountCourseNav(); mountPreview(); mountUpdater(); mountDeadlines(); mountResume(); mountUnread(); mountCourseTools(); mountKeys(); } });
+	timed("extras", () => { if (on("extras")) { mountSeasonal(); mountEffects(); mountRabbit(); mountCourseNav(); mountPreview(); mountUpdater(); mountDeadlines(); mountResume(); mountUnread(); mountCourseTools(); mountKeys(); mountPopout(); mountCelebrate(); } });
 	if (on("fix")) timed("fix", mountFix);
 	reveal();
 	mark("mounted");

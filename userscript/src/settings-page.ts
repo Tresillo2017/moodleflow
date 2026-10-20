@@ -234,6 +234,8 @@ export const TABS: Tab[] = [
 		panel(panelHead("layout-manage", "Courses"), group(
 			switchRow("course_nav", "Section list", "Replace the theme's tile carousel with a compact list of the course's sections"),
 			switchRow("file_preview", "Preview files", "Open PDFs, images, video, audio and text in a dialog (Ctrl/⌘/Shift-click opens normally)"),
+			switchRow("activity_popup", "Open activities in a popout", "Assignments, forums, pages and more open over the course so closing them brings you right back (Ctrl/⌘/Shift-click opens normally)"),
+			switchRow("confetti", "Celebrate submissions", "A little confetti when an assignment is submitted"),
 			switchRow("unread", "New markers", "Flag activities that appeared since you last looked, and count them on course cards (courses you have opened)"),
 			switchRow("shortcuts", "Keyboard shortcuts", "[ ] sections · g then d/c/a/g/m/p to go places · j k through activities · ? for the full list"))),
 		panel(panelHead("layout-manage", "Dashboard"), group(

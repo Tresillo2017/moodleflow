@@ -418,3 +418,61 @@ body.mf .gradingform_rubric .level-wrapper .radio, body.mf .gradingform_rubric .
 	body.mf .gradingform_rubric table.criteria, body.mf .gradingform_rubric .criterion, body.mf .gradingform_rubric .criterion > td, body.mf .gradingform_rubric .criterion > .levels > table, body.mf .gradingform_rubric .levels tbody, body.mf .gradingform_rubric .levels tr, body.mf .gradingform_rubric td.level { display: block; width: 100% !important; margin: 0; }
 	body.mf .gradingform_rubric td.level { margin-bottom: 8px; }
 }
+
+/* ---- activity popout (popout.ts) ---- */
+.bleh-modal[data-modal-type="activity"] { width: min(1100px, 95vw); height: min(90vh, 960px); max-width: none; max-height: none; }
+[data-modal-type="activity"] > .bleh-modal-body { flex: 1; min-height: 0; display: flex; position: relative; padding: 0; }
+.mf-popout-frame { flex: 1; width: 100%; height: 100%; border: 0; border-radius: var(--item-radius, 12px); background: transparent; color-scheme: normal; }
+.mf-popout-loading { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.mf-spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid oklch(var(--c3) / 40%); border-top-color: oklch(var(--h4)); animation: mf-spin .7s linear infinite; }
+@keyframes mf-spin { to { rotate: 360deg; } }
+/* frame mode: just the page's content, on the theme's own backdrop */
+html.mf-frame body { background: transparent !important; }
+html.mf-frame :is(.masthead, #mf-banner, .page-background-image, .page-banner, .content-side, #page-footer, .mf-toast:not([role]), [data-mf-settings], .page-header, nav.navlist, .snow-container, .rain-container, .mf-root-glow) { display: none !important; }
+html.mf-frame #mf-root, html.mf-frame .page-content { padding-top: 8px !important; margin-top: 0 !important; }
+html.mf-frame .col-main { max-width: 100% !important; }
+
+/* ---- submit: working state, landing pop, confetti (celebrate.ts) ---- */
+body.mf :is(.btn, button, input[type="submit"]).mf-busy { pointer-events: none; position: relative; overflow: hidden; opacity: .9; }
+body.mf :is(.btn, button, input[type="submit"]).mf-busy::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 20%, oklch(1 0 0 / 35%) 50%, transparent 80%); translate: -100% 0; animation: mf-sheen 1s ease-in-out infinite; }
+@keyframes mf-sheen { to { translate: 100% 0; } }
+body.mf .mf-pop { position: relative; animation: mf-pop .6s cubic-bezier(.2, 1.4, .4, 1) both; box-shadow: 0 0 0 2px oklch(0.78 0.17 150 / 70%), 0 8px 30px oklch(0.78 0.17 150 / 25%); border-radius: var(--item-radius, 10px); }
+body.mf .mf-pop::before { content: "✓"; display: inline-grid; place-items: center; width: 1.4em; height: 1.4em; margin-right: .5em; border-radius: 50%; background: oklch(0.72 0.17 150); color: #fff; font-weight: 700; animation: mf-tick .5s .25s cubic-bezier(.2, 1.6, .4, 1) both; }
+@keyframes mf-pop { from { scale: .94; opacity: 0; } to { scale: 1; opacity: 1; } }
+@keyframes mf-tick { from { scale: 0; rotate: -40deg; } to { scale: 1; rotate: 0; } }
+body canvas.mf-confetti { display: block !important; position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 100000; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { body.mf .mf-pop, body.mf .mf-pop::before, .mf-spinner, body.mf .mf-busy::after { animation: none; } }
+html.mf-frame :is(.content, .content-main, .col-main, .page-content, .page-content > .row) { background: none !important; border: 0 !important; box-shadow: none !important; }
+
+/* ---- layout pass: course page sections are single cards, activities are rows with an icon, blocks read like bleh's sidebar ---- */
+body.mf .course-content ul.topics, body.mf .course-content ul.weeks { display: flex; flex-direction: column; gap: var(--card-gap); margin: 0; padding: 0; list-style: none; }
+body.mf :is(.course-section, li.section) { border: 1px solid var(--card-border-base) !important; border-radius: var(--item-big-radius) !important; background: oklch(var(--b5) / 55%) !important; padding: 14px 16px !important; transition: border-color .2s var(--trans-function-ani); }
+body.mf :is(.course-section, li.section):hover { border-color: oklch(var(--h4) / 30%) !important; }
+body.mf .course-section .section-item, body.mf .course-section .course-section-header { border: 0 !important; background: none !important; padding: 0 !important; box-shadow: none !important; }
+body.mf .course-content-item-content.collapse.show, body.mf .course-content-item-content { justify-content: flex-start !important; width: 100%; }
+body.mf .course-content-item-content > ul.section { width: 100%; margin: 6px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px; }
+body.mf li.activity { margin: 0; border: 0 !important; }
+body.mf li.activity .activity-item { padding: 8px 10px; display: block; }
+body.mf li.activity .activity-grid { align-items: center; column-gap: 12px; }
+body.mf li.activity .activityiconcontainer { width: 36px; height: 36px; border-radius: 10px; background: oklch(var(--h4) / 16%) !important; display: grid; place-items: center; flex: none; }
+body.mf li.activity .activityiconcontainer img { width: 20px; height: 20px; }
+body.mf li.activity .activityname a { font-weight: var(--font-weight-medium); }
+body.mf li.activity .activity-altcontent, body.mf li.activity .description { font-size: calc(var(--font-size) - 1px); }
+body.mf .course-section-header .collapsed-icon, body.mf .course-section-header .icons-collapse-expand { border-radius: 10px; }
+body.mf .course-section-header .btn-link, body.mf .collapseexpand { font-size: calc(var(--font-size) - 1px); text-decoration: none; color: oklch(var(--c3)); }
+body.mf .course-section-header .btn-link:hover, body.mf .collapseexpand:hover { color: oklch(var(--c1)); }
+/* block links and headings follow the sidebar's text hierarchy instead of the browser's blue / purple */
+body.mf .col-sidebar a:not(.btn):not(.mf-section) { color: oklch(var(--c2)); text-decoration: none; transition: color .15s; }
+body.mf .col-sidebar a:not(.btn):not(.mf-section):hover { color: oklch(var(--h4)); }
+body.mf .col-sidebar .card-title, body.mf .col-sidebar h3, body.mf .col-sidebar h4 { font-size: var(--font-size-subheading); font-weight: var(--font-weight-medium); color: oklch(var(--c1)); }
+body.mf .col-sidebar section.block { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; margin-bottom: var(--card-gap); border: 1px solid var(--card-border-base); border-radius: var(--item-big-radius); background: oklch(var(--b5) / 55%); }
+/* assignment status: key / value rows as a tidy card instead of a ruled table */
+body.mf .submissionstatustable .generaltable, body.mf table.generaltable.mod_assign_summary_table { border: 0; width: 100%; border-collapse: separate; border-spacing: 0 6px; }
+body.mf .submissionstatustable :is(th, td), body.mf table.generaltable.mod_assign_summary_table :is(th, td) { border: 0 !important; padding: 10px 14px !important; background: oklch(var(--b5) / 55%) !important; }
+body.mf .submissionstatustable :is(th.cell, td.cell.c0), body.mf table.generaltable.mod_assign_summary_table th { width: 30%; color: oklch(var(--c3)); font-weight: var(--font-weight-medium); border-radius: var(--item-radius, 10px) 0 0 var(--item-radius, 10px); }
+body.mf .submissionstatustable td:last-child, body.mf table.generaltable.mod_assign_summary_table td:last-child { border-radius: 0 var(--item-radius, 10px) var(--item-radius, 10px) 0; }
+body.mf :is(.submissionstatussubmitted, .submissionstatus) { color: oklch(0.78 0.15 150) !important; }
+body.mf .submissionstatus:not(.submissionstatussubmitted) { color: oklch(0.8 0.14 70) !important; }
+body.mf .singlebutton .btn, body.mf form.singlebutton button[type="submit"] { border-radius: 99px; padding-inline: 20px; }
+body.mf .col-sidebar a.mf-section { color: oklch(var(--c2)); }
+body.mf .col-sidebar a.mf-section:hover, body.mf .col-sidebar a.mf-section[aria-current]:not([aria-current="false"]) { color: oklch(var(--c1)); }

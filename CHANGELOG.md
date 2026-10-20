@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.16.2] - 2026-10-20
+### Added
+- Activities (assignments, forums, pages, books …) open in a popout over the course instead of a new page; Ctrl/⌘/Shift-click still opens normally. Toggle: "Open activities in a popout".
+- Submitting an assignment now shows a working state on the button, then pops the status and rains confetti when it lands (respects reduced motion). Toggle: "Celebrate submissions".
+
+### Changed
+- Course page layout: sections are single cards, activities are rows with an icon, sidebar blocks follow bleh's text hierarchy, and the assignment status table is a key / value card list.
+
 ## [0.16.0] - 2026-10-20
 
 ### Added
