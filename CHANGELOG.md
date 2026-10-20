@@ -6,6 +6,7 @@
 
 ### Added
 - Userscript 0.16.0: "Due soon" and "Continue" cards on the dashboard, scroll-position restore, "new" markers on activities and course cards, pin / rename / hide on course cards, "Download all files" in the section list (when the site offers it), and more keyboard shortcuts (`g` then `d c a g m p`, `j` `k`, `?`).
+- Rubric ("Grade breakdown") restyled: criteria rows, level cards, points pills and a highlighted awarded level.
 
 ### Changed
 - The repository is now the moodleflow userscript (a bleh port for Moodle). The web app it used to ship has been discontinued.

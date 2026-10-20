@@ -386,3 +386,35 @@ body.mf .mf-hidden-bar { margin-bottom: 8px; }
 body.mf .mf-keys { display: grid; grid-template-columns: max-content 1fr; gap: 8px 20px; margin: 0; }
 body.mf .mf-keys dt { font-family: var(--font-mono, monospace); color: oklch(var(--c1)); }
 body.mf .mf-keys dd { margin: 0; color: oklch(var(--c2)); }
+
+/* ---- rubric / "Grade breakdown" (Moodle gradingform_rubric): criteria as rows, levels as cards, the awarded level highlighted ---- */
+body.mf .gradingform_rubric { overflow-x: auto; }
+body.mf .gradingform_rubric table.criteria { width: 100%; border-collapse: separate; border-spacing: 0 10px; table-layout: auto; background: none; }
+body.mf .gradingform_rubric table.criteria :is(tbody, tr, td, th) { background: none !important; border: 0 !important; }
+body.mf .gradingform_rubric .criterion > .description { width: 16%; min-width: 130px; padding: 4px 14px 4px 4px !important; vertical-align: top; font-family: var(--font-heading, inherit); font-size: calc(var(--font-size) + 1px); font-weight: var(--font-weight-bold); color: oklch(var(--c1)); }
+body.mf .gradingform_rubric .criterion > .levels { padding: 0 !important; }
+body.mf .gradingform_rubric .criterion > .levels > table { width: 100%; border-collapse: separate; border-spacing: 8px 0; table-layout: fixed; margin: 0 -8px; width: calc(100% + 16px); }
+body.mf .gradingform_rubric td.level { vertical-align: top; padding: 0 !important; }
+body.mf .gradingform_rubric td.level > .level-wrapper, body.mf .gradingform_rubric td.level:not(:has(.level-wrapper)) {
+	display: flex; flex-direction: column; gap: 10px; height: 100%; box-sizing: border-box; padding: 12px 14px !important;
+	border: 1px solid var(--card-border-base) !important; border-radius: var(--item-radius, 12px);
+	background: oklch(var(--b5) / var(--solarium-opacity, 90%)) !important; color: oklch(var(--c2));
+	font-size: calc(var(--font-size) - 1px); line-height: 1.45; transition: border-color .15s, background .15s;
+}
+body.mf .gradingform_rubric td.level:hover > .level-wrapper { border-color: oklch(var(--h4) / 50%) !important; }
+body.mf .gradingform_rubric .level .definition { flex: 1; }
+/* the points: a pill pushed to the bottom of the card */
+body.mf .gradingform_rubric .level :is(.scorevalue, .score) { align-self: flex-start; margin: 0; padding: 1px 9px; border-radius: 99px; font-style: normal !important; font-weight: var(--font-weight-medium); font-size: calc(var(--font-size) - 2px); background: oklch(var(--b3)); color: oklch(var(--c2)); }
+body.mf .gradingform_rubric .level .scorevalue em, body.mf .gradingform_rubric .level .score em { font-style: normal; }
+/* the level you were given */
+body.mf .gradingform_rubric td.level.checked > .level-wrapper, body.mf .gradingform_rubric td.level[aria-checked="true"] > .level-wrapper, body.mf .gradingform_rubric td.level.currentchecked > .level-wrapper {
+	border-color: oklch(var(--h4)) !important; background: oklch(var(--h4) / 16%) !important; color: oklch(var(--c1)); box-shadow: 0 0 0 1px oklch(var(--h4)), 0 6px 20px oklch(var(--h4) / 18%);
+}
+body.mf .gradingform_rubric td.level.checked .scorevalue, body.mf .gradingform_rubric td.level.checked .score { background: oklch(var(--h4) / 35%); color: oklch(var(--c1)); }
+body.mf .gradingform_rubric td.level.checked .scorevalue::before, body.mf .gradingform_rubric td.level.checked .score::before { content: "✓ "; }
+body.mf .gradingform_rubric .level .remark, body.mf .gradingform_rubric .remark { padding: 8px 10px; border-radius: var(--radius-s); background: oklch(var(--b3)); color: oklch(var(--c2)); }
+body.mf .gradingform_rubric .level-wrapper .radio, body.mf .gradingform_rubric .level-wrapper input[type="radio"] { accent-color: oklch(var(--h4)); }
+@media (max-width: 760px) {
+	body.mf .gradingform_rubric table.criteria, body.mf .gradingform_rubric .criterion, body.mf .gradingform_rubric .criterion > td, body.mf .gradingform_rubric .criterion > .levels > table, body.mf .gradingform_rubric .levels tbody, body.mf .gradingform_rubric .levels tr, body.mf .gradingform_rubric td.level { display: block; width: 100% !important; margin: 0; }
+	body.mf .gradingform_rubric td.level { margin-bottom: 8px; }
+}
