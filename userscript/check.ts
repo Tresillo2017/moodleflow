@@ -15,6 +15,9 @@ const { pushVisit } = await import("./src/resume");
 const { unseen } = await import("./src/unread");
 const { step, GO } = await import("./src/keys");
 const { isActivityLink } = await import("./src/popout");
+const { fileKind } = await import("./src/filetypes");
+const { greeting, firstName } = await import("./src/home");
+const { perDay } = await import("./src/deadlines");
 const { isFresh, burst } = await import("./src/celebrate");
 
 // bleh's accent-from-image maths
@@ -120,3 +123,26 @@ console.log("extras ok");
 	assert.equal(burst(1000, 800, 200, 20, () => 0.5).length, 20);
 }
 console.log("popout/celebrate ok");
+
+{
+	assert.equal(fileKind("https://x/f/pdf-24", "")?.label, "PDF");
+	assert.equal(fileKind("https://x/f/powerpoint", "Slides")?.label, "PPT");
+	assert.equal(fileKind("https://x/f/unknown", "schema.sql")?.label, "SQL");
+	assert.equal(fileKind("", "notes · Plain text")?.label, "TXT");
+	assert.equal(fileKind("https://x/f/archive", "")?.label, "ZIP");
+	assert.equal(fileKind("https://x/theme/image.php/boost/core/1/f/unknown-24", "Lecture"), undefined);
+	assert.equal(fileKind("https://x/theme/image.php/boost/core/1/f/video-24", "")?.label, "VID");
+	assert.equal(fileKind("https://x/f/unknown", "Lecture"), undefined);
+}
+console.log("filetypes ok");
+
+{
+	assert.equal(greeting(8), "Good morning"); assert.equal(greeting(15), "Good afternoon"); assert.equal(greeting(22), "Good evening"); assert.equal(greeting(3), "Good night");
+	assert.equal(firstName("TOMAS PALMA SÁNCI"), "Tomas"); assert.equal(firstName("  "), "");
+}
+console.log("home ok");
+{
+	const now = Date.UTC(2026, 9, 20, 12) / 1000;
+	const c = perDay([{ timesort: now }, { timesort: now + 100 }, { timesort: now + 86400 * 3 }, { timesort: now + 86400 * 9 }], now);
+	assert.equal(c.length, 7); assert.equal(c[0], 2); assert.equal(c.reduce((a, b) => a + b, 0), 3);
+}

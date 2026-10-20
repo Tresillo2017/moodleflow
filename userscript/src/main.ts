@@ -1,6 +1,7 @@
 import bleh from "../dist/core.css";
 import moodle from "./styles/moodle.css";
 import classroom from "./styles/classroom.css";
+import filetypes from "./styles/filetypes.css";
 import { apply, onSystemThemeChange } from "./apply";
 import { buildShell, setHeaderAvatar, installSettingsRoute, NO_SHELL_LAYOUTS } from "./shell";
 import { mountBackdrop, refreshBackdrop, earlyAccent } from "./backdrop";
@@ -17,6 +18,9 @@ import { mountResume } from "./resume";
 import { mountUnread } from "./unread";
 import { mountCourseTools } from "./courses";
 import { mountKeys } from "./keys";
+import { mountFileTypes } from "./filetypes";
+import { mountChangelog } from "./changelog";
+import { mountHome } from "./home";
 import { mountPopout, FRAME_NAME } from "./popout";
 import { mountCelebrate } from "./celebrate";
 import { applyLazy } from "./lazy";
@@ -63,7 +67,7 @@ when(() => document.body && !SKIP, () => {
 	if (NO_SHELL_LAYOUTS.test(document.body.className)) return;
 	settings.load();
 	if (FRAME) document.documentElement.classList.add("mf-frame");
-	const style = timed("inject-css", () => GM_addStyle(bleh + moodle + classroom));
+	const style = timed("inject-css", () => GM_addStyle(bleh + moodle + classroom + filetypes));
 	// Moodle's stylesheets load after ours and win equal-specificity ties against bleh's rules, so keep ours last
 	const keepLast = () => { if (style.parentNode && style.nextElementSibling) style.parentNode.append(style); };
 	const obs = new MutationObserver(keepLast);
@@ -85,7 +89,7 @@ function start(): void {
 	mark("shell");
 	if (FRAME) { mountCelebrate(); if (on("fix")) timed("fix", mountFix); reveal(); return; } // the popout shows just the page's content
 	timed("settings-route", installSettingsRoute);
-	timed("extras", () => { if (on("extras")) { mountSeasonal(); mountEffects(); mountRabbit(); mountCourseNav(); mountPreview(); mountUpdater(); mountDeadlines(); mountResume(); mountUnread(); mountCourseTools(); mountKeys(); mountPopout(); mountCelebrate(); } });
+	timed("extras", () => { if (on("extras")) { mountSeasonal(); mountEffects(); mountRabbit(); mountCourseNav(); mountPreview(); mountUpdater(); mountHome(); mountDeadlines(); mountResume(); mountUnread(); mountCourseTools(); mountKeys(); mountFileTypes(); mountChangelog(); mountPopout(); mountCelebrate(); } });
 	if (on("fix")) timed("fix", mountFix);
 	reveal();
 	mark("mounted");

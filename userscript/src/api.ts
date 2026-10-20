@@ -27,15 +27,19 @@ export const write = (key: string, value: unknown): void => { try { GM_setValue(
 export const isDashboard = (): boolean => document.body.id === "page-my-index" && !document.body.classList.contains("page-mycourses");
 export const isCourseList = (): boolean => document.body.classList.contains("page-mycourses");
 
-/** A container at the top of the dashboard's main region for the cards below to share. */
-export function homeSlot(): HTMLElement | null {
-	if (!isDashboard()) return null;
-	let slot = document.querySelector<HTMLElement>(".mf-home");
-	if (slot) return slot;
-	const main = document.querySelector("#region-main");
-	if (!main) return null;
-	slot = document.createElement("div");
-	slot.className = "mf-home";
-	main.prepend(slot);
-	return slot;
+export type Zone = "hero" | "main" | "side";
+/** The dashboard's own layout skeleton (hero strip, main column, side column), created once at the top of the main region.
+ *  `null` away from the dashboard and in edit mode (Moodle's own blocks stay untouched there). */
+export function homeSlot(zone: Zone = "main"): HTMLElement | null {
+	if (!isDashboard() || document.body.classList.contains("editing")) return null;
+	let root = document.querySelector<HTMLElement>(".mf-home");
+	if (!root) {
+		const main = document.querySelector("#region-main");
+		if (!main) return null;
+		root = document.createElement("div");
+		root.className = "mf-home";
+		for (const z of ["hero", "main", "side"]) { const el = document.createElement("div"); el.className = `mf-home-${z}`; root.append(el); }
+		main.prepend(root);
+	}
+	return root.querySelector<HTMLElement>(`.mf-home-${zone}`);
 }

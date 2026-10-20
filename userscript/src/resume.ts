@@ -6,7 +6,7 @@ import { read, write, homeSlot } from "./api";
 import { knownCourses } from "./backdrop";
 import { h } from "./dom";
 
-export type Visit = { url: string; title: string; sub: string; at: number };
+export type Visit = { url: string; title: string; sub: string; at: number; cid?: string };
 const KEY = "resume", SCROLL = "scroll", KEEP = 5, MAX_SCROLL = 40;
 const PAGE = /\/(course\/(view|section)\.php|mod\/[a-z_]+\/(view|index)\.php)$/;
 
@@ -16,14 +16,16 @@ export const pushVisit = (list: Visit[], v: Visit, keep = KEEP): Visit[] => [v, 
 const pageKey = () => location.pathname + location.search;
 const isTracked = () => PAGE.test(location.pathname) && m.isLoggedIn();
 
+export const visits = (): Visit[] => read<{ items: Visit[] }>(KEY, { items: [] }).items;
+
 function record(): void {
 	if (!isTracked()) return;
 	const id = m.courseId();
 	const course = (id && knownCourses().find((c) => c.url.includes(`id=${id}`))?.title) || m.pageLabel();
 	const title = m.pageTitle();
 	if (!title) return;
-	const list = read<{ items: Visit[] }>(KEY, { items: [] }).items;
-	write(KEY, { items: pushVisit(list, { url: location.href, title, sub: course === title ? "" : course, at: Date.now() }) });
+	const list = visits();
+	write(KEY, { items: pushVisit(list, { url: location.href, title, sub: course === title ? "" : course, at: Date.now(), cid: id ?? undefined }) });
 }
 
 function restoreScroll(): void {
@@ -44,8 +46,8 @@ function restoreScroll(): void {
 
 function renderCard(): void {
 	document.querySelector(".mf-resume")?.remove();
-	const slot = settings.get().resume ? homeSlot() : null;
-	const items = read<{ items: Visit[] }>(KEY, { items: [] }).items;
+	const slot = settings.get().resume && !settings.get().home ? homeSlot("main") : null; // the new home draws its own hero
+	const items = visits();
 	if (!slot || !items.length) return;
 	const [last, ...rest] = items;
 	slot.prepend(h("section", { class: "mf-card mf-resume" }, h("h4", {}, "Continue"),
@@ -55,8 +57,8 @@ function renderCard(): void {
 
 export function mountResume(): void {
 	renderCard();
-	if (!settings.get().resume) { settings.subscribe((_, c) => { if (c.includes("resume")) { record(); renderCard(); } }); return; }
+	if (!settings.get().resume) { settings.subscribe((_, c) => { if (c.includes("resume") || c.includes("home")) { record(); renderCard(); } }); return; }
 	record();
 	restoreScroll();
-	settings.subscribe((_, c) => { if (c.includes("resume")) renderCard(); });
+	settings.subscribe((_, c) => { if (c.includes("resume") || c.includes("home")) renderCard(); });
 }

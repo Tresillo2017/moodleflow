@@ -2,8 +2,17 @@
 
 ## [Unreleased]
 
+## [0.16.3] - 2026-10-20
 ### Added
+- New dashboard layout: a greeting with due / overdue / new counts and quick links, a "Continue where you left off" card, your courses as cover cards with progress, and a week strip above the due list. Toggle: "New dashboard layout" (off restores Moodle's blocks; edit mode always shows them).
+- "What's new" dialog in bleh's newspaper style, built from this changelog: open it from the user menu or Settings → General, and after an update a toast offers it once.
+- File type icons: file activities show a real file-type icon (PDF, PowerPoint, Excel, Word, SQL, ZIP, image, video, audio, code, text; Tabler Icons, MIT) in its own colour instead of the generic icon. Toggle: "File type icons".
 - Icons in the user menu: every entry (profile, grades, calendar, messages, files, reports, preferences, language, log out) gets one of bleh's icons.
+
+### Fixed
+- Padding and alignment of our own text buttons (dashboard quick links, Resume, toasts, chips).
+- Text buttons using the icon-only style showed nothing (download all, hidden courses, "mark read", file preview arrows).
+- The "new" marker on an activity showed twice.
 
 ## [0.16.2] - 2026-10-20
 ### Added

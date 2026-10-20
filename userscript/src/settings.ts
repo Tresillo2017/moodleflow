@@ -68,11 +68,13 @@ export type Settings = {
 	file_preview: boolean; // open pdfs, images, video, audio and text in a dialog instead of leaving the page
 	shortcuts: boolean; // [ ] sections, / switcher, g-then-letter to go places, j k activities, ? cheat sheet
 	update_check: boolean; // look for a newer moodleflow now and then
+	home: boolean; // the redesigned dashboard (greeting, courses grid, week) instead of Moodle's blocks
 	deadlines: boolean; // "Due soon" card on the dashboard
 	resume: boolean; // "Continue" card on the dashboard + scroll position restore
 	unread: boolean; // "new" markers on activities and course cards
 	activity_popup: boolean; // open activities in a popout instead of a new page
 	confetti: boolean; // celebrate a submitted assignment
+	file_icons: boolean; // coloured PDF / PPT / SQL … badges on file activities
 	course_tools: boolean; // pin / hide / rename buttons on course cards
 };
 
@@ -86,7 +88,7 @@ export const DEFAULTS: Settings = {
 	seasonal: false, seasonal_particles: "all", seasonal_particles_fps: false, seasonal_overlays: true, seasonal_masks: true,
 	rabbit: true, branding_type: "logo", banner: true, bannerUrl: "", wide: false,
 	course_nav: true, file_preview: true, shortcuts: true, update_check: true,
-	deadlines: true, resume: true, unread: true, course_tools: true, activity_popup: true, confetti: true,
+	home: true, deadlines: true, resume: true, unread: true, course_tools: true, file_icons: true, activity_popup: true, confetti: true,
 };
 
 const KEY = "settings";

@@ -199,6 +199,7 @@ export const TABS: Tab[] = [
 		panel(panelHead("bleh", "Branding"), group(radioRow("branding_type", "Header branding", "What the masthead shows next to the navigation", [["logo", "Site logo"], ["text", "Site name"]]))),
 		panel(panelHead("external", "Updates"), group(updateRow(), switchRow("update_check", "Check for updates", "Look for a newer moodleflow about twice a day and tell you when there is one"))),
 		panel(panelHead("info", "About"), group(row(h("div", { class: "setting", "data-type": "info" }, label("moodleflow", `bleh for Moodle · v${typeof __VERSION__ === "string" ? __VERSION__ : ""}`)), "about moodleflow version", "bleh"),
+			actionRow("Changelog", "Release notes for every moodleflow version", "What's new", () => { document.dispatchEvent(new CustomEvent("moodleflow:changelog")); }),
 			actionRow("bleh", "The Last.fm redesign this is ported from, by katelyn", "Open repository", () => { window.open("https://github.com/katelyynn/bleh", "_blank", "noopener"); }, { icon: "external" }))),
 	] },
 	{ id: "visual", name: "Visual", icon: "themes", build: () => [
@@ -236,9 +237,11 @@ export const TABS: Tab[] = [
 			switchRow("file_preview", "Preview files", "Open PDFs, images, video, audio and text in a dialog (Ctrl/⌘/Shift-click opens normally)"),
 			switchRow("activity_popup", "Open activities in a popout", "Assignments, forums, pages and more open over the course so closing them brings you right back (Ctrl/⌘/Shift-click opens normally)"),
 			switchRow("confetti", "Celebrate submissions", "A little confetti when an assignment is submitted"),
+			switchRow("file_icons", "File type icons", "Show PDF, PowerPoint, Excel, Word, SQL, ZIP … badges on file activities instead of the generic icon"),
 			switchRow("unread", "New markers", "Flag activities that appeared since you last looked, and count them on course cards (courses you have opened)"),
 			switchRow("shortcuts", "Keyboard shortcuts", "[ ] sections · g then d/c/a/g/m/p to go places · j k through activities · ? for the full list"))),
 		panel(panelHead("layout-manage", "Dashboard"), group(
+			switchRow("home", "New dashboard layout", "Greeting, your courses with progress, this week at a glance and quick links instead of Moodle's blocks (off = Moodle's own)"),
 			switchRow("deadlines", "Due soon", "List upcoming and overdue deadlines at the top of the dashboard"),
 			switchRow("resume", "Continue where you left off", "Jump back to the last pages you opened, and remember how far you scrolled"),
 			switchRow("course_tools", "Course card tools", "Pin, rename or hide courses on your dashboard and course list (stored in this browser)"))),

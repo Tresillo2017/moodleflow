@@ -69,3 +69,5 @@ Every navigation re-runs the script, so its cost is paid on each page. What it d
 
 Debugging: `localStorage["mf:off"] = "shell,fix,backdrop"` (comma list of `apply, lazy, fonts, icons, shell, extras, fix,
 backdrop, hide`) skips those modules; `performance.getEntriesByType("measure")` lists `mf:*` timings.
+
+File type icons are from [Tabler Icons](https://tabler.io/icons) (MIT), baked into `src/styles/filetypes.css` by `gen-filetypes.mjs`.

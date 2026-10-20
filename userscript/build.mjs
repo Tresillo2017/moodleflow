@@ -14,9 +14,9 @@ const root = path.dirname(new URL(import.meta.url).pathname);
 
 // ---- 1. skip imports of Last.fm-only stylesheets (matched against the @import path text) ----
 const DEAD = [
-	/\.\.\/music\//, /\.\.\/profile\//, /\.\.\/minis\//, /\.\.\/home\//, /\.\.\/event\//, /\.\.\/text\/(shout|markdown)/,
+	/\.\.\/music\//, /\.\.\/profile\//, /\.\.\/minis\//, /\.\.\/home\//, /\.\.\/event\//, /\.\.\/text\/(shout)/,
 	/\.\/(playback|translate|profile|auto_edit|pro|privacy|api|test)\.css/, // settings/page/*
-	/\.\/(edit_scrobble|calendar|bulk_edit|news|sponsor|scrobble|share|status|avatar|edit_avatar|timeframe|mini_window|notices|external)\.css/, // dialog/*
+	/\.\/(edit_scrobble|calendar|bulk_edit|sponsor|scrobble|share|status|avatar|edit_avatar|timeframe|mini_window|notices|external)\.css/, // dialog/*
 	/\.\/labs\.css/,
 ];
 const pruneImports = {

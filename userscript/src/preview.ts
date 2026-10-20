@@ -68,8 +68,8 @@ async function open(all: string[], index: number): Promise<void> {
 	const stage = h("div", { class: "mf-preview-stage" });
 	const dl = h("a", { class: "btn flex-button", download: "" }, "Download");
 	const tab = h("a", { class: "btn flex-button", target: "_blank", rel: "noopener" }, "Open");
-	const prev = h("button", { type: "button", class: "btn flex-button chibi", "aria-label": "Previous file" }, "←");
-	const next = h("button", { type: "button", class: "btn flex-button chibi", "aria-label": "Next file" }, "→");
+	const prev = h("button", { type: "button", class: "btn flex-button", "aria-label": "Previous file" }, "←");
+	const next = h("button", { type: "button", class: "btn flex-button", "aria-label": "Next file" }, "→");
 	const closeBtn = h("button", { type: "button", class: "btn modal-close-button icon-mask", "aria-label": "Close", "data-type": "close" }, "Close");
 	closeBtn.onclick = close;
 	const modal = h("div", { class: "bleh-modal", "data-modal-type": "preview", role: "dialog", "aria-label": "File preview" },

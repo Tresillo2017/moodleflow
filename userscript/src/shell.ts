@@ -63,7 +63,9 @@ function buildMasthead(): HTMLElement {
 		const logout = usermenu.querySelector('a[href*="login/logout.php"]');
 		const entry = h("a", { class: "dropdown-item", href: "#moodleflow/visual", role: "menuitem", id: "mf-entry" }, "moodleflow settings");
 		const before = logout?.previousElementSibling?.classList.contains("dropdown-divider") ? logout.previousElementSibling : logout;
-		before?.before(entry);
+		const news = h("a", { class: "dropdown-item", href: "#", role: "menuitem", id: "mf-news" }, "What's new");
+		news.onclick = (e) => { e.preventDefault(); document.dispatchEvent(new CustomEvent("moodleflow:changelog")); };
+		before?.before(entry, news);
 	}
 	else if (!m.isLoggedIn()) auth.append(h("a", { class: "btn auth-link", href: location.origin + "/login/index.php" }, "Log in"));
 

@@ -32,7 +32,7 @@ function markCourse(): void {
 	chip?.remove(); chip = undefined;
 	const side = document.querySelector(".mf-coursenav");
 	if (side && fresh.size) {
-		const b = h("button", { type: "button", class: "btn flex-button chibi" }, `${fresh.size} new · Mark read`);
+		const b = h("button", { type: "button", class: "btn flex-button" }, `${fresh.size} new · Mark read`);
 		b.onclick = () => { const s = store(); s[course] = { ids: acts.map((x) => x.id), fresh: 0 }; write(KEY, s); markCourse(); };
 		chip = h("div", { class: "mf-new-chip" }, b);
 		side.querySelector("h4")?.after(chip);
@@ -63,3 +63,6 @@ export function mountUnread(): void {
 	onDomChange(() => { clearTimeout(t); t = window.setTimeout(run, 150); });
 	settings.subscribe((_, c) => { if (c.includes("unread")) { run(); if (!settings.get().unread) document.querySelectorAll("[data-mf-new]").forEach((n) => n.removeAttribute("data-mf-new")); } });
 }
+
+/** New items across every course you have opened (for the dashboard summary). */
+export const totalFresh = (): number => Object.values(store()).reduce((n, c) => n + (c.fresh ?? 0), 0);

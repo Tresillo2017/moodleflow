@@ -50,7 +50,7 @@ function render(side: Element): void {
 	const filter = entries.length > 8 ? h("input", { type: "search", class: "input", placeholder: "Filter sections", "aria-label": "Filter sections" }) : null;
 	if (filter) filter.oninput = () => { const q = filter.value.trim().toLowerCase(); for (const it of items) it.hidden = !!q && !it.entry.name.toLowerCase().includes(q); };
 	const zip = document.querySelector<HTMLAnchorElement>('a[href*="downloadcontent.php"]'); // Moodle's own "Download course content", when the site enables it
-	card = h("section", { class: "mf-coursenav" }, h("h4", {}, "Sections"), filter, list, zip ? h("a", { class: "btn flex-button chibi", href: zip.href }, "Download all files") : null);
+	card = h("section", { class: "mf-coursenav" }, h("h4", {}, "Sections"), filter, list, zip ? h("a", { class: "btn flex-button", href: zip.href }, "Download all files") : null);
 	side.prepend(card);
 	card.querySelector("[aria-current=page]")?.scrollIntoView({ block: "nearest" });
 	if (entries.some((e) => e.href.startsWith("#")) && !entries.some((e) => e.active)) {

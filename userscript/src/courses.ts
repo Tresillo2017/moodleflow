@@ -58,7 +58,7 @@ function apply(): void {
 	document.body.toggleAttribute("data-mf-show-hidden", showHidden);
 	bar?.remove(); bar = undefined;
 	if (on && hiddenCount && cards[0]) {
-		const b = h("button", { type: "button", class: "btn flex-button chibi" }, showHidden ? `Hide ${hiddenCount} hidden courses` : `Show ${hiddenCount} hidden courses`);
+		const b = h("button", { type: "button", class: "btn flex-button" }, showHidden ? `Hide ${hiddenCount} hidden courses` : `Show ${hiddenCount} hidden courses`);
 		b.onclick = () => { showHidden = !showHidden; apply(); };
 		bar = h("div", { class: "mf-hidden-bar" }, b);
 		slotOf(cards[0]).parentElement?.before(bar);

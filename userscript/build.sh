@@ -4,7 +4,8 @@
 # 2) src/ is bundled with that css + our adapter css inlined as text
 set -e
 cd "$(dirname "$0")"
+bun changelog.mjs
 bun build.mjs
-esbuild src/main.ts --bundle --target=es2022 --loader:.css=text \
+esbuild src/main.ts --bundle --target=es2022 --loader:.css=text --loader:.json=json \
   --define:__VERSION__="\"$(sed -n 's|^// @version *||p' meta.txt)\"" \
   --banner:js="$(cat meta.txt)" --outfile=moodleflow.user.js --log-level=warning

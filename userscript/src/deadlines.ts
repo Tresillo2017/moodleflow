@@ -18,7 +18,7 @@ export function bucket(timesort: number, now: number): "Overdue" | "Today" | "To
 }
 const ORDER = ["Overdue", "Today", "Tomorrow", "This week", "Later"] as const;
 
-async function load(): Promise<DueEvent[]> {
+export async function load(): Promise<DueEvent[]> {
 	const hit = read<{ at: number; events: DueEvent[] }>(KEY, { at: 0, events: [] });
 	if (Date.now() - hit.at < TTL) return hit.events;
 	const now = Math.floor(Date.now() / 1000);
@@ -32,15 +32,32 @@ async function load(): Promise<DueEvent[]> {
 
 const when = (t: number) => new Date(t * 1000).toLocaleString(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
 
+/** Pure: how many events fall on each of the next `days` days starting at the day of `now` (index 0 = today). */
+export function perDay(events: Pick<DueEvent, "timesort">[], now: number, days = 7): number[] {
+	const start = startOfDay(now);
+	return Array.from({ length: days }, (_, i) => events.filter((e) => e.timesort >= start + i * DAY && e.timesort < start + (i + 1) * DAY).length);
+}
+/** Seven day cells, today first, each with the weekday, the date and a dot per deadline (capped at three). */
+function weekStrip(events: DueEvent[], now: number): HTMLElement {
+	const counts = perDay(events, now);
+	return h("div", { class: "mf-week" }, ...counts.map((n, i) => {
+		const d = new Date((startOfDay(now) + i * DAY) * 1000 + 12 * 3600e3);
+		return h("div", { class: "mf-day" + (i === 0 ? " today" : "") + (n ? " busy" : ""), title: n ? `${n} due` : "Nothing due" },
+			h("span", { class: "mf-day-name" }, d.toLocaleDateString(undefined, { weekday: "short" })),
+			h("span", { class: "mf-day-num" }, String(d.getDate())),
+			h("span", { class: "mf-dots" }, "•".repeat(Math.min(3, n))));
+	}));
+}
+
 let card: HTMLElement | undefined;
 async function render(): Promise<void> {
 	card?.remove(); card = undefined;
-	const slot = settings.get().deadlines ? homeSlot() : null;
+	const slot = settings.get().deadlines ? homeSlot("side") : null;
 	if (!slot) return;
 	const events = await load();
 	const done = new Set<number>(read<{ ids: number[] }>(DONE, { ids: [] }).ids);
 	const open = events.filter((e) => !done.has(e.id));
-	if (!open.length || !settings.get().deadlines || card) return;
+	if ((!open.length && !settings.get().home) || !settings.get().deadlines || card) return;
 	const now = Math.floor(Date.now() / 1000);
 	const body = h("div", { class: "mf-due-list" });
 	for (const b of ORDER) {
@@ -54,7 +71,8 @@ async function render(): Promise<void> {
 			return h("ul", { class: "mf-due-group" }, item);
 		}));
 	}
-	card = h("section", { class: "mf-card mf-deadlines" }, h("h4", {}, "Due soon", h("span", { class: "mf-count" }, String(open.length))), body);
+	if (!open.length) body.append(h("p", { class: "mf-due-meta" }, "Nothing due. Enjoy the week."));
+	card = h("section", { class: "mf-card mf-deadlines" }, h("h4", {}, "Due soon", open.length ? h("span", { class: "mf-count" }, String(open.length)) : null), weekStrip(open, now), body);
 	slot.prepend(card);
 }
 
