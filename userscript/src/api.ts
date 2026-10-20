@@ -23,8 +23,8 @@ export function read<T>(key: string, fallback: T): T {
 }
 export const write = (key: string, value: unknown): void => { try { GM_setValue(key, JSON.stringify(value)); } catch { /* storage full */ } };
 
-/** The dashboard (not "My courses", which shares the body id). */
-export const isDashboard = (): boolean => document.body.id === "page-my-index" && !document.body.classList.contains("page-mycourses");
+/** The home page: the dashboard (not "My courses", which shares its body id) or the site front page, when logged in. */
+export const isDashboard = (): boolean => /^page-(my|site)-index$/.test(document.body.id) && !document.body.classList.contains("page-mycourses") && !document.body.classList.contains("notloggedin");
 export const isCourseList = (): boolean => document.body.classList.contains("page-mycourses");
 
 export type Zone = "hero" | "main" | "side";

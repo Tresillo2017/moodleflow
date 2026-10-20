@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         moodleflow
 // @namespace    https://github.com/Tresillo2017/moodleflow
-// @version      0.16.3
+// @version      0.16.4
 // @description  bleh (by katelyn) for Moodle: the same themes, glass, motion and layout
 // @updateURL    https://moodleflow.tomasps.workers.dev/moodleflow.meta.js
 // @downloadURL  https://moodleflow.tomasps.workers.dev/moodleflow.user.js

@@ -1,7 +1,7 @@
 // Dashboard card: what is due soon, from Moodle's own timeline API. Ticking an item off is local (a marker for you, not a
 // submission). Cached for 10 minutes so navigating around the site does not re-ask every page.
 import * as settings from "./settings";
-import { call, read, write, homeSlot } from "./api";
+import { call, read, write, homeSlot, siteRoot } from "./api";
 import { h } from "./dom";
 
 export type DueEvent = { id: number; name: string; timesort: number; url: string; course?: { fullname?: string } };
@@ -42,7 +42,9 @@ function weekStrip(events: DueEvent[], now: number): HTMLElement {
 	const counts = perDay(events, now);
 	return h("div", { class: "mf-week" }, ...counts.map((n, i) => {
 		const d = new Date((startOfDay(now) + i * DAY) * 1000 + 12 * 3600e3);
-		return h("div", { class: "mf-day" + (i === 0 ? " today" : "") + (n ? " busy" : ""), title: n ? `${n} due` : "Nothing due" },
+		const ts = startOfDay(now) + i * DAY;
+		const names = events.filter((e) => e.timesort >= ts && e.timesort < ts + DAY).map((e) => e.name).join("\n");
+		return h("a", { class: "mf-day" + (i === 0 ? " today" : "") + (n ? " busy" : ""), href: `${siteRoot()}/calendar/view.php?view=day&time=${ts}`, title: n ? names : "Nothing due" },
 			h("span", { class: "mf-day-name" }, d.toLocaleDateString(undefined, { weekday: "short" })),
 			h("span", { class: "mf-day-num" }, String(d.getDate())),
 			h("span", { class: "mf-dots" }, "•".repeat(Math.min(3, n))));
@@ -72,7 +74,7 @@ async function render(): Promise<void> {
 		}));
 	}
 	if (!open.length) body.append(h("p", { class: "mf-due-meta" }, "Nothing due. Enjoy the week."));
-	card = h("section", { class: "mf-card mf-deadlines" }, h("h4", {}, "Due soon", open.length ? h("span", { class: "mf-count" }, String(open.length)) : null), weekStrip(open, now), body);
+	card = h("section", { class: "mf-card mf-deadlines", "data-i": "", style: "--i:3" }, h("h4", {}, "Due soon", open.length ? h("span", { class: "mf-count" }, String(open.length)) : null), weekStrip(open, now), body);
 	slot.prepend(card);
 }
 

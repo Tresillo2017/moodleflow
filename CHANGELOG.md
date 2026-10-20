@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.16.4] - 2026-10-20
+### Changed
+- The new dashboard also loads on the site front page (when logged in), paints instantly from what it remembers (skeleton cards on the first visit), and has a polished look: drifting accent glow, staggered entrance, pointer-follow highlights, covers that zoom, progress bars that grow, clickable week days, and a course filter. All of it respects reduced motion.
+
 ## [0.16.3] - 2026-10-20
 ### Added
 - New dashboard layout: a greeting with due / overdue / new counts and quick links, a "Continue where you left off" card, your courses as cover cards with progress, and a week strip above the due list. Toggle: "New dashboard layout" (off restores Moodle's blocks; edit mode always shows them).
