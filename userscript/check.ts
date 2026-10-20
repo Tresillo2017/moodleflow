@@ -16,7 +16,7 @@ const { unseen } = await import("./src/unread");
 const { step, GO } = await import("./src/keys");
 const { isActivityLink } = await import("./src/popout");
 const { fileKind } = await import("./src/filetypes");
-const { greeting, firstName } = await import("./src/home");
+const { greeting, firstName, courseState, inTab } = await import("./src/home");
 const { perDay } = await import("./src/deadlines");
 const { isHomePath } = await import("./src/api");
 const { isFresh, burst } = await import("./src/celebrate");
@@ -150,4 +150,10 @@ console.log("home ok");
 {
 	assert.ok(isHomePath("/my/") && isHomePath("/my/index.php") && isHomePath("/") && isHomePath("/local/docencia/actual/index.php") && isHomePath("/moodle/my/"));
 	assert.ok(!isHomePath("/my/courses.php") && !isHomePath("/course/view.php") && !isHomePath("/local/docencia/historico/index.php"));
+}
+{
+	const now = 1_000_000;
+	assert.equal(courseState({ enddate: now - 1 }, now), "past"); assert.equal(courseState({ startdate: now + 5 }, now), "future"); assert.equal(courseState({ startdate: 1, enddate: 0 }, now), "inprogress");
+	const list = [{ id: 1, fullname: "a", viewurl: "", enddate: now - 1 }, { id: 2, fullname: "b", viewurl: "", isfavourite: true }];
+	assert.equal(inTab(list, "all", now).length, 2); assert.equal(inTab(list, "past", now).length, 1); assert.equal(inTab(list, "favourites", now)[0].id, 2); assert.equal(inTab(list, "inprogress", now)[0].id, 2);
 }

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.16.8] - 2026-10-20
+### Changed
+- The new dashboard now follows bleh's profile layout: the page header carries the greeting, the date and your numbers (courses, due, overdue, new); the main column has "Continue" and a cover grid of **all** your courses with All / In progress / Past / Favourites tabs and a filter; the sidebar column holds due soon (with the week strip), recently visited pages and shortcuts as flat sections with bleh's list rows.
+
 ## [0.16.7] - 2026-10-20
 ### Fixed
 - "Copy page structure" no longer fails with "Clipboard blocked": it uses the script manager's clipboard, and otherwise shows the text in a box with Copy / Save as file buttons.

@@ -1,3 +1,4 @@
+import * as settings from "./settings";
 // Tiny Moodle helpers shared by the dashboard / course features: site root, session key, web-service calls and a
 // JSON store on GM storage. Everything degrades to "nothing" when the page has no logged-in session.
 const logout = (): HTMLAnchorElement | null => document.querySelector<HTMLAnchorElement>('a[href*="login/logout.php"]');
@@ -45,5 +46,10 @@ export function homeSlot(zone: Zone = "main"): HTMLElement | null {
 		for (const z of ["hero", "main", "side"]) { const el = document.createElement("div"); el.className = `mf-home-${z}`; root.append(el); }
 		main.prepend(root);
 	}
-	return root.querySelector<HTMLElement>(`.mf-home-${zone}`);
+	const side = document.querySelector<HTMLElement>(".mf-home-side");
+	const colSide = document.querySelector<HTMLElement>(".col-sidebar");
+	// the new layout puts the side sections in the shell's own sidebar column (like bleh's profile pages); classic keeps them below
+	if (side && colSide && settings.get().home && side.parentElement !== colSide) { colSide.append(side); document.querySelector(".content")?.classList.remove("single-column"); }
+	else if (side && !settings.get().home && side.parentElement === colSide) root.append(side);
+	return zone === "side" ? side : root.querySelector<HTMLElement>(`.mf-home-${zone}`);
 }

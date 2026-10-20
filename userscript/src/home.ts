@@ -1,7 +1,9 @@
-// The dashboard, redesigned: a greeting with the numbers that matter, a "continue" hero, your courses as cover cards with
-// progress, and (in the side column, from deadlines.ts) what is due and the week ahead. Moodle's own blocks are hidden,
+// The dashboard, laid out the way bleh lays out a profile: the page header carries the greeting and the numbers that matter,
+// the main column holds "Continue" and every course as a cover grid (with All / In progress / Past tabs), and the sidebar
+// column holds what is due (deadlines.ts), recent pages and shortcuts as flat sections. Moodle's own blocks are hidden,
 // not removed, and come back with the "New dashboard layout" switch (or in edit mode).
 import * as settings from "./settings";
+import * as m from "./moodle";
 import { call, read, write, homeSlot, isDashboard, siteRoot } from "./api";
 import { load as loadDue, bucket, type DueEvent } from "./deadlines";
 import { visits } from "./resume";
@@ -9,8 +11,9 @@ import { totalFresh } from "./unread";
 import { onDomChange } from "./watch";
 import { h } from "./dom";
 
-export type Course = { id: number; fullname: string; viewurl: string; courseimage?: string; progress?: number | null; coursecategory?: string };
-const KEY = "home_courses", TTL = 10 * 60e3;
+export type Course = { id: number; fullname: string; viewurl: string; courseimage?: string; progress?: number | null; coursecategory?: string; startdate?: number; enddate?: number; isfavourite?: boolean; hidden?: boolean };
+export type Tab = "all" | "inprogress" | "past" | "favourites";
+const KEY = "home_courses_all", TTL = 10 * 60e3;
 
 /** Pure: "Good morning" … for an hour of the day. */
 export const greeting = (hour: number): string => (hour < 6 ? "Good night" : hour < 12 ? "Good morning" : hour < 20 ? "Good afternoon" : "Good evening");
@@ -18,6 +21,18 @@ export const greeting = (hour: number): string => (hour < 6 ? "Good night" : hou
 export function firstName(full: string): string {
 	const w = full.trim().split(/\s+/)[0] ?? "";
 	return w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : "";
+}
+/** Pure: where a course is in its life, from its start / end dates (seconds; 0 or missing = no date). */
+export function courseState(c: Pick<Course, "startdate" | "enddate">, now: number): "future" | "inprogress" | "past" {
+	if (c.enddate && c.enddate < now) return "past";
+	if (c.startdate && c.startdate > now) return "future";
+	return "inprogress";
+}
+/** Pure: the courses a tab shows. */
+export function inTab(list: Course[], tab: Tab, now: number): Course[] {
+	if (tab === "all") return list;
+	if (tab === "favourites") return list.filter((c) => c.isfavourite);
+	return list.filter((c) => courseState(c, now) === tab);
 }
 
 /** The signed-in user's name, read once from their profile page title ("Sam Student: Public profile | Site") and kept. */
@@ -36,101 +51,142 @@ async function courses(): Promise<Course[]> {
 	const hit = read<{ at: number; list: Course[] }>(KEY, { at: 0, list: [] });
 	if (Date.now() - hit.at < TTL && hit.list.length) return hit.list;
 	const res = await call<{ courses: Course[] }>("core_course_get_enrolled_courses_by_timeline_classification",
-		{ classification: "inprogress", limit: 0, offset: 0, sort: "ul.timeaccess desc", customfieldname: "", customfieldvalue: "", requiredfields: ["id", "fullname", "shortname", "showcoursecategory", "showshortname", "visible", "enddate"] }); // the list Moodle's own overview sends: other lists are rejected
-	const list = res?.courses ?? hit.list;
+		{ classification: "all", limit: 0, offset: 0, sort: "ul.timeaccess desc", customfieldname: "", customfieldvalue: "", requiredfields: ["id", "fullname", "shortname", "showcoursecategory", "showshortname", "visible", "enddate"] }); // the list Moodle's own overview sends: other lists are rejected
+	const list = (res?.courses ?? hit.list).filter((c) => !c.hidden);
 	if (res) write(KEY, { at: Date.now(), list });
 	return list;
 }
 
-const chip = (text: string, tone = "", i = 0) => h("span", { class: `mf-chip ${tone}`.trim(), style: `--i:${i}` }, text);
-const quick = (label: string, href: string, icon: string, i: number) => h("a", { class: "btn mf-quick-link icon", href, style: `--mask: var(--icon-16-${icon});--i:${i}` }, label);
 const hue = (id: number) => (id * 47) % 360;
 const gradient = (id: number) => `linear-gradient(135deg, oklch(0.55 0.12 ${hue(id)}), oklch(0.35 0.1 ${hue(id) + 50}))`;
 const reduceMotion = () => settings.get().reduced_motion || matchMedia("(prefers-reduced-motion: reduce)").matches;
+const icon = (name: string) => h("span", { class: "mf-glyph", style: `--mask: var(--icon-16-${name})`, "aria-hidden": "true" });
 
-function courseCard(c: Course, i: number, animate: boolean): HTMLElement {
+function tile(c: Course, i: number, animate: boolean): HTMLElement {
 	const pct = typeof c.progress === "number" ? Math.round(c.progress) : null;
-	const bar = h("span", { class: "mf-progress-bar", style: `width:${animate ? 0 : pct}%` });
-	if (animate && pct !== null) setTimeout(() => { bar.style.width = `${pct}%`; }, 250 + i * 70); // grows from empty, staggered with the cards
-	return h("article", { class: "mf-course-card", "data-course-id": String(c.id), "data-i": "", style: `--i:${i + 4}` },
-		h("a", { class: "mf-course-link", href: c.viewurl, "aria-label": c.fullname },
-			h("div", { class: "mf-course-cover" }, h("div", { class: "mf-course-img", style: `background-image:${c.courseimage ? `url(${JSON.stringify(c.courseimage)})` : gradient(c.id)}` })),
-			h("div", { class: "mf-course-body" },
-				c.coursecategory ? h("div", { class: "mf-course-cat" }, c.coursecategory) : null,
-				h("h3", { class: "coursename" }, c.fullname),
-				pct === null ? null : h("div", { class: "mf-progress-row" },
-					h("div", { class: "mf-progress", role: "progressbar", "aria-valuenow": String(pct), "aria-valuemin": "0", "aria-valuemax": "100" }, bar),
-					h("span", { class: "mf-progress-text" }, pct >= 100 ? "Done ✓" : `${pct}%`)))));
+	const bar = h("span", { class: "mf-tile-bar", style: `width:${animate ? 0 : pct}%` });
+	if (animate && pct !== null) setTimeout(() => { bar.style.width = `${pct}%`; }, 250 + i * 40);
+	const state = courseState(c, Date.now() / 1000);
+	return h("article", { class: "mf-tile", "data-course-id": String(c.id), "data-i": "", style: `--i:${Math.min(i, 12) + 3}` },
+		h("a", { class: "mf-tile-link", href: c.viewurl, "aria-label": c.fullname },
+			h("div", { class: "mf-tile-cover", style: `background-image:${c.courseimage ? `url(${JSON.stringify(c.courseimage)})` : gradient(c.id)}` },
+				pct === null ? null : h("div", { class: "mf-tile-progress", role: "progressbar", "aria-valuenow": String(pct), "aria-valuemin": "0", "aria-valuemax": "100" }, bar),
+				state === "past" ? h("span", { class: "mf-tile-flag" }, "Past") : null),
+			h("div", { class: "mf-tile-title coursename" }, c.fullname),
+			h("div", { class: "mf-tile-sub" }, [c.coursecategory, pct === null ? null : pct >= 100 ? "Done" : `${pct}%`].filter(Boolean).join(" · "))));
 }
-const skeletons = (n: number) => Array.from({ length: n }, () => h("div", { class: "mf-course-card mf-skel" }, h("div", { class: "mf-course-cover" }), h("div", { class: "mf-course-body" }, h("span", { class: "mf-skel-line" }), h("span", { class: "mf-skel-line short" }))));
+const skeletons = (n: number) => Array.from({ length: n }, () => h("div", { class: "mf-tile mf-skel" }, h("div", { class: "mf-tile-cover" }), h("span", { class: "mf-skel-line" }), h("span", { class: "mf-skel-line short" })));
 
 let filter = "";
+let tab: Tab = "all";
 let animateNext = true; // entrance animations play once per page load, not on every repaint
 let lastSig = "";
-
 type Data = { list: Course[]; name: string; events: DueEvent[]; loading: boolean };
+let current: Data = { list: [], name: "", events: [], loading: true };
+
+const matches = (c: Course) => !filter.trim() || `${c.fullname} ${c.coursecategory ?? ""}`.toLowerCase().includes(filter.trim().toLowerCase());
+const shownCourses = (d: Data) => inTab(d.list, tab, Date.now() / 1000).filter(matches);
+
+/** The page header becomes bleh's profile header: your photo, the greeting, the date and the numbers. */
+function decorateHeader(d: Data, week: DueEvent[], overdue: number, fresh: number): void {
+	const header = document.querySelector<HTMLElement>(".page-content > .page-header:not([data-mf-settings])");
+	if (!header) return;
+	const now = new Date();
+	const info = header.querySelector(".main-info");
+	if (!info) return;
+	info.replaceChildren(
+		h("div", { class: "sub-text" }, now.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })),
+		h("h1", { class: "page-header-title generic-page-title" }, `${greeting(now.getHours())}${d.name ? ", " + firstName(d.name) : ""}`),
+		h("dl", { class: "mf-meta" },
+			...[["Courses", String(d.list.length)], ["Due this week", String(week.length - overdue)], overdue ? ["Overdue", String(overdue)] : null, fresh ? ["New", String(fresh)] : null]
+				.filter((x): x is string[] => !!x).flatMap(([k, v]) => [h("div", { class: "mf-meta-item" }, h("dd", {}, v), h("dt", {}, k))])));
+	const user = m.currentUser();
+	if (user?.avatar && !header.querySelector(".page-header-avatar-list")) {
+		header.classList.remove("for-home", "for-album");
+		header.classList.add("for-profile");
+		header.prepend(h("div", { class: "page-header-avatar-list" }, h("div", { class: "page-header-avatar colourful" }, h("img", { src: user.avatar.replace(/\/f[12](\?|$)/, "/f1$1"), alt: "" }), h("div", { class: "page-header-avatar-glow colourful" }))));
+	}
+}
+
+function sideSections(): void {
+	const side = homeSlot("side");
+	if (!side) return;
+	side.querySelector(".mf-recent")?.remove();
+	side.querySelector(".mf-shortcuts")?.remove();
+	const recent = visits().slice(1, 6);
+	if (recent.length) side.append(h("section", { class: "mf-block mf-recent", "data-i": "", style: "--i:4" },
+		h("div", { class: "mf-block-head" }, h("h3", {}, "Recently visited")),
+		h("ul", { class: "mf-rows" }, ...recent.map((v) => h("li", {}, h("a", { class: "mf-row", href: v.url }, icon("recent"), h("span", { class: "mf-row-main" }, h("span", { class: "mf-row-title" }, v.title), v.sub ? h("span", { class: "mf-row-sub" }, v.sub) : null)))))));
+	const links: [string, string, string][] = [["Courses", "/my/courses.php", "library"], ["Calendar", "/calendar/view.php?view=month", "calendar"], ["Grades", "/grade/report/overview/index.php", "chart-bar"], ["Messages", "/message/index.php", "inbox"], ["Private files", "/user/files.php", "page"]];
+	side.append(h("section", { class: "mf-block mf-shortcuts", "data-i": "", style: "--i:5" },
+		h("div", { class: "mf-block-head" }, h("h3", {}, "Shortcuts")),
+		h("ul", { class: "mf-rows" }, ...links.map(([label, path, ic]) => h("li", {}, h("a", { class: "mf-row", href: siteRoot() + path }, icon(ic), h("span", { class: "mf-row-main" }, h("span", { class: "mf-row-title" }, label))))))));
+}
+
 function paint(d: Data): void {
 	const st = settings.get();
-	const hero = homeSlot("hero"), main = homeSlot("main");
-	if (!hero || !main) return;
+	const main = homeSlot("main");
+	if (!main) return;
 	const animate = animateNext && !reduceMotion();
-	const root = hero.parentElement!;
+	const root = main.parentElement!;
 	root.classList.toggle("mf-enter", animate);
-	const now = new Date();
-	const t = Math.floor(now.getTime() / 1000);
+	document.querySelector(".content")?.classList.toggle("mf-enter", animate);
+	const t = Math.floor(Date.now() / 1000);
 	const week = d.events.filter((e) => e.timesort < t + 7 * 86400);
 	const overdue = week.filter((e) => bucket(e.timesort, t) === "Overdue").length;
-	const fresh = st.unread ? totalFresh() : 0;
-	hero.replaceChildren(h("section", { class: "mf-hero", "data-i": "", style: "--i:0" },
-		h("span", { class: "mf-blob a" }), h("span", { class: "mf-blob b" }),
-		h("div", { class: "mf-hero-text" },
-			h("h1", {}, `${greeting(now.getHours())}${d.name ? ", " + firstName(d.name) : ""}`),
-			h("p", {}, now.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" }) + (d.list.length ? ` · ${d.list.length} course${d.list.length === 1 ? "" : "s"} in progress` : ""))),
-		h("div", { class: "mf-chips" }, chip(`${week.length - overdue} due this week`, week.length - overdue ? "" : "quiet", 1), overdue ? chip(`${overdue} overdue`, "bad", 2) : null, fresh ? chip(`${fresh} new`, "good", 3) : null),
-		h("div", { class: "mf-quick" }, quick("Courses", `${siteRoot()}/my/courses.php`, "library", 2), quick("Calendar", `${siteRoot()}/calendar/view.php?view=month`, "calendar", 3),
-			quick("Grades", `${siteRoot()}/grade/report/overview/index.php`, "chart-bar", 4), quick("Messages", `${siteRoot()}/message/index.php`, "inbox", 5))));
-	main.querySelector(".mf-continue")?.remove();
-	main.querySelector(".mf-home-courses")?.remove();
+	decorateHeader(d, week, overdue, st.unread ? totalFresh() : 0);
+	main.querySelector(".mf-continue-block")?.remove();
+	main.querySelector(".mf-courses")?.remove();
 	const last = visits()[0];
 	if (last) {
 		const cover = d.list.find((c) => String(c.id) === last.cid)?.courseimage;
-		main.prepend(h("a", { class: "mf-continue", href: last.url, "data-i": "", style: "--i:2" },
-			h("div", { class: "mf-continue-art", style: cover ? `background-image:url(${JSON.stringify(cover)})` : last.cid ? `background-image:${gradient(+last.cid)}` : "" }),
-			h("div", { class: "mf-continue-text" }, h("span", { class: "mf-continue-label" }, "Continue where you left off"), h("strong", {}, last.title), last.sub ? h("span", { class: "mf-due-meta" }, last.sub) : null),
-			h("span", { class: "btn flex-button mf-continue-go" }, "Resume", h("span", { class: "mf-arrow", "aria-hidden": "true" }, "→"))));
+		main.prepend(h("section", { class: "mf-block mf-continue-block", "data-i": "", style: "--i:2" },
+			h("div", { class: "mf-block-head" }, h("h3", {}, "Continue")),
+			h("a", { class: "mf-continue", href: last.url },
+				h("div", { class: "mf-continue-art", style: cover ? `background-image:url(${JSON.stringify(cover)})` : last.cid ? `background-image:${gradient(+last.cid)}` : "" }),
+				h("div", { class: "mf-continue-text" }, h("strong", {}, last.title), last.sub ? h("span", { class: "mf-row-sub" }, last.sub) : null),
+				h("span", { class: "btn flex-button mf-continue-go" }, "Resume", h("span", { class: "mf-arrow", "aria-hidden": "true" }, "→")))));
 	}
-	const q = filter.trim().toLowerCase();
-	const shown = q ? d.list.filter((c) => `${c.fullname} ${c.coursecategory ?? ""}`.toLowerCase().includes(q)) : d.list;
-	const grid = h("div", { class: "mf-course-grid" }, ...(d.loading && !d.list.length ? skeletons(6) : shown.map((c, i) => courseCard(c, i, animate))));
-	if (!shown.length && !d.loading) grid.append(h("p", { class: "mf-due-meta" }, q ? "No course matches that." : "No courses in progress."));
-	const search = h("input", { type: "search", class: "input mf-course-filter", placeholder: "Find a course", "aria-label": "Find a course", value: filter });
-	search.addEventListener("input", () => { filter = search.value; paintGrid(); });
-	const section = h("section", { class: "mf-home-courses", "data-i": "", style: "--i:3" },
-		h("div", { class: "mf-home-courses-head" }, h("h4", {}, "My courses"), d.list.length > 5 ? search : null, h("a", { class: "mf-see-all", href: `${siteRoot()}/my/courses.php` }, "See all")), grid);
-	main.append(section);
 	current = d;
+	const now = Date.now() / 1000;
+	const tabs: [Tab, string][] = [["all", "All"], ["inprogress", "In progress"], ["past", "Past"]];
+	if (d.list.some((c) => c.isfavourite)) tabs.push(["favourites", "Favourites"]);
+	const seg = h("div", { class: "mf-seg", role: "tablist" }, ...tabs.map(([id, name]) => {
+		const n = inTab(d.list, id, now).length;
+		const b = h("button", { type: "button", role: "tab", class: "mf-seg-item", "aria-selected": String(tab === id) }, name, h("span", { class: "mf-seg-n" }, String(n)));
+		b.onclick = () => { tab = id; seg.querySelectorAll("[role=tab]").forEach((x) => x.setAttribute("aria-selected", String(x === b))); paintGrid(); };
+		return b;
+	}));
+	const search = h("input", { type: "search", class: "input mf-filter", placeholder: "Find a course", "aria-label": "Find a course", value: filter });
+	search.addEventListener("input", () => { filter = search.value; paintGrid(); });
+	const grid = h("div", { class: "mf-grid" });
+	main.append(h("section", { class: "mf-block mf-courses", "data-i": "", style: "--i:3" },
+		h("div", { class: "mf-block-head" }, h("h3", {}, "Courses"), seg, d.list.length > 6 ? search : null), grid));
+	fillGrid(grid, d.loading && !d.list.length ? skeletons(8) : null, animate);
+	sideSections();
 	animateNext = false;
-	if (animate) setTimeout(() => root.classList.remove("mf-enter"), 1800);
+	if (animate) setTimeout(() => { root.classList.remove("mf-enter"); document.querySelector(".content")?.classList.remove("mf-enter"); }, 1800);
 }
-let current: Data = { list: [], name: "", events: [], loading: true };
-/** Typing in the filter swaps only the grid, so the input keeps focus and nothing re-animates. */
-function paintGrid(): void {
-	const old = document.querySelector(".mf-course-grid");
-	if (!old) return;
-	const q = filter.trim().toLowerCase();
-	const shown = q ? current.list.filter((c) => `${c.fullname} ${c.coursecategory ?? ""}`.toLowerCase().includes(q)) : current.list;
-	old.replaceChildren(...(shown.length ? shown.map((c, i) => courseCard(c, i, false)) : [h("p", { class: "mf-due-meta" }, "No course matches that.")]));
+function fillGrid(grid: Element, placeholders: Element[] | null, animate: boolean): void {
+	if (placeholders) { grid.replaceChildren(...placeholders); return; }
+	const shown = shownCourses(current);
+	grid.replaceChildren(...(shown.length ? shown.map((c, i) => tile(c, i, animate)) : [h("p", { class: "mf-row-sub" }, filter.trim() ? "No course matches that." : "No courses here yet.")]));
 	document.dispatchEvent(new CustomEvent("mf:cards"));
 }
+/** Switching tabs or typing in the filter swaps only the grid, so nothing else re-animates and the input keeps focus. */
+function paintGrid(): void {
+	const grid = document.querySelector(".mf-grid");
+	if (grid) fillGrid(grid, null, false);
+}
 
-/** Pointer-follow glow on the cards (a radial highlight under the cursor), skipped with reduced motion. */
+/** Pointer-follow highlight on the cover tiles, skipped with reduced motion. */
 function trackPointer(): void {
 	document.addEventListener("pointermove", (e) => {
-		const card = (e.target as Element).closest?.<HTMLElement>(".mf-course-card:not(.mf-skel), .mf-continue, .mf-hero");
-		if (!card || reduceMotion()) return;
-		const r = card.getBoundingClientRect();
-		card.style.setProperty("--mx", `${e.clientX - r.left}px`);
-		card.style.setProperty("--my", `${e.clientY - r.top}px`);
+		const el = (e.target as Element).closest?.<HTMLElement>(".mf-tile:not(.mf-skel), .mf-continue");
+		if (!el || reduceMotion()) return;
+		const r = el.getBoundingClientRect();
+		el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+		el.style.setProperty("--my", `${e.clientY - r.top}px`);
 	}, { passive: true });
 }
 
@@ -138,8 +194,8 @@ async function render(): Promise<void> {
 	const st = settings.get();
 	const on = st.home && isDashboard() && !document.body.classList.contains("editing");
 	document.body.toggleAttribute("data-mf-home", on);
-	if (!on) { document.querySelector(".mf-home-hero")?.replaceChildren(); document.querySelector(".mf-continue")?.remove(); document.querySelector(".mf-home-courses")?.remove(); return; }
-	// paint at once from whatever we remember (skeleton cards on the very first visit), then refresh from the network
+	if (!on) { document.querySelector(".mf-continue-block")?.remove(); document.querySelector(".mf-courses")?.remove(); document.querySelector(".mf-recent")?.remove(); document.querySelector(".mf-shortcuts")?.remove(); homeSlot("side"); return; }
+	// paint at once from whatever we remember (skeleton tiles on the very first visit), then refresh from the network
 	const cached = read<{ at: number; list: Course[] }>(KEY, { at: 0, list: [] });
 	paint({ list: cached.list, name: GM_getValue("home_name", ""), events: read<{ events: DueEvent[] }>("deadlines", { events: [] }).events, loading: true });
 	const [events, list, name] = await Promise.all([st.deadlines ? loadDue() : Promise.resolve([]), courses(), userName()]);

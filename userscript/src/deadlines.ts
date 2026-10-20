@@ -30,7 +30,6 @@ export async function load(): Promise<DueEvent[]> {
 	return events;
 }
 
-const when = (t: number) => new Date(t * 1000).toLocaleString(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
 
 /** Pure: how many events fall on each of the next `days` days starting at the day of `now` (index 0 = today). */
 export function perDay(events: Pick<DueEvent, "timesort">[], now: number, days = 7): number[] {
@@ -61,20 +60,20 @@ async function render(): Promise<void> {
 	const open = events.filter((e) => !done.has(e.id));
 	if ((!open.length && !settings.get().home) || !settings.get().deadlines || card) return;
 	const now = Math.floor(Date.now() / 1000);
-	const body = h("div", { class: "mf-due-list" });
-	for (const b of ORDER) {
-		const group = open.filter((e) => bucket(e.timesort, now) === b);
-		if (!group.length) continue;
-		body.append(h("h5", { class: b === "Overdue" ? "mf-overdue" : "" }, b), ...group.map((e) => {
-			const tick = h("button", { type: "button", class: "mf-due-tick", "aria-label": `Mark "${e.name}" as done`, title: "Mark as done (only on this device)" });
-			const item = h("li", { class: "mf-due" }, tick,
-				h("a", { href: e.url }, h("span", { class: "mf-due-name" }, e.name), h("span", { class: "mf-due-meta" }, [e.course?.fullname, when(e.timesort)].filter(Boolean).join(" · "))));
-			tick.onclick = () => { write(DONE, { ids: [...done, e.id].slice(-200) }); void render(); };
-			return h("ul", { class: "mf-due-group" }, item);
-		}));
+	const rows = h("ul", { class: "mf-rows" });
+	for (const e of open.slice(0, 8)) {
+		const b = bucket(e.timesort, now);
+		const d = new Date(e.timesort * 1000);
+		const tick = h("button", { type: "button", class: "mf-due-tick", "aria-label": `Mark "${e.name}" as done`, title: "Mark as done (only on this device)" });
+		tick.onclick = (ev) => { ev.preventDefault(); ev.stopPropagation(); write(DONE, { ids: [...done, e.id].slice(-200) }); void render(); };
+		rows.append(h("li", {}, h("a", { class: "mf-row", href: e.url },
+			h("span", { class: `mf-date ${b === "Overdue" ? "bad" : b === "Today" ? "now" : ""}`.trim() }, h("span", {}, d.toLocaleDateString(undefined, { weekday: "short" })), h("strong", {}, String(d.getDate()))),
+			h("span", { class: "mf-row-main" }, h("span", { class: "mf-row-title" }, e.name), h("span", { class: "mf-row-sub" }, [b === "Overdue" ? "Overdue" : null, e.course?.fullname, d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })].filter(Boolean).join(" · "))), tick)));
 	}
-	if (!open.length) body.append(h("p", { class: "mf-due-meta" }, "Nothing due. Enjoy the week."));
-	card = h("section", { class: "mf-card mf-deadlines", "data-i": "", style: "--i:3" }, h("h4", {}, "Due soon", open.length ? h("span", { class: "mf-count" }, String(open.length)) : null), weekStrip(open, now), body);
+	if (!open.length) rows.append(h("li", { class: "mf-row-empty" }, "Nothing due. Enjoy the week."));
+	card = h("section", { class: "mf-block mf-deadlines", "data-i": "", style: "--i:3" },
+		h("div", { class: "mf-block-head" }, h("h3", {}, "Due soon", open.length ? h("span", { class: "mf-count" }, String(open.length)) : null), h("a", { class: "mf-more", href: `${siteRoot()}/calendar/view.php?view=upcoming` }, "Calendar")),
+		weekStrip(open, now), rows);
 	slot.prepend(card);
 }
 

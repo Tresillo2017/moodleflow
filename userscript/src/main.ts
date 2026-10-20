@@ -2,6 +2,7 @@ import bleh from "../dist/core.css";
 import moodle from "./styles/moodle.css";
 import classroom from "./styles/classroom.css";
 import filetypes from "./styles/filetypes.css";
+import homeCss from "./styles/home.css";
 import { apply, onSystemThemeChange } from "./apply";
 import { buildShell, setHeaderAvatar, installSettingsRoute, NO_SHELL_LAYOUTS } from "./shell";
 import { mountBackdrop, refreshBackdrop, earlyAccent } from "./backdrop";
@@ -67,7 +68,7 @@ when(() => document.body && !SKIP, () => {
 	if (NO_SHELL_LAYOUTS.test(document.body.className)) return;
 	settings.load();
 	if (FRAME) document.documentElement.classList.add("mf-frame");
-	const style = timed("inject-css", () => GM_addStyle(bleh + moodle + classroom + filetypes));
+	const style = timed("inject-css", () => GM_addStyle(bleh + moodle + classroom + filetypes + homeCss));
 	// Moodle's stylesheets load after ours and win equal-specificity ties against bleh's rules, so keep ours last
 	const keepLast = () => { if (style.parentNode && style.nextElementSibling) style.parentNode.append(style); };
 	const obs = new MutationObserver(keepLast);
