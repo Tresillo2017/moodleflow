@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.16.6] - 2026-10-20
+### Fixed
+- The new dashboard now also replaces the "current subjects" page (`/local/docencia/actual/`) that this site lands on after login.
+
 ## [0.16.5] - 2026-10-20
 ### Changed
 - The in-app updater checks every 30 minutes (and when you come back to the tab) instead of every 12 hours, shows a dot on your avatar and an "Update to vX" entry in the user menu while an update is waiting, and walks you through it: Update opens the install dialog, then offers "Reload now" once it closes. "Later" snoozes the toast for 6 hours instead of forever.

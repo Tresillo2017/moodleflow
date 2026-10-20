@@ -18,6 +18,7 @@ const { isActivityLink } = await import("./src/popout");
 const { fileKind } = await import("./src/filetypes");
 const { greeting, firstName } = await import("./src/home");
 const { perDay } = await import("./src/deadlines");
+const { isHomePath } = await import("./src/api");
 const { isFresh, burst } = await import("./src/celebrate");
 
 // bleh's accent-from-image maths
@@ -145,4 +146,8 @@ console.log("home ok");
 	const now = Date.UTC(2026, 9, 20, 12) / 1000;
 	const c = perDay([{ timesort: now }, { timesort: now + 100 }, { timesort: now + 86400 * 3 }, { timesort: now + 86400 * 9 }], now);
 	assert.equal(c.length, 7); assert.equal(c[0], 2); assert.equal(c.reduce((a, b) => a + b, 0), 3);
+}
+{
+	assert.ok(isHomePath("/my/") && isHomePath("/my/index.php") && isHomePath("/") && isHomePath("/local/docencia/actual/index.php") && isHomePath("/moodle/my/"));
+	assert.ok(!isHomePath("/my/courses.php") && !isHomePath("/course/view.php") && !isHomePath("/local/docencia/historico/index.php"));
 }

@@ -23,8 +23,12 @@ export function read<T>(key: string, fallback: T): T {
 }
 export const write = (key: string, value: unknown): void => { try { GM_setValue(key, JSON.stringify(value)); } catch { /* storage full */ } };
 
-/** The home page: the dashboard (not "My courses", which shares its body id) or the site front page, when logged in. */
-export const isDashboard = (): boolean => /^page-(my|site)-index$/.test(document.body.id) && !document.body.classList.contains("page-mycourses") && !document.body.classList.contains("notloggedin");
+/** Pure: is this path a landing page? The dashboard, the site front page and this site's own "current subjects" page
+ *  (`/local/docencia/actual/`, where Alexia sends you after logging in), with or without a sub-folder install. */
+export const isHomePath = (pathname: string): boolean => /(^|\/)(my|local\/docencia\/actual)\/(index\.php)?$/.test(pathname) || /^\/(index\.php)?$/.test(pathname);
+/** The home page, when logged in ("My courses" shares the dashboard's body id, so it is excluded). */
+export const isDashboard = (): boolean => !document.body.classList.contains("page-mycourses") && !document.body.classList.contains("notloggedin")
+	&& (/^page-(my|site)-index$/.test(document.body.id) || isHomePath(location.pathname));
 export const isCourseList = (): boolean => document.body.classList.contains("page-mycourses");
 
 export type Zone = "hero" | "main" | "side";
