@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.16.12] - 2026-10-22
+### Fixed
+- The file picker (and other dialogs) opened from inside an activity popout was see-through, so the submission form showed through it; dialogs are now opaque there.
+
 ## [0.16.11] - 2026-10-22
 ### Fixed
 - Assignment pages on the classroom theme lost their description, attached files and "To do" box: the activity header lives outside the main region there and is now moved into the page with it.

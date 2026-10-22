@@ -527,3 +527,8 @@ body.mf :is(#user-menu-toggle, .usermenu .dropdown-toggle) .mf-update-dot { posi
 .mf-update-toast.ready { border-color: oklch(0.72 0.17 150 / 60%); }
 .mf-update-toast .mf-spinner { flex: none; width: 20px; height: 20px; }
 @media (prefers-reduced-motion: reduce) { body.mf :is(#user-menu-toggle, .usermenu .dropdown-toggle) .mf-update-dot { animation: none; } }
+
+/* frame mode: dialogs opened inside the popout (file picker, confirmations) must be opaque, or the form behind shows through them */
+html.mf-frame :is(.modal-content, .moodle-dialogue-base .moodle-dialogue, .moodle-dialogue-wrap, .filepicker, .fp-content, .fp-repo-area, .fp-navbar) { background: oklch(var(--b5)) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+html.mf-frame .modal-backdrop { background: oklch(0 0 0 / 55%) !important; backdrop-filter: none; -webkit-backdrop-filter: none; }
+html.mf-frame .modal { z-index: 1060; }
