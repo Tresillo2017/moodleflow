@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.16.11] - 2026-10-22
+### Fixed
+- Assignment pages on the classroom theme lost their description, attached files and "To do" box: the activity header lives outside the main region there and is now moved into the page with it.
+
 ## [0.16.10] - 2026-10-20
 ### Changed
 - The dashboard's calendar is interactive: the week strip no longer opens the calendar page. Pick a day to list just its deadlines, page through weeks with the arrows, and jump back with "Today".

@@ -126,6 +126,9 @@ export function buildShell(): void {
 	// bleh pads `.col-main > section` / `.col-sidebar > section`, so Moodle's content is wrapped in one section
 	// and each block (already a <section>) is lifted into the sidebar; the emptied <aside> stays for Moodle's JS
 	const extras = [...document.querySelectorAll<HTMLElement>("#page .classroom-actions")]; // site toolbars that live outside #region-main
+	// themes (classroom) can render the activity header (description, files, "To do") in #page-header, outside #region-main
+	const activityHeader = q("#page .activity-header, #page [data-for='page-activity-header']");
+	if (activityHeader && !mainBox?.contains(activityHeader)) extras.push(activityHeader);
 	if (mainBox) main.append(h("section", { class: "mf-moodle" }, ...extras, mainBox));
 	if (blocks) for (const block of [...blocks.querySelectorAll<HTMLElement>(":scope > section.block")]) side.append(block);
 	if (blocks) side.append(blocks);
