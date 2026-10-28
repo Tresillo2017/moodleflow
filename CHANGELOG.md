@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-10-28
+### Added
+- The file preview opens Word (docx), Excel (xlsx), PowerPoint (pptx), zip contents and csv/tsv as tables, with no extra download.
+- Many more code and text types in the preview (Python, Java, Kotlin, SQL, Go, Rust, PHP, shell, TypeScript, CSS and more) with syntax highlighting, JSON pretty-printing and a Copy button; click an image to zoom.
+- The remaining Moodle pages follow the same design: quiz attempts and reviews, forum posts, grade reports, profile, messages, alerts, lists, tabs, pagination and admin forms.
+- The file picker and file manager are restyled: a sources sidebar beside the panel, themed buttons, drop zone and fields.
+
+### Fixed
+- Uploading from the assignment popout: Escape in the file picker no longer closes the whole popout, and a stray click outside it (or Close) asks before throwing away what you entered.
+- A file dropped outside the drop zone no longer navigates the popout to that file.
+- File links inside popouts, and Moodle's own `forcedownload` file links, now open in the preview instead of downloading.
+- The assignment status table shows every row on the same card.
+
 ## [0.16.12] - 2026-10-22
 ### Fixed
 - The file picker (and other dialogs) opened from inside an activity popout was see-through, so the submission form showed through it; dialogs are now opaque there.

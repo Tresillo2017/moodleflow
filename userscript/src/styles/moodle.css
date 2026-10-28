@@ -347,6 +347,21 @@ body.mf .section-navigation .btn { max-width: 48vw; overflow: hidden; text-overf
 .mf-preview-stage > audio { width: min(520px, 90%); }
 .mf-preview-note { color: oklch(var(--c3)); }
 .mf-preview-text { align-self: stretch; flex: 1; margin: 0; padding: var(--card-gap); overflow: auto; white-space: pre-wrap; word-break: break-word; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: oklch(var(--c2)); text-align: left; }
+.mf-preview-stage { justify-content: safe center; }
+.mf-preview-stage > img { cursor: zoom-in; }
+.mf-preview-stage > img.mf-zoom { max-width: none; max-height: none; cursor: zoom-out; }
+.mf-preview-scroll { align-self: stretch; flex: 1; min-width: 0; overflow: auto; padding: var(--card-gap); text-align: left; color: oklch(var(--c2)); }
+.mf-doc { max-width: 820px; margin: 0 auto; line-height: 1.6; }
+.mf-doc h2, .mf-doc h3, .mf-doc h4 { color: oklch(var(--c1)); margin: 1em 0 .4em; }
+.mf-doc p { margin: 0 0 .7em; }
+.mf-doc-table { border-collapse: collapse; margin: .5em 0 1em; font-size: calc(var(--font-size) - 1px); }
+.mf-doc-table :is(th, td) { border: 1px solid oklch(var(--c3) / 30%); padding: 4px 8px; vertical-align: top; white-space: pre-wrap; }
+.mf-doc-table th { background: oklch(var(--b4)); color: oklch(var(--c1)); position: sticky; top: 0; }
+.mf-slide { padding: 0 0 .5em; border-bottom: 1px solid oklch(var(--c3) / 25%); }
+.mf-tk-c { color: oklch(var(--c3)); font-style: italic; }
+.mf-tk-s { color: oklch(0.72 0.14 150); }
+.mf-tk-n { color: oklch(0.75 0.13 60); }
+.mf-tk-k { color: oklch(var(--h4)); font-weight: 600; }
 .mf-preview-bar { display: flex; align-items: center; gap: 8px; }
 .mf-preview-bar .mf-spacer { flex: 1; }
 
@@ -529,6 +544,62 @@ body.mf :is(#user-menu-toggle, .usermenu .dropdown-toggle) .mf-update-dot { posi
 @media (prefers-reduced-motion: reduce) { body.mf :is(#user-menu-toggle, .usermenu .dropdown-toggle) .mf-update-dot { animation: none; } }
 
 /* frame mode: dialogs opened inside the popout (file picker, confirmations) must be opaque, or the form behind shows through them */
-html.mf-frame :is(.modal-content, .moodle-dialogue-base .moodle-dialogue, .moodle-dialogue-wrap, .filepicker, .fp-content, .fp-repo-area, .fp-navbar) { background: oklch(var(--b5)) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+html.mf-frame :is(.modal-content, .moodle-dialogue-base .moodle-dialogue, .moodle-dialogue-wrap, .filepicker) { background: oklch(var(--b5)) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
 html.mf-frame .modal-backdrop { background: oklch(0 0 0 / 55%) !important; backdrop-filter: none; -webkit-backdrop-filter: none; }
 html.mf-frame .modal { z-index: 1060; }
+
+/* ---- assignment status table: every row on the same card (Moodle's striping made one row light grey) ---- */
+body.mf .submissionstatustable :is(table, .generaltable) tr > :is(th, td) { background: oklch(var(--b5) / 55%) !important; color: oklch(var(--c2)); }
+body.mf .submissionstatustable :is(table, .generaltable) tr > :is(th, td).c0, body.mf .submissionstatustable :is(table, .generaltable) tr > th { color: oklch(var(--c3)); }
+body.mf .submissionstatustable :is(table, .generaltable) tr:hover > :is(th, td) { background: var(--menu-item-hov) !important; }
+
+/* ---- file manager + file picker (assignment upload, profile picture, editors' "insert image") ---- */
+body.mf .filemanager { padding: 0 !important; overflow: hidden; }
+body.mf :is(.fp-navbar, .fp-pathbar, .fp-toolbar) { background: transparent !important; border: 0 !important; border-bottom: 1px solid var(--card-border-base) !important; padding: 6px 8px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; color: oklch(var(--c2)); }
+body.mf .fp-navbar .fp-toolbar { border: 0 !important; padding: 0; }
+body.mf :is(.fp-navbar, .fp-toolbar, .fp-viewbar) :is(.btn, .fp-tb-view, a.fp-vb-icons, a.fp-vb-tree, a.fp-vb-details) { background: oklch(var(--b6) / 70%) !important; border: 0 !important; border-radius: var(--item-radius, 10px) !important; color: oklch(var(--c2)) !important; box-shadow: none !important; }
+body.mf :is(.fp-navbar, .fp-toolbar, .fp-viewbar) :is(.btn:hover, .checked, .active) { background: oklch(var(--h4) / 22%) !important; color: oklch(var(--c1)) !important; }
+body.mf .fp-restrictions, body.mf .fp-path-folder-name, body.mf .fp-filename { color: oklch(var(--c3)); }
+body.mf .fp-content { min-height: 120px; padding: 8px; color: oklch(var(--c2)); }
+body.mf :is(.dndupload-target, .fp-dropzone) { border: 2px dashed oklch(var(--c3) / 45%) !important; border-radius: var(--item-big-radius) !important; background: transparent !important; color: oklch(var(--c3)); transition: border-color .15s, background .15s; }
+body.mf :is(.dndupload-target:hover, .dndupload-over, .dndupload-target.dndupload-ready) { border-color: oklch(var(--h4)) !important; background: oklch(var(--h4) / 8%) !important; }
+body.mf .fp-iconview .fp-file:hover, body.mf .fp-filename-field:hover { background: var(--menu-item-hov); border-radius: var(--item-radius, 10px); }
+
+/* picker dialog: a sidebar of sources + the active source's panel */
+body.mf .moodle-dialogue-base .moodle-dialogue { border: 1px solid var(--card-border-base) !important; border-radius: var(--item-big-radius) !important; box-shadow: var(--overlay-shadow) !important; overflow: hidden; }
+body.mf .moodle-dialogue-base .moodle-dialogue-hd { background: transparent !important; color: oklch(var(--c1)) !important; border: 0 !important; border-bottom: 1px solid var(--card-border-base) !important; padding: 12px 16px; font-size: var(--font-size-subheading); font-weight: var(--font-weight-medium); }
+body.mf .moodle-dialogue-base .moodle-dialogue-bd { background: transparent !important; color: oklch(var(--c2)); padding: 12px; }
+body.mf .fp-repo-area { padding: 4px; }
+body.mf .fp-repo-area .fp-repo { margin: 2px 0; border-radius: var(--item-radius, 10px); overflow: hidden; }
+body.mf .fp-repo-area .fp-repo a { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: oklch(var(--c2)) !important; text-decoration: none; }
+body.mf .fp-repo-area .fp-repo:hover { background: var(--menu-item-hov); }
+body.mf .fp-repo-area .fp-repo.active { background: oklch(var(--h4) / 18%); }
+body.mf .fp-repo-area .fp-repo.active a { color: oklch(var(--c1)) !important; font-weight: var(--font-weight-medium); }
+body.mf .file-picker .fp-content { border: 1px solid var(--card-border-base) !important; background: oklch(var(--b6) / 40%) !important; box-shadow: none; }
+body.mf .fp-upload-form, body.mf .fp-fileform, body.mf .fp-select { padding: 12px; }
+body.mf :is(.fp-upload-form, .fp-select, .fp-fileform) :is(label, .fp-saveas, .fp-setauthor, .fp-setlicense) { color: oklch(var(--c2)); }
+body.mf :is(.fp-upload-form, .fp-select, .fp-fileform) .fp-field, body.mf :is(.fp-upload-form, .fp-select) .form-group { margin-bottom: 10px; }
+body.mf :is(.fp-upload-form, .fp-select) select { background: var(--textarea) !important; color: oklch(var(--c2)) !important; border: 0 !important; box-shadow: var(--input-shadow); border-radius: var(--item-med-radius) !important; padding: 6px 10px; }
+body.mf input[type="file"] { color: oklch(var(--c3)); max-width: 100%; }
+body.mf input[type="file"]::file-selector-button { margin-right: 10px; padding: 6px 14px; border: 0; border-radius: var(--item-radius, 10px); background: oklch(var(--h4) / 22%); color: oklch(var(--c1)); font: inherit; cursor: pointer; transition: background .15s; }
+body.mf input[type="file"]::file-selector-button:hover { background: oklch(var(--h4) / 36%); }
+body.mf :is(.fp-upload-btn, .fp-select-confirm, .fp-dlg-butconfirm, .fp-login-submit) { background: oklch(var(--h4) / 80%) !important; color: oklch(var(--c1)) !important; border: 0 !important; border-radius: var(--item-radius, 10px) !important; padding: 6px 16px; }
+body.mf :is(.fp-dlg-butcancel, .fp-select-cancel) { background: oklch(var(--b6) / 70%) !important; color: oklch(var(--c2)) !important; border: 0 !important; border-radius: var(--item-radius, 10px) !important; padding: 6px 16px; }
+body.mf .fp-msg, body.mf .fp-content-error { color: oklch(var(--c2)); }
+
+/* picker layout: sources on the left, the active source's panel on the right (Moodle's bootstrap row overflowed the dialog and wrapped) */
+body.mf .moodle-dialogue-base .moodle-dialogue.filepicker { width: min(980px, 94vw) !important; max-height: 90vh; }
+body.mf .moodle-dialogue-base .moodle-dialogue.filepicker :is(.moodle-dialogue-wrap, .moodle-dialogue-bd) { max-height: calc(90vh - 60px); overflow: auto; }
+body.mf .file-picker.fp-generallayout { display: grid !important; grid-template-columns: 230px minmax(0, 1fr); gap: 12px; margin: 0 !important; width: 100% !important; }
+body.mf .file-picker.fp-generallayout > * { width: auto !important; max-width: none !important; min-width: 0; padding: 0 !important; flex: none; }
+body.mf .file-picker .fp-repo-area { flex-direction: column; flex-wrap: nowrap; }
+body.mf .file-picker .fp-repo-items { height: 100%; }
+body.mf .file-picker .fp-content-error { color: oklch(var(--c3)); }
+/* every YUI dialog is opaque (the page behind showed through), on top of a plain dim */
+body.mf .moodle-dialogue-base .moodle-dialogue, body.mf .moodle-dialogue-base .moodle-dialogue-wrap { background: oklch(var(--b5)) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+body.mf .moodle-dialogue-base .moodle-dialogue-lightbox, body.mf .moodle-dialogue-base .yui3-widget-mask { background: oklch(0 0 0 / 55%) !important; opacity: 1 !important; backdrop-filter: none !important; }
+body.mf .moodle-dialogue-base .moodle-dialogue.filepicker :is(.moodle-dialogue-wrap, .moodle-dialogue-bd) { width: 100% !important; max-width: 100%; box-sizing: border-box; }
+body.mf .file-picker :is(.fp-upload-form, .fp-content-center, .fp-formset) { display: block !important; width: 100% !important; max-width: 100%; box-sizing: border-box; }
+body.mf .file-picker :is(.fp-saveas, .fp-setauthor, .fp-setlicense, .fp-path) input, body.mf .file-picker .fp-formset :is(input[type="text"], select) { width: 100%; box-sizing: border-box; }
+body.mf .moodle-dialogue-bd > .container { width: 100% !important; max-width: 100% !important; min-width: 0 !important; padding: 0 !important; margin: 0 !important; }
+body.mf .file-picker .fp-repo-items.card { min-width: 0; }

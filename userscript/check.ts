@@ -84,12 +84,18 @@ assert.equal(kindFor("application/pdf; charset=x", "/a"), "pdf");
 assert.equal(kindFor("image/png", "/a"), "image");
 assert.equal(kindFor("application/octet-stream", "/pluginfile.php/1/mod_resource/content/1/a.PDF"), "pdf");
 assert.equal(kindFor("text/html", "/mod/resource/view.php"), undefined);
-assert.equal(kindFor("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "/a.docx"), undefined);
+assert.equal(kindFor("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "/a.docx"), "docx");
+assert.equal(kindFor("application/octet-stream", "/a.XLSX"), "xlsx");
+assert.equal(kindFor("text/x-python", "/a.py"), "text");
+assert.equal(kindFor("application/octet-stream", "/q.sql"), "text");
+assert.equal(kindFor("text/html", "/a.docx"), undefined);
+assert.equal(kindFor("application/x-rar", "/a.rar"), undefined);
+{ const { parseCsv } = await import("./src/office"); assert.deepEqual(parseCsv('a;b\n"x;1";"he said ""hi"""\r\n'), [["a", "b"], ["x;1", 'he said "hi"']]); }
 const O = "https://x.test";
 assert.ok(isFileLink(new URL(`${O}/mod/resource/view.php?id=3`), O));
 assert.ok(!isFileLink(new URL(`${O}/mod/resource/view.php`), O));
 assert.ok(isFileLink(new URL(`${O}/pluginfile.php/1/mod_resource/content/1/a.png`), O));
-assert.ok(!isFileLink(new URL(`${O}/pluginfile.php/1/a.png?forcedownload=1`), O) && !isFileLink(new URL(`${O}/pluginfile.php/1/a.docx`), O));
+assert.ok(isFileLink(new URL(`${O}/pluginfile.php/1/a.png?forcedownload=1`), O) && isFileLink(new URL(`${O}/pluginfile.php/1/a.docx`), O) && !isFileLink(new URL(`${O}/pluginfile.php/1/a.rar`), O));
 assert.ok(!isFileLink(new URL("https://other.test/mod/resource/view.php?id=3"), O));
 
 // section list: neighbours of the active entry

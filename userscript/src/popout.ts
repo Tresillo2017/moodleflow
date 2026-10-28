@@ -15,15 +15,19 @@ export function isActivityLink(url: URL, origin: string): boolean {
 }
 
 let wrap: HTMLElement | undefined;
-function close(): void {
+let dirty = false; // the form inside has been touched (typed, picked or uploaded a file)
+const DIALOG = ".modal.show, .moodle-dialogue-base:not(.moodle-dialogue-hidden), .filepicker, .mf-preview-open";
+function close(force = false): void {
 	if (!wrap) return;
+	if (!force && dirty && !confirm("Close without saving? What you entered here will be lost.")) return;
+	dirty = false;
 	const el = wrap;
 	wrap = undefined;
 	removeEventListener("keydown", onKey, true);
 	el.querySelector(".bleh-modal")?.classList.add("to-remove");
 	setTimeout(() => el.remove(), 250);
 }
-function onKey(e: KeyboardEvent): void { if (e.key === "Escape" && !document.querySelector(".bleh-modals.has-dialog[data-mf-top]")) { e.preventDefault(); close(); } }
+function onKey(e: KeyboardEvent): void { if (e.key === "Escape" && !e.defaultPrevented && !document.querySelector(".bleh-modals.has-dialog[data-mf-top]")) { e.preventDefault(); close(); } }
 
 function open(href: string, name: string): void {
 	close();
@@ -31,14 +35,14 @@ function open(href: string, name: string): void {
 	const title = h("h4", {}, name);
 	const tab = h("a", { class: "btn flex-button", target: "_blank", rel: "noopener", href }, "Open in tab");
 	const closeBtn = h("button", { type: "button", class: "btn modal-close-button icon-mask", "aria-label": "Close", "data-type": "close" }, "Close");
-	closeBtn.onclick = close;
+	closeBtn.onclick = () => close();
 	const loading = h("div", { class: "mf-popout-loading" }, h("span", { class: "mf-spinner" }));
 	const modal = h("div", { class: "bleh-modal", "data-modal-type": "activity", role: "dialog", "aria-label": name },
 		h("div", { class: "bleh-modal-title" }, h("div", {}, title)), closeBtn,
 		h("div", { class: "bleh-modal-body" }, loading, frame),
 		h("div", { class: "mf-preview-bar" }, h("span", { class: "mf-spacer" }), tab));
 	const el = h("div", { class: "bleh-modals has-dialog" }, modal);
-	el.addEventListener("mousedown", (e) => { if (e.target === el) close(); });
+	el.addEventListener("mousedown", (e) => { if (e.target === el && !dirty) close(); }); // a stray click must not throw away a half-done submission
 	document.body.append(el);
 	wrap = el;
 	addEventListener("keydown", onKey, true);
@@ -49,7 +53,14 @@ function open(href: string, name: string): void {
 			const t = doc.querySelector("h1")?.textContent?.trim() || doc.title.split("|")[0].trim();
 			if (t) title.textContent = t;
 			tab.href = frame.contentWindow!.location.href;
-			doc.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+			dirty = false; // new page in the frame (including after a save)
+			doc.addEventListener("keydown", (e) => { if (e.key === "Escape" && !e.defaultPrevented && !doc.querySelector(DIALOG) && !(e.target as Element).closest?.("input, textarea, select, [contenteditable]")) close(); });
+			doc.addEventListener("input", () => { dirty = true; });
+			doc.addEventListener("change", () => { dirty = true; });
+			// the file picker adds files without a change event on the form; a drop that misses the drop zone must not navigate the frame to the file
+			doc.addEventListener("click", (e) => { if ((e.target as Element).closest?.(".fp-upload-btn, .fp-select-confirm, .fp-dlg-butconfirm, .fp-file")) dirty = true; });
+			for (const t of ["dragover", "drop"]) doc.addEventListener(t, (e) => { if (!e.defaultPrevented) e.preventDefault(); });
+			frame.contentWindow!.addEventListener("beforeunload", () => { dirty = false; }); // submitting the form is not abandoning it
 		} catch { /* left the site: keep the original title */ }
 	});
 }

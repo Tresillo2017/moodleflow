@@ -1,0 +1,98 @@
+/* ---- the rest of Moodle's pages on bleh's card / row / field language (quiz, forum, grades, profile, people, messages, admin forms) ----
+   Shared recipe: card = b5 surface + card border + big radius; row = b6 tint + medium radius; accent = --h4. */
+
+/* generic building blocks Bootstrap pages use everywhere */
+body.mf :is(.alert, .box, .generalbox, .box.py-3, .card, .list-group-item, .accordion-item, .que, .forumpost, .userprofile .card, .mod_quiz-summary-table, .no-overflow > .generaltable) { color: oklch(var(--c2)); }
+body.mf :is(.alert, .generalbox, .box.generalbox, .list-group-item, .accordion-item, .forumpost, .que) { background: oklch(var(--b5) / var(--solarium-opacity, 90%)) !important; border: 1px solid var(--card-border-base) !important; border-radius: var(--item-big-radius) !important; box-shadow: none !important; }
+body.mf .alert { padding: 10px 14px; }
+body.mf .alert-info { border-left: 3px solid oklch(var(--h4)) !important; }
+body.mf .alert-success { border-left: 3px solid oklch(0.72 0.17 150) !important; }
+body.mf .alert-warning { border-left: 3px solid oklch(0.8 0.15 75) !important; }
+body.mf :is(.alert-danger, .alert-error) { border-left: 3px solid oklch(0.7 0.19 23) !important; }
+body.mf .alert :is(a, .alert-link) { color: oklch(var(--c1)); text-decoration: underline; }
+body.mf .list-group { gap: 6px; display: flex; flex-direction: column; }
+body.mf .list-group-item { padding: 10px 14px; }
+body.mf :is(a.list-group-item, .list-group-item-action):hover { background: var(--menu-item-hov) !important; }
+body.mf .list-group-item.active { background: oklch(var(--h4) / 20%) !important; border-color: oklch(var(--h4) / 50%) !important; color: oklch(var(--c1)); }
+body.mf .accordion-button, body.mf .card-header { background: transparent !important; color: oklch(var(--c1)); border-color: var(--card-border-base) !important; }
+body.mf :is(.pagination .page-link, .paging .page-link) { background: oklch(var(--b6) / 60%) !important; border: 0 !important; border-radius: var(--item-radius, 10px) !important; margin: 0 2px; color: oklch(var(--c2)); }
+body.mf .pagination .page-item.active .page-link { background: oklch(var(--h4) / 80%) !important; color: oklch(var(--c1)); }
+body.mf .pagination .page-item.disabled .page-link { opacity: .45; }
+body.mf .breadcrumb { background: transparent !important; padding: 0; }
+body.mf .breadcrumb-item + .breadcrumb-item::before { color: oklch(var(--c3)); }
+body.mf :is(.nav-tabs, .nav-pills, .moremenu .nav) .nav-link { border-radius: var(--item-radius, 10px) !important; color: oklch(var(--c3)); border: 0 !important; }
+body.mf :is(.nav-tabs, .nav-pills) .nav-link:hover { background: var(--menu-item-hov); color: oklch(var(--c2)); }
+body.mf :is(.nav-tabs, .nav-pills) .nav-link.active { background: oklch(var(--h4) / 20%) !important; color: oklch(var(--c1)); }
+body.mf .tertiary-navigation, body.mf .secondary-navigation { background: transparent !important; border: 0 !important; }
+body.mf :is(.badge-primary, .badge-info, .bg-primary, .bg-info) { background: oklch(var(--h4) / 25%) !important; color: oklch(var(--c1)) !important; }
+body.mf :is(.badge-secondary, .badge-light, .bg-light, .bg-secondary) { background: oklch(var(--b6)) !important; color: oklch(var(--c2)) !important; }
+body.mf .btn-secondary, body.mf .btn-outline-secondary, body.mf .btn-light { background: oklch(var(--b6) / 70%) !important; color: oklch(var(--c2)) !important; border: 0 !important; border-radius: var(--item-radius, 10px) !important; }
+body.mf :is(.btn-secondary, .btn-outline-secondary, .btn-light):hover { background: var(--menu-item-hov) !important; }
+body.mf :is(.btn-danger, .btn-outline-danger) { background: oklch(0.7 0.19 23 / 22%) !important; color: oklch(0.85 0.1 23) !important; border: 0 !important; border-radius: var(--item-radius, 10px) !important; }
+body.mf .progress { background: oklch(var(--b6)) !important; border-radius: 99px; overflow: hidden; }
+body.mf .progress-bar { background: oklch(var(--h4)) !important; }
+body.mf :is(.table-responsive, .no-overflow) { border-radius: var(--item-radius, 10px); }
+body.mf :is(.collapsible-actions, .fheader, legend, .ftoggler) { color: oklch(var(--c1)); }
+body.mf :is(.mform fieldset, .mform .fcontainer) { border: 0; }
+body.mf .mform .fitem { padding: 6px 0; }
+body.mf .form-autocomplete-selection .badge, body.mf .form-autocomplete-suggestions { background: oklch(var(--menu-bg)) !important; border-radius: var(--item-radius, 10px); color: oklch(var(--c2)); border: 1px solid var(--card-border-base); }
+body.mf .form-autocomplete-suggestions li[aria-selected="true"], body.mf .form-autocomplete-suggestions li:hover { background: var(--menu-item-hov); }
+body.mf :is(input[type="checkbox"], input[type="radio"]) { accent-color: oklch(var(--h4)); }
+
+/* quiz: attempt, summary, review */
+body.mf .que { margin-bottom: var(--card-gap); overflow: hidden; display: flex; flex-wrap: wrap; }
+body.mf .que .info { background: oklch(var(--b6) / 55%) !important; color: oklch(var(--c2)) !important; border: 0 !important; border-radius: 0 !important; }
+body.mf .que :is(.info h3, .info .no, .info .qno) { color: oklch(var(--c1)); }
+body.mf .que :is(.formulation, .content, .outcome, .comment) { background: transparent !important; color: oklch(var(--c2)) !important; border: 0 !important; }
+body.mf .que .formulation :is(.qtext, label, .answer, .answer *:not(input):not(select)) { color: inherit; }
+body.mf .que :is(.answer div[class^="r"], .answer .r0, .answer .r1) { padding: 6px 10px; border-radius: var(--item-radius, 10px); }
+body.mf .que :is(.answer .r0:hover, .answer .r1:hover) { background: var(--menu-item-hov); }
+body.mf .que .specificfeedback, body.mf .que .generalfeedback, body.mf .que .rightanswer { background: oklch(var(--h4) / 10%) !important; border-radius: var(--item-radius, 10px); padding: 8px 12px; color: oklch(var(--c2)); }
+body.mf .que.correct .info, body.mf .que .correct { box-shadow: inset 3px 0 0 oklch(0.72 0.17 150); }
+body.mf .que.incorrect .info, body.mf .que .incorrect { box-shadow: inset 3px 0 0 oklch(0.7 0.19 23); }
+body.mf .que .grade { color: oklch(var(--c3)); }
+body.mf :is(.qnbutton, .quiz-nav .qn_buttons a) { border-radius: var(--item-radius, 10px) !important; background: oklch(var(--b6) / 70%) !important; border: 0 !important; color: oklch(var(--c2)) !important; }
+body.mf .qnbutton.thispage, body.mf .qnbutton.answersaved { background: oklch(var(--h4) / 30%) !important; color: oklch(var(--c1)) !important; }
+body.mf .qnbutton.correct { box-shadow: inset 0 -3px oklch(0.72 0.17 150); }
+body.mf .qnbutton.incorrect { box-shadow: inset 0 -3px oklch(0.7 0.19 23); }
+body.mf :is(.quizattemptsummary, .quizreviewsummary, .quizsummaryofattempt) :is(th, td) { background: oklch(var(--b5) / 55%) !important; border: 0 !important; padding: 10px 14px !important; }
+body.mf #page-mod-quiz-attempt .submitbtns, body.mf .submitbtns { gap: 8px; }
+body.mf #countdown, body.mf #quiz-time-left { background: oklch(var(--h4) / 18%); border-radius: 99px; padding: 2px 12px; color: oklch(var(--c1)); }
+
+/* forum */
+body.mf .forumpost { padding: 14px 16px; margin-bottom: var(--card-gap); }
+body.mf .forumpost :is(.row.header, .topic, .author, .posting, .content-alignment-container) { background: transparent !important; border: 0 !important; color: oklch(var(--c2)); }
+body.mf .forumpost .subject { color: oklch(var(--c1)); font-weight: var(--font-weight-medium); }
+body.mf .forumpost :is(.author, .author a, .time) { color: oklch(var(--c3)); font-size: calc(var(--font-size) - 1px); }
+body.mf .forumpost .forum-post-container, body.mf .forumpost .post-actions { background: transparent !important; }
+body.mf .forumpost .forumpost { margin-left: 24px; }
+body.mf :is(.discussion-list, .forumheaderlist) :is(th, td) { background: transparent !important; }
+body.mf .discussion-list tr:hover > * { background: var(--menu-item-hov) !important; }
+body.mf .unread, body.mf .discussion-unread { box-shadow: inset 3px 0 0 oklch(var(--h4)); }
+
+/* grades: user report + overview */
+body.mf :is(.user-report-container, .gradereport-overview-table, .generaltable.user-grade) :is(th, td) { background: oklch(var(--b5) / 55%) !important; border: 0 !important; padding: 8px 12px !important; }
+body.mf .user-grade :is(.column-grade, .column-percentage) { color: oklch(var(--c1)); font-weight: var(--font-weight-medium); }
+body.mf :is(.user-grade .levelodd, .user-grade .leveleven, .user-grade tr.category > *, .user-grade tr.baggt > *) { background: oklch(var(--b5) / 55%) !important; }
+body.mf .user-grade tr.category > * { background: oklch(var(--b6) / 60%) !important; color: oklch(var(--c1)); }
+
+/* profile, people, messages */
+body.mf :is(.userprofile, #region-main .profile-page) .card { padding: 14px 16px; }
+body.mf .userprofile .description { color: oklch(var(--c2)); }
+body.mf :is(.userprofile, .profile_tree) :is(dt, h3, .card-title) { color: oklch(var(--c1)); }
+body.mf :is(#participants, #participantsform) :is(th, td) { background: transparent !important; }
+body.mf .userinitials, body.mf .userpicture { border-radius: 50%; }
+body.mf [data-region="message-drawer"], body.mf .message-app { background: oklch(var(--b5)) !important; color: oklch(var(--c2)); border-color: var(--card-border-base) !important; }
+body.mf .message-app :is(.bg-light, .bg-white, .list-group-item) { background: transparent !important; }
+body.mf .message-app .message.send { background: oklch(var(--h4) / 28%) !important; color: oklch(var(--c1)); border-radius: var(--item-big-radius); }
+body.mf .message-app .message.received { background: oklch(var(--b6) / 70%) !important; color: oklch(var(--c2)); border-radius: var(--item-big-radius); }
+
+/* wiki / glossary / database / lesson / choice / survey / chat bodies share these */
+body.mf :is(.glossarypost, .defaulttemplate, .entry, .wiki_contentbox, .choices, .surveyquestion, .lessoncontent, .generalbox.center) { color: oklch(var(--c2)); }
+body.mf :is(.glossarypost, .wiki_contentbox, .lessoncontent) { background: oklch(var(--b5) / var(--solarium-opacity, 90%)) !important; border: 1px solid var(--card-border-base) !important; border-radius: var(--item-big-radius) !important; padding: 14px 16px; }
+body.mf :is(#page-admin-index, .path-admin) .adminsettings :is(.form-item, .form-setting) { padding: 8px 0; border-color: var(--card-border-base) !important; }
+body.mf .path-admin :is(.form-label, .form-shortname) { color: oklch(var(--c2)); }
+
+/* leftovers found on the live demo: monochrome <img> icons are black on dark themes; empty activity header boxes show as hollow pills */
+body.mf[data-bleh--theme_type="dark"] img.icon:not([src*="/f/"]):not(.userpicture) { filter: invert(.85); }
+body.mf :is(.activity-header, .activity-information):not(:has(:is(a, p, span, dl, dt, button, img, strong, li, h1, h2, h3, h4))) { display: none !important; }
