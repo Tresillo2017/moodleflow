@@ -13,7 +13,7 @@
 	},
 	"dependencies": {
 		"@mingcute/react": "^3.0.2",
-		"@tabler/icons-react": "^3.36.1",
+		"@tabler/icons-react": "^3.50.0",
 		"next": "^16.4.3",
 		"radix-ui": "^1.4.3",
 		"react": "^19.3.1",
@@ -29,7 +29,7 @@
 		"esbuild": "^0.28.2",
 		"eslint": "^9",
 		"eslint-config-next": "^16.4.3",
-		"postcss": "^8.5.31",
+		"postcss": "^8.5.32",
 		"typescript": "^5"
 	}
 }
