@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.19.1] - 2026-11-10
+### Fixed
+- On the two days a year when the clocks change, a deadline close to midnight could be listed under the wrong heading (Today / Tomorrow) and the dashboard's week strip could be off by an hour. Days are now counted by the calendar.
+
+### Changed
+- "Save as Markdown" only downloads pictures hosted on your Moodle site, so no other website gets a request, and it stops at 15 MB per picture, 60 MB in total and 60 pictures. Other pictures keep their web address in the file.
+
 ## [0.19.0] - 2026-11-10
 ### Added
 - Assignment pages get a "Save as Markdown" button under the description. It saves the text as a `.md` file, or as a `.zip` with an `images/` folder when the description has pictures (pictures that cannot be downloaded keep their web address). Turn it off in settings under "Save assignments as Markdown".
