@@ -17,6 +17,8 @@ jobs:
       - run: bun run build
       - run: bun check.ts
         working-directory: userscript
+      - run: bun test markdown.test.ts
+        working-directory: userscript
 
   # Dependabot PRs (minor/patch only, see dependabot.yml) merge themselves once CI is green.
   automerge:
