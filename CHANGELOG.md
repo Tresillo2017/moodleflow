@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-11-10
+### Fixed
+- The Assignments page showed "Couldn't load your assignments" on real sites: it asked Moodle for more events at once than it allows. It now loads them in batches of 50.
+
 ## [0.18.0] - 2026-11-10
 ### Added
 - An Assignments page (`#moodleflow/assignments`) listing everything still pending, grouped by Overdue, Today, Tomorrow, This week and Later, with period chips, search and a per-course filter. It is reachable from the top navigation, the account menu, the phone dock, the quick switcher, "View all" on the dashboard and `g` then `t`.

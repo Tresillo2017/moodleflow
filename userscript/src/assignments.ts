@@ -10,7 +10,7 @@ type Period = "all" | "Overdue" | "Today" | "Soon" | "Later";
 type RawEvent = DueEvent & { action?: { actionable?: boolean }; course?: { id?: number; fullname?: string } };
 type Loaded = { events: Pending[]; ok: boolean };
 
-const KEY = "assignments", BACK_DAYS = 45, AHEAD_DAYS = 120, LIMIT = 100, DONE_MAX = 200;
+const KEY = "assignments", BACK_DAYS = 45, AHEAD_DAYS = 120, PAGE = 50, MAX_PAGES = 4, LIMIT = PAGE * MAX_PAGES, DONE_MAX = 200; // Moodle refuses more than 50 events per request
 const KIND: Record<string, string> = { assign: "Assignment", quiz: "Quiz", forum: "Forum", lesson: "Lesson", workshop: "Workshop", feedback: "Feedback", choice: "Choice", data: "Database" };
 
 /** Pure: "in 3 days", "2 days ago", "now" … relative to `now` (seconds). */
@@ -34,17 +34,27 @@ export const inPeriod = (timesort: number, period: Period, now: number): boolean
 	return period === "Soon" ? b === "Tomorrow" || b === "This week" : b === period;
 };
 
-/** Always asks Moodle (a just-submitted assignment must leave the list at once); the saved copy is only the fallback. */
+/** Always asks Moodle (a just-submitted assignment must leave the list at once); the saved copy is only the fallback.
+ *  Moodle caps a request at 50 events, so later pages continue after the last event we got. */
 async function load(): Promise<Loaded> {
 	const saved = read<{ events: Pending[] }>(KEY, { events: [] }).events;
 	const now = Math.floor(Date.now() / 1000);
-	const res = await call<{ events: RawEvent[] }>("core_calendar_get_action_events_by_timesort", { timesortfrom: now - BACK_DAYS * DAY, timesortto: now + AHEAD_DAYS * DAY, limitnum: LIMIT });
-	if (!res) return { events: saved, ok: false };
-	const events = res.events.filter((e) => e.action?.actionable !== false)
-		.map(({ id, name, timesort, url, modulename, course }): Pending => ({ id, name, timesort, url, modulename, course: { id: course?.id, fullname: course?.fullname ?? "Other" } }));
+	const raw: RawEvent[] = [];
+	let from = now - BACK_DAYS * DAY, after = 0;
+	for (let page = 0; page < MAX_PAGES; page++) {
+		const res = await call<{ events: RawEvent[] }>("core_calendar_get_action_events_by_timesort", { timesortfrom: from, timesortto: now + AHEAD_DAYS * DAY, limitnum: PAGE, ...(after ? { aftereventid: after } : {}) });
+		if (!res) return { events: raw.length ? toPending(raw) : saved, ok: false };
+		raw.push(...res.events);
+		const last = res.events[res.events.length - 1];
+		if (res.events.length < PAGE || !last) break;
+		from = last.timesort; after = last.id;
+	}
+	const events = toPending(raw);
 	write(KEY, { at: Date.now(), events });
 	return { events, ok: true };
 }
+const toPending = (raw: RawEvent[]): Pending[] => raw.filter((e) => e.action?.actionable !== false)
+	.map(({ id, name, timesort, url, modulename, course }): Pending => ({ id, name, timesort, url, modulename, course: { id: course?.id, fullname: course?.fullname ?? "Other" } }));
 
 type State = { events: Pending[]; loading: boolean; failed: boolean; period: Period; course: string; text: string; showDone: boolean };
 const doneIds = (): Set<number> => new Set(read<{ ids: number[] }>(DONE, { ids: [] }).ids);
