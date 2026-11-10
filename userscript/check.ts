@@ -1,6 +1,7 @@
 // bun check.ts — smoke checks for the pure logic (no DOM): accent maths, css url parsing, settings, seasons, search scoring.
 import { strict as assert } from "node:assert";
-(globalThis as any).matchMedia = (q: string) => ({ matches: /dark/.test(q) ? (globalThis as any).__dark === true : false, addEventListener() {} });
+const g = globalThis as unknown as { matchMedia: (q: string) => { matches: boolean; addEventListener(): void }; __dark?: boolean };
+g.matchMedia = (q: string) => ({ matches: /dark/.test(q) ? g.__dark === true : false, addEventListener() {} });
 const { rgbToOklch, accentFromRgb, cssUrl } = await import("./src/backdrop");
 const { DEFAULTS, THEMES, sanitize } = await import("./src/settings");
 const { effectiveTheme } = await import("./src/apply");
@@ -42,7 +43,7 @@ assert.ok(THEMES.some((t) => t.type === "light") && THEMES.some((t) => t.type ==
 
 // "adapt to my device": light OS → day theme, dark OS → night theme
 assert.equal(effectiveTheme({ ...DEFAULTS, theme: "oled" }), "oled");
-(globalThis as any).__dark = false;
+g.__dark = false;
 assert.equal(effectiveTheme({ ...DEFAULTS, theme_schedule: true, theme_day: "ink", theme_night: "oled" }), "ink");
 
 // sanitize: right keys + right types only, numbers clamped, enums checked, text bounded

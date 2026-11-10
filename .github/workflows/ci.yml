@@ -12,6 +12,8 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - run: bunx tsc --noEmit
+      - run: bunx tsc -p userscript/tsconfig.json
+      - run: bun run lint
       - run: bun run build
       - run: bun check.ts
         working-directory: userscript

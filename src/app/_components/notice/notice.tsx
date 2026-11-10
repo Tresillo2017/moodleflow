@@ -1,12 +1,16 @@
 "use client";
 
 import { Dialog } from "radix-ui";
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "next/navigation";
 import { IconInfoCircle, IconX } from "@tabler/icons-react";
 import styles from "./notice.module.css";
 
 const SEEN = "mf-notice-seen";
+
+const noSubscription = () => () => {};
+// ponytail: once per tab session, redirected visitors always see it
+const shouldShow = () => new URLSearchParams(location.search).get("from") === "app" || !sessionStorage.getItem(SEEN);
 
 interface NoticeProps {
 	children: React.ReactNode
@@ -15,18 +19,17 @@ interface NoticeProps {
 export function Notice({
 	children
 }: NoticeProps) {
-	const [open, setOpen] = useState(false);
-
-	useEffect(() => {
-		// ponytail: once per tab session, redirected visitors always see it
-		const redirected = new URLSearchParams(location.search).get("from") === "app";
-		if (redirected || !sessionStorage.getItem(SEEN)) setOpen(true);
-	}, []);
+	// server render and hydration see false; the client decides after hydration
+	const wanted = useSyncExternalStore(noSubscription, shouldShow, () => false);
+	const [closed, setClosed] = useState(false);
+	const open = wanted && !closed;
 
 	return (
 		<Dialog.Root open={open} onOpenChange={(o) => {
-			if (!o) sessionStorage.setItem(SEEN, "1");
-			setOpen(o);
+			if (!o) {
+				sessionStorage.setItem(SEEN, "1");
+				setClosed(true);
+			}
 		}}>
 			<Dialog.Portal>
 				<Dialog.Overlay className={styles.overlay}>
