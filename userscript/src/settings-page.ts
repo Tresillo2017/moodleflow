@@ -239,7 +239,7 @@ export const TABS: Tab[] = [
 			switchRow("confetti", "Celebrate submissions", "A little confetti when an assignment is submitted"),
 			switchRow("file_icons", "File type icons", "Show PDF, PowerPoint, Excel, Word, SQL, ZIP … badges on file activities instead of the generic icon"),
 			switchRow("unread", "New markers", "Flag activities that appeared since you last looked, and count them on course cards (courses you have opened)"),
-			switchRow("shortcuts", "Keyboard shortcuts", "[ ] sections · g then d/c/a/g/m/p to go places · j k through activities · ? for the full list"))),
+			switchRow("shortcuts", "Keyboard shortcuts", "[ ] sections · g then d/c/t/a/g/m/p to go places · j k through activities · ? for the full list"))),
 		panel(panelHead("layout-manage", "Dashboard"), group(
 			switchRow("home", "New dashboard layout", "Greeting, your courses with progress, this week at a glance and quick links instead of Moodle's blocks (off = Moodle's own)"),
 			switchRow("deadlines", "Due soon", "List upcoming and overdue deadlines at the top of the dashboard"),

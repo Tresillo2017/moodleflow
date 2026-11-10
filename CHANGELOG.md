@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-11-10
+### Added
+- An Assignments page (`#moodleflow/assignments`) listing everything still pending, grouped by Overdue, Today, Tomorrow, This week and Later, with period chips, search and a per-course filter. It is reachable from the top navigation, the account menu, the phone dock, the quick switcher, "View all" on the dashboard and `g` then `t`.
+- On the Assignments page you can mark everything overdue as done at once, and review or restore items you ticked off by mistake.
+
+### Changed
+- A calmer dashboard: the Shortcuts block is gone, "Due soon" shows five items and "Recently visited" four. On phones, what is due comes before the course grid.
+- "Due soon" refreshes after a minute (it was ten), so a handed-in assignment leaves the list sooner. The Assignments page always asks Moodle when it opens.
+- The course filter chips and the tick buttons are proper toggle buttons: keyboard friendly, with a larger hit area, and no longer nested inside links.
+
+### Fixed
+- A failed load on the Assignments page no longer says "All caught up"; it says it could not load and offers to try again.
+
 ## [0.17.0] - 2026-10-28
 ### Added
 - The file preview opens Word (docx), Excel (xlsx), PowerPoint (pptx), zip contents and csv/tsv as tables, with no extra download.

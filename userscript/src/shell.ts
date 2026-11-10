@@ -7,6 +7,7 @@ import { onDomChange } from "./watch";
 import { TABS, sideColumn, buildAll, showTab, syncSettingsControls, mountSettingsControls } from "./settings-page";
 
 import { h } from "./dom";
+import { buildAssignments } from "./assignments";
 import * as settings from "./settings";
 const q = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel);
 
@@ -19,7 +20,7 @@ const TAB_ICONS: Record<string, string> = {
 	coursereports: "chart-line", questionbank: "question", contentbank: "library", coursecompletion: "checks", badgesview: "obsession",
 	filtermanagement: "advanced", coursetools: "app", coursereuse: "copy", enrolments: "user-plus", more: "dots",
 	// primary navigation
-	history: "recent", offers: "labs", files: "library", home: "home", myhome: "layout-manage", mycourses: "library", calendar: "calendar", sitesettings: "advanced",
+	assignments: "checks", history: "recent", offers: "labs", files: "library", home: "home", myhome: "layout-manage", mycourses: "library", calendar: "calendar", sitesettings: "advanced",
 };
 
 function mastheadLink(label: string, href: string, key: string | undefined, active: boolean): HTMLElement {
@@ -33,7 +34,8 @@ function buildMasthead(): HTMLElement {
 	const home = h("a", { class: "btn navigation-item home-link", href: location.origin + "/" },
 		h("span", { class: "home-logo-container" }, logo && settings.get().branding_type === "logo" ? h("img", { src: logo, alt: "" }) : m.siteName()));
 	const nav = h("nav", { class: "navlist navlist--more masthead-nav masthead-nav-top" },
-		h("ul", { class: "navlist-items" }, ...m.primaryLinks().map((l) => mastheadLink(l.label, l.href, l.key, l.active))));
+		h("ul", { class: "navlist-items" }, ...m.primaryLinks().map((l) => mastheadLink(l.label, l.href, l.key, l.active)),
+			...(m.isLoggedIn() ? [mastheadLink("Assignments", "#moodleflow/assignments", "assignments", false)] : [])));
 
 	// global search is off by default in Moodle: only offer it when the stock navbar had a search field
 	const search = q("#searchinput-navbar, nav.navbar .simplesearchform input[type=text], #classroom-navbar .simplesearchform input[type=text]");
@@ -63,9 +65,10 @@ function buildMasthead(): HTMLElement {
 		const logout = usermenu.querySelector('a[href*="login/logout.php"]');
 		const entry = h("a", { class: "dropdown-item", href: "#moodleflow/visual", role: "menuitem", id: "mf-entry" }, "moodleflow settings");
 		const before = logout?.previousElementSibling?.classList.contains("dropdown-divider") ? logout.previousElementSibling : logout;
+		const todo = h("a", { class: "dropdown-item", href: "#moodleflow/assignments", role: "menuitem", id: "mf-assignments" }, "Assignments");
 		const news = h("a", { class: "dropdown-item", href: "#", role: "menuitem", id: "mf-news" }, "What's new");
 		news.onclick = (e) => { e.preventDefault(); document.dispatchEvent(new CustomEvent("moodleflow:changelog")); };
-		before?.before(entry, news);
+		before?.before(todo, entry, news);
 	}
 	else if (!m.isLoggedIn()) auth.append(h("a", { class: "btn auth-link", href: location.origin + "/login/index.php" }, "Log in"));
 
@@ -78,6 +81,7 @@ function buildMasthead(): HTMLElement {
 		...m.primaryLinks().map((l) => mobile(l.label, l.href, TAB_ICONS[l.key ?? ""] ?? "dot", l.active)),
 		m.isLoggedIn() ? mobile("Alerts", `${location.origin}/message/output/popup/notifications.php`, "notifications") : null,
 		m.isLoggedIn() ? mobile("Messages", `${location.origin}/message/index.php`, "mail") : null,
+		m.isLoggedIn() ? mobile("Tasks", "#moodleflow/assignments", "checks") : null,
 		mobile("Settings", "#moodleflow/visual", "settings"));
 	return h("header", { class: "masthead" },
 		h("div", { class: "masthead-inner-wrap" }, h("div", { class: "masthead-logo" }, home, nav, searchForm), wrap), dock);
@@ -138,7 +142,7 @@ export function buildShell(): void {
 		for (const block of document.querySelectorAll<HTMLElement>("#page-wrapper section.block, #page section.block")) {
 			if (!block.closest("#mf-root") && !block.closest(".modal, .drawer")) side.insertBefore(block, side.lastElementChild?.matches("aside") ? side.lastElementChild : null);
 		}
-		if (side.querySelector("section")) document.querySelector(".content")?.classList.remove("single-column");
+		if (!q(".page-content[data-mf-mode]") && side.querySelector("section")) document.querySelector(".content")?.classList.remove("single-column");
 	});
 	const content = h("main", { class: "content" + (side.childElementCount ? "" : " single-column") },
 		h("div", { class: "content-main" }, main), h("div", { class: "content-side" }, side));
@@ -196,6 +200,7 @@ export function openSettings(tabId = "visual"): void {
 	const container = q(".page-content"), main = q(".col-main"), side = q(".col-sidebar"), row = q(".page-content > .row");
 	if (!container || !main || !side || !row) return;
 	settingsTabId = TABS.some((t) => t.id === tabId) ? tabId : "visual";
+	if (container.dataset.mfMode && container.dataset.mfMode !== "settings") closeSettings();
 	const already = !!container.dataset.mfMode;
 	if (!already) {
 		hide(container.querySelectorAll(":scope > .page-header, :scope > .navlist"));
@@ -228,7 +233,7 @@ export function closeSettings(): void {
 	away = [];
 	delete container.dataset.mfMode;
 	delete document.body.dataset.mfSettingsOpen;
-	if (!q(".col-sidebar")?.childElementCount) q(".content")?.classList.add("single-column");
+	q(".content")?.classList.toggle("single-column", !q(".col-sidebar")?.childElementCount);
 }
 
 function buildHeaderFor(title: string, label: string): HTMLElement {
@@ -236,10 +241,32 @@ function buildHeaderFor(title: string, label: string): HTMLElement {
 		h("div", { class: "main-info" }, h("div", { class: "sub-text" }, label), h("h1", { class: "page-header-title generic-page-title" }, title))));
 }
 
-/** #moodleflow/<tab> opens settings; anything else (or no hash) goes back to the Moodle page. */
+/** The Assignments page: same swap as settings (Moodle's nodes are hidden, ours are marked `data-mf-settings` so closeSettings removes them). */
+export function openAssignments(): void {
+	const container = q(".page-content"), main = q(".col-main"), side = q(".col-sidebar");
+	if (!container || !main || !side) return;
+	if (container.dataset.mfMode === "assignments") return;
+	closeSettings();
+	hide(container.querySelectorAll(":scope > .page-header, :scope > .navlist"));
+	hide(main.children);
+	hide(side.children);
+	container.dataset.mfMode = "assignments";
+	const header = buildHeaderFor("Assignments", "Everything still pending");
+	header.setAttribute("data-mf-settings", "");
+	container.prepend(header);
+	const cols = buildAssignments();
+	const mark = (els: HTMLElement[]) => els.map((el) => { el.setAttribute("data-mf-settings", ""); return el; });
+	main.append(...mark(cols.main));
+	side.append(...mark(cols.side));
+	q(".page-content .toolbar")?.remove();
+	scrollTo({ top: 0 }); // the page itself decides single/two columns (no courses, no sidebar)
+}
+
+/** #moodleflow/assignments opens the assignments page, #moodleflow/<tab> settings; anything else (or no hash) goes back to the Moodle page. */
 export function routeSettings(): void {
 	const r = location.hash.match(/^#moodleflow(?:\/(\w+))?/);
-	if (r) openSettings(r[1] ?? settingsTabId);
+	if (r?.[1] === "assignments") { if (m.isLoggedIn()) openAssignments(); else closeSettings(); }
+	else if (r) openSettings(r[1] ?? settingsTabId);
 	else closeSettings();
 }
 export function installSettingsRoute(): void {

@@ -3,7 +3,7 @@
 body[data-mf-home].mf .mf-home { display: block; margin: 0; }
 body[data-mf-home].mf .mf-home-hero { display: none; }
 body[data-mf-home].mf .mf-home-main { gap: 0; }
-body[data-mf-home].mf .col-sidebar > :not(.mf-home-side) { display: none !important; }
+body[data-mf-home].mf .col-sidebar > :not(.mf-home-side):not([data-mf-settings]) { display: none !important; }
 body[data-mf-home].mf .mf-home-side { display: flex; flex-direction: column; padding: var(--card-padding); }
 
 /* page header numbers, like a profile's scrobble / artist counts */
@@ -34,7 +34,7 @@ body.mf .mf-continue:hover .mf-arrow { translate: 4px 0; }
 body.mf .mf-seg { display: inline-flex; gap: 2px; padding: 2px; border-radius: 99px; background: oklch(var(--b3) / 70%); }
 body.mf .mf-seg-item { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 12px; border: 0; border-radius: 99px; background: none; color: oklch(var(--c3)); font: inherit; font-size: calc(var(--font-size) - 1px); cursor: pointer; transition: background .15s, color .15s; }
 body.mf .mf-seg-item:hover { color: oklch(var(--c1)); }
-body.mf .mf-seg-item[aria-selected="true"] { background: oklch(var(--h4) / 22%); color: oklch(var(--c1)); }
+body.mf .mf-seg-item[aria-pressed="true"] { background: oklch(var(--h4) / 22%); color: oklch(var(--c1)); }
 body.mf .mf-seg-n { font-size: calc(var(--font-size) - 3px); opacity: .7; font-variant-numeric: tabular-nums; }
 body.mf .mf-filter { margin-left: auto; width: 170px; height: 30px; }
 
@@ -102,3 +102,58 @@ body.mf .mf-cal-nav { display: inline-flex; align-items: center; justify-content
 body.mf .mf-cal-nav:hover { background: oklch(var(--h4) / 24%); color: oklch(var(--c1)); }
 body.mf .mf-week-range { margin: -4px 0 -2px; font-size: calc(var(--font-size) - 2px); color: oklch(var(--c3)); }
 body[data-mf-home].mf .mf-moodle > .classroom-actions { display: none; }
+
+/* ---- Assignments page (src/assignments.ts) ---- */
+body.mf .mf-assign { gap: 20px; }
+body.mf .mf-assign-bar { flex-wrap: wrap; gap: 10px 12px; }
+body.mf .mf-assign-bar .mf-filter { margin-left: auto; }
+body.mf .mf-assign-groups { display: flex; flex-direction: column; gap: 22px; }
+body.mf .mf-assign-group { display: flex; flex-direction: column; gap: 6px; }
+body.mf .mf-assign-heading { display: flex; align-items: center; gap: 8px; margin: 0 0 2px 8px; font-size: calc(var(--font-size) - 2px); font-weight: var(--font-weight-medium); text-transform: uppercase; letter-spacing: .07em; color: oklch(var(--c3)); }
+body.mf .mf-assign-heading.bad { color: oklch(0.72 0.17 25); }
+body.mf .mf-assign-heading .mf-count { letter-spacing: 0; text-transform: none; }
+body.mf .mf-task { padding: 8px 10px; gap: 14px; }
+body.mf .mf-task-when { flex: none; display: flex; flex-direction: column; align-items: flex-end; font-size: calc(var(--font-size) - 2px); color: oklch(var(--c3)); font-variant-numeric: tabular-nums; }
+body.mf .mf-task-when strong { font-weight: var(--font-weight-medium); color: oklch(var(--c2)); }
+body.mf .mf-task-when.bad strong { color: oklch(0.72 0.17 25); }
+body.mf .mf-empty { margin: 0; padding: 28px 8px; text-align: center; color: oklch(var(--c3)); }
+body.mf .mf-assign-side { gap: 8px; }
+body.mf button.mf-course-row { width: 100%; border: 0; background: none; font: inherit; text-align: left; cursor: pointer; }
+body.mf button.mf-course-row .mf-row-title { flex: 1; min-width: 0; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+body.mf button.mf-course-row[aria-pressed="true"] { background: oklch(var(--h4) / 22%); box-shadow: inset 0 0 0 1px oklch(var(--h4) / 55%); }
+body.mf .mf-assign-note { margin: 8px 8px 0; }
+
+/* calmer dashboard: quieter dividers and a lighter "view all" link */
+body.mf .mf-block + .mf-block { border-top-color: oklch(var(--c1) / 7%); }
+body.mf .mf-block-head .mf-more { font-size: calc(var(--font-size) - 2px); }
+/* dashboard sections that finish loading after the Assignments page (or settings) opened must stay out of its way */
+body.mf .page-content[data-mf-mode] .mf-home-side { display: none !important; }
+
+/* assignments: rows keep the tick outside the link (no button inside an anchor), roomier hit area, text buttons, narrow screens */
+body.mf .mf-task-item { position: relative; display: flex; align-items: center; gap: 4px; }
+body.mf .mf-task-item .mf-task { flex: 1; min-width: 0; padding-right: 6px; }
+body.mf .mf-task-item .mf-due-tick { position: relative; margin-right: 10px; }
+body.mf .mf-task-item .mf-due-tick::after { content: ""; position: absolute; inset: -9px; }
+body.mf .mf-due-tick.is-done { background: oklch(var(--h4)); border-color: oklch(var(--h4)); }
+body.mf .mf-link { border: 0; background: none; padding: 0; font: inherit; font-size: inherit; color: oklch(var(--h4)); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+body.mf .mf-link:hover { color: oklch(var(--c1)); }
+body.mf .mf-assign-bulk { margin-left: auto; font-size: calc(var(--font-size) - 2px); text-transform: none; letter-spacing: 0; }
+body.mf .mf-assign-bar .mf-seg { flex-wrap: wrap; border-radius: 16px; }
+body.mf .mf-assign-bar .mf-seg-item { white-space: nowrap; }
+body.mf .mf-seg-item[aria-pressed="true"] { background: oklch(var(--h4) / 22%); color: oklch(var(--c1)); }
+body.mf .mf-course-select { display: none; height: 30px; max-width: 100%; }
+body.mf .mf-assign-side[hidden] { display: none; }
+body.mf .mf-empty .mf-link { margin-left: 4px; }
+@media (max-width: 760px) {
+	body.mf .mf-course-select { display: block; flex: 1 1 100%; }
+	body.mf .mf-assign-side { display: none; }
+	body.mf .mf-assign-bar .mf-filter { margin-left: 0; flex: 1 1 100%; width: auto; }
+}
+/* the phone dock gained a "Tasks" entry: seven items must still fit on one row */
+@media (max-width: 480px) {
+	body.mf .masthead .mobile-controls { grid-template-columns: repeat(auto-fit, minmax(46px, 1fr)); }
+	body.mf .masthead .mobile-controls .mobile-control { --padding: calc(10px + var(--icon-size) + 2px) 2px 10px; }
+}
+
+/* phones: what is due comes before the course grid */
+@media (max-width: 980px) { body[data-mf-home].mf .content > .content-side { order: -1; } }

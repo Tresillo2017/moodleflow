@@ -49,7 +49,7 @@ export function homeSlot(zone: Zone = "main"): HTMLElement | null {
 	const side = document.querySelector<HTMLElement>(".mf-home-side");
 	const colSide = document.querySelector<HTMLElement>(".col-sidebar");
 	// the new layout puts the side sections in the shell's own sidebar column (like bleh's profile pages); classic keeps them below
-	if (side && colSide && settings.get().home && side.parentElement !== colSide) { colSide.append(side); document.querySelector(".content")?.classList.remove("single-column"); }
+	if (side && colSide && settings.get().home && side.parentElement !== colSide) { colSide.append(side); if (!document.querySelector(".page-content[data-mf-mode]")) document.querySelector(".content")?.classList.remove("single-column"); }
 	else if (side && !settings.get().home && side.parentElement === colSide) root.append(side);
 	return zone === "side" ? side : root.querySelector<HTMLElement>(`.mf-home-${zone}`);
 }

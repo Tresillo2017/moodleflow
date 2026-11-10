@@ -112,15 +112,10 @@ function sideSections(): void {
 	const side = homeSlot("side");
 	if (!side) return;
 	side.querySelector(".mf-recent")?.remove();
-	side.querySelector(".mf-shortcuts")?.remove();
-	const recent = visits().slice(1, 6);
+		const recent = visits().slice(1, 5);
 	if (recent.length) side.append(h("section", { class: "mf-block mf-recent", "data-i": "", style: "--i:4" },
 		h("div", { class: "mf-block-head" }, h("h3", {}, "Recently visited")),
 		h("ul", { class: "mf-rows" }, ...recent.map((v) => h("li", {}, h("a", { class: "mf-row", href: v.url }, icon("recent"), h("span", { class: "mf-row-main" }, h("span", { class: "mf-row-title" }, v.title), v.sub ? h("span", { class: "mf-row-sub" }, v.sub) : null)))))));
-	const links: [string, string, string][] = [["Courses", "/my/courses.php", "library"], ["Calendar", "/calendar/view.php?view=month", "calendar"], ["Grades", "/grade/report/overview/index.php", "chart-bar"], ["Messages", "/message/index.php", "inbox"], ["Private files", "/user/files.php", "page"]];
-	side.append(h("section", { class: "mf-block mf-shortcuts", "data-i": "", style: "--i:5" },
-		h("div", { class: "mf-block-head" }, h("h3", {}, "Shortcuts")),
-		h("ul", { class: "mf-rows" }, ...links.map(([label, path, ic]) => h("li", {}, h("a", { class: "mf-row", href: siteRoot() + path }, icon(ic), h("span", { class: "mf-row-main" }, h("span", { class: "mf-row-title" }, label))))))));
 }
 
 function paint(d: Data): void {
@@ -151,10 +146,10 @@ function paint(d: Data): void {
 	const now = Date.now() / 1000;
 	const tabs: [Tab, string][] = [["all", "All"], ["inprogress", "In progress"], ["past", "Past"]];
 	if (d.list.some((c) => c.isfavourite)) tabs.push(["favourites", "Favourites"]);
-	const seg = h("div", { class: "mf-seg", role: "tablist" }, ...tabs.map(([id, name]) => {
+	const seg = h("div", { class: "mf-seg", role: "group", "aria-label": "Show courses" }, ...tabs.map(([id, name]) => {
 		const n = inTab(d.list, id, now).length;
-		const b = h("button", { type: "button", role: "tab", class: "mf-seg-item", "aria-selected": String(tab === id) }, name, h("span", { class: "mf-seg-n" }, String(n)));
-		b.onclick = () => { tab = id; seg.querySelectorAll("[role=tab]").forEach((x) => x.setAttribute("aria-selected", String(x === b))); paintGrid(); };
+		const b = h("button", { type: "button", class: "mf-seg-item", "aria-pressed": String(tab === id) }, name, h("span", { class: "mf-seg-n" }, String(n)));
+		b.onclick = () => { tab = id; seg.querySelectorAll(".mf-seg-item").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); paintGrid(); };
 		return b;
 	}));
 	const search = h("input", { type: "search", class: "input mf-filter", placeholder: "Find a course", "aria-label": "Find a course", value: filter });
@@ -194,7 +189,7 @@ async function render(): Promise<void> {
 	const st = settings.get();
 	const on = st.home && isDashboard() && !document.body.classList.contains("editing");
 	document.body.toggleAttribute("data-mf-home", on);
-	if (!on) { document.querySelector(".mf-continue-block")?.remove(); document.querySelector(".mf-courses")?.remove(); document.querySelector(".mf-recent")?.remove(); document.querySelector(".mf-shortcuts")?.remove(); homeSlot("side"); return; }
+	if (!on) { document.querySelector(".mf-continue-block")?.remove(); document.querySelector(".mf-courses")?.remove(); document.querySelector(".mf-recent")?.remove(); homeSlot("side"); return; }
 	// paint at once from whatever we remember (skeleton tiles on the very first visit), then refresh from the network
 	const cached = read<{ at: number; list: Course[] }>(KEY, { at: 0, list: [] });
 	paint({ list: cached.list, name: GM_getValue("home_name", ""), events: read<{ events: DueEvent[] }>("deadlines", { events: [] }).events, loading: true });

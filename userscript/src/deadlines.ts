@@ -4,10 +4,12 @@ import * as settings from "./settings";
 import { call, read, write, homeSlot, siteRoot } from "./api";
 import { h } from "./dom";
 
-export type DueEvent = { id: number; name: string; timesort: number; url: string; course?: { fullname?: string } };
-const KEY = "deadlines", DONE = "deadlines_done", TTL = 10 * 60e3, DAY = 86400;
+export type DueEvent = { id: number; modulename?: string; name: string; timesort: number; url: string; course?: { fullname?: string } };
+export const DONE = "deadlines_done";
+export const DAY = 86400;
+const KEY = "deadlines", TTL = 60e3; // short: a handed-in assignment should leave the list soon
 
-const startOfDay = (t: number) => { const d = new Date(t * 1000); d.setHours(0, 0, 0, 0); return d.getTime() / 1000; };
+export const startOfDay = (t: number) => { const d = new Date(t * 1000); d.setHours(0, 0, 0, 0); return d.getTime() / 1000; };
 /** Pure: which heading an event belongs under, relative to `now` (seconds). */
 export function bucket(timesort: number, now: number): "Overdue" | "Today" | "Tomorrow" | "This week" | "Later" {
 	const today = startOfDay(now);
@@ -16,7 +18,7 @@ export function bucket(timesort: number, now: number): "Overdue" | "Today" | "To
 	if (timesort < today + 2 * DAY) return "Tomorrow";
 	return timesort < today + 7 * DAY ? "This week" : "Later";
 }
-const ORDER = ["Overdue", "Today", "Tomorrow", "This week", "Later"] as const;
+export const ORDER = ["Overdue", "Today", "Tomorrow", "This week", "Later"] as const;
 
 export async function load(): Promise<DueEvent[]> {
 	const hit = read<{ at: number; events: DueEvent[] }>(KEY, { at: 0, events: [] });
@@ -66,17 +68,17 @@ async function render(): Promise<void> {
 	if (mine !== rendering) return; // a newer render took over while we were fetching
 	const open = base.filter((e) => !done.has(e.id));
 	if (!open.length && !settings.get().home && weekOffset === 0) { card?.remove(); card = undefined; return; }
-	const shown = picked !== null ? pool.filter((e) => e.timesort >= picked! && e.timesort < picked! + DAY) : weekOffset === 0 ? open.slice(0, 8) : pool;
+	const shown = picked !== null ? pool.filter((e) => e.timesort >= picked! && e.timesort < picked! + DAY) : weekOffset === 0 ? open.slice(0, 5) : pool;
 
 	const rows = h("ul", { class: "mf-rows" });
 	for (const e of shown) {
 		const b = bucket(e.timesort, now);
 		const d = new Date(e.timesort * 1000);
 		const tick = h("button", { type: "button", class: "mf-due-tick", "aria-label": `Mark "${e.name}" as done`, title: "Mark as done (only on this device)" });
-		tick.onclick = (ev) => { ev.preventDefault(); ev.stopPropagation(); write(DONE, { ids: [...done, e.id].slice(-200) }); void render(); };
-		rows.append(h("li", {}, h("a", { class: "mf-row", href: e.url },
+		tick.onclick = () => { write(DONE, { ids: [...done, e.id].slice(-200) }); void render(); };
+		rows.append(h("li", { class: "mf-task-item" }, h("a", { class: "mf-row mf-task", href: e.url },
 			h("span", { class: `mf-date ${b === "Overdue" ? "bad" : b === "Today" ? "now" : ""}`.trim() }, h("span", {}, d.toLocaleDateString(undefined, { weekday: "short" })), h("strong", {}, String(d.getDate()))),
-			h("span", { class: "mf-row-main" }, h("span", { class: "mf-row-title" }, e.name), h("span", { class: "mf-row-sub" }, [b === "Overdue" ? "Overdue" : null, e.course?.fullname, d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })].filter(Boolean).join(" · "))), tick)));
+			h("span", { class: "mf-row-main" }, h("span", { class: "mf-row-title" }, e.name), h("span", { class: "mf-row-sub" }, [b === "Overdue" ? "Overdue" : null, e.course?.fullname, d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })].filter(Boolean).join(" · ")))), tick));
 	}
 	if (!shown.length) rows.append(h("li", { class: "mf-row-empty" }, picked !== null ? "Nothing due that day." : weekOffset ? "Nothing due that week." : "Nothing due. Enjoy the week."));
 
@@ -94,7 +96,8 @@ async function render(): Promise<void> {
 	}));
 	const next = h("section", { class: "mf-block mf-deadlines", "data-i": "", style: "--i:3" },
 		h("div", { class: "mf-block-head" },
-			h("h3", {}, "Due soon", open.length ? h("span", { class: "mf-count" }, String(open.length)) : null),
+			h("h3", {}, "Due soon"),
+			h("a", { class: "mf-more", href: "#moodleflow/assignments" }, open.length > shown.length ? `View all ${open.length}` : "View all"),
 			weekOffset || picked !== null ? nav("Back to today", "Today", () => { weekOffset = 0; picked = null; void render(); }) : null,
 			nav("Previous week", "‹", () => { weekOffset--; picked = null; void render(); }), nav("Next week", "›", () => { weekOffset++; picked = null; void render(); })),
 		h("div", { class: "mf-week-range" }, range), strip, rows);

@@ -5,11 +5,11 @@ import { siteRoot } from "./api";
 import { h } from "./dom";
 
 export const GO: Record<string, [string, string]> = {
-	d: ["Dashboard", "/my/"], c: ["My courses", "/my/courses.php"], a: ["Calendar", "/calendar/view.php?view=upcoming"],
+	d: ["Dashboard", "/my/"], c: ["My courses", "/my/courses.php"], a: ["Calendar", "/calendar/view.php?view=upcoming"], t: ["Assignments", "/my/#moodleflow/assignments"],
 	g: ["Grades", "/grade/report/overview/index.php"], m: ["Messages", "/message/index.php"], p: ["Profile", "/user/profile.php"],
 };
 const SHEET: [string, string][] = [
-	["Ctrl/⌘ K  or  /", "Quick switcher"], ["g then d / c / a / g / m / p", "Dashboard · courses · calendar · grades · messages · profile"],
+	["Ctrl/⌘ K  or  /", "Quick switcher"], ["g then d / c / t / a / g / m / p", "Dashboard · courses · assignments · calendar · grades · messages · profile"],
 	["[  ]", "Previous / next section"], ["j  k", "Next / previous activity, Enter to open"], ["?", "This sheet"],
 ];
 const SEQ_MS = 900;

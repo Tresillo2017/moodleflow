@@ -32,6 +32,7 @@ function items(): Item[] {
 	knownCourses().forEach((c) => add(c.title, c.url, "album"));
 	courseSections().forEach((c) => add(c.name, c.href, "link"));
 	document.querySelectorAll<HTMLAnchorElement>(".course-content a.aalink[href]").forEach((a) => add(a.querySelector(".instancename")?.firstChild?.textContent?.trim() || a.textContent!.trim(), a.href, "link"));
+	add("Assignments", "#moodleflow/assignments", "link");
 	TABS.forEach((t) => add(`Settings: ${t.name}`, `#moodleflow/${t.id}`, "settings"));
 	const seen = new Set<string>();
 	return out.filter((i) => !seen.has(i.href + i.text) && !!seen.add(i.href + i.text));
