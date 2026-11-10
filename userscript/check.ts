@@ -21,7 +21,7 @@ const { perDay } = await import("./src/deadlines");
 const { isHomePath } = await import("./src/api");
 const { isFresh, burst } = await import("./src/celebrate");
 const { zip, crc32 } = await import("./src/zipwrite");
-const { slug, imageExt } = await import("./src/savetext");
+const { slug, imageExt, isSameOrigin } = await import("./src/savetext");
 const { openZip } = await import("./src/office");
 
 // bleh's accent-from-image maths
@@ -183,4 +183,8 @@ assert.equal(crc32(new TextEncoder().encode("123456789")), 0xcbf43926); // the s
 	assert.equal(await z.text("a/a.md"), "# Título ñ");
 	await Bun.write("/tmp/mf-zip-check.zip", bytes);
 }
+assert.equal(isSameOrigin("https://m.example/pluginfile.php/1/a.png", "https://m.example"), true);
+assert.equal(isSameOrigin("https://evil.example/x.png", "https://m.example"), false);
+assert.equal(isSameOrigin("not a url", "https://m.example"), false);
+assert.equal(isSameOrigin("data:image/png;base64,AAAA", "https://m.example"), false);
 console.log("save-text ok");
