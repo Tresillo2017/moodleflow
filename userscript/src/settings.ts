@@ -73,6 +73,7 @@ export type Settings = {
 	resume: boolean; // "Continue" card on the dashboard + scroll position restore
 	unread: boolean; // "new" markers on activities and course cards
 	activity_popup: boolean; // open activities in a popout instead of a new page
+	save_text: boolean; // "Save as Markdown" button on assignment descriptions
 	confetti: boolean; // celebrate a submitted assignment
 	file_icons: boolean; // coloured PDF / PPT / SQL … badges on file activities
 	course_tools: boolean; // pin / hide / rename buttons on course cards
@@ -88,7 +89,7 @@ export const DEFAULTS: Settings = {
 	seasonal: false, seasonal_particles: "all", seasonal_particles_fps: false, seasonal_overlays: true, seasonal_masks: true,
 	rabbit: true, branding_type: "logo", banner: true, bannerUrl: "", wide: false,
 	course_nav: true, file_preview: true, shortcuts: true, update_check: true,
-	home: true, deadlines: true, resume: true, unread: true, course_tools: true, file_icons: true, activity_popup: true, confetti: true,
+	home: true, deadlines: true, resume: true, unread: true, course_tools: true, file_icons: true, activity_popup: true, save_text: true, confetti: true,
 };
 
 const KEY = "settings";

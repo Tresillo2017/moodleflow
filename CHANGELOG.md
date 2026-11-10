@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-11-10
+### Added
+- Assignment pages get a "Save as Markdown" button under the description. It saves the text as a `.md` file, or as a `.zip` with an `images/` folder when the description has pictures (pictures that cannot be downloaded keep their web address). Turn it off in settings under "Save assignments as Markdown".
+- The Assignments page header shows how many are pending, due this week and overdue.
+- Ticking an assignment off folds the row away and offers Undo for a few seconds (also after "Mark all done").
+
+### Changed
+- The group headings on the Assignments page (Overdue, Today, This week…) are larger and in normal case.
+
 ## [0.18.1] - 2026-11-10
 ### Fixed
 - The Assignments page showed "Couldn't load your assignments" on real sites: it asked Moodle for more events at once than it allows. It now loads them in batches of 50.

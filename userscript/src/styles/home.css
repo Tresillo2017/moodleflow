@@ -109,7 +109,7 @@ body.mf .mf-assign-bar { flex-wrap: wrap; gap: 10px 12px; }
 body.mf .mf-assign-bar .mf-filter { margin-left: auto; }
 body.mf .mf-assign-groups { display: flex; flex-direction: column; gap: 22px; }
 body.mf .mf-assign-group { display: flex; flex-direction: column; gap: 6px; }
-body.mf .mf-assign-heading { display: flex; align-items: center; gap: 8px; margin: 0 0 2px 8px; font-size: calc(var(--font-size) - 2px); font-weight: var(--font-weight-medium); text-transform: uppercase; letter-spacing: .07em; color: oklch(var(--c3)); }
+body.mf .mf-assign-heading { display: flex; align-items: center; gap: 8px; margin: 0 0 2px 8px; font-size: calc(var(--font-size) + 1px); font-weight: var(--font-weight-medium); color: oklch(var(--c1)); }
 body.mf .mf-assign-heading.bad { color: oklch(0.72 0.17 25); }
 body.mf .mf-assign-heading .mf-count { letter-spacing: 0; text-transform: none; }
 body.mf .mf-task { padding: 8px 10px; gap: 14px; }
@@ -157,3 +157,15 @@ body.mf .mf-empty .mf-link { margin-left: 4px; }
 
 /* phones: what is due comes before the course grid */
 @media (max-width: 980px) { body[data-mf-home].mf .content > .content-side { order: -1; } }
+
+/* completing an item: the row folds away, then Undo is offered */
+body.mf .mf-task-item { transition: height .22s cubic-bezier(.4, 0, .2, 1), opacity .18s linear, translate .22s cubic-bezier(.4, 0, .2, 1); }
+body.mf .mf-task-item.is-leaving { overflow: hidden; height: 0 !important; opacity: 0; translate: 16px 0; }
+body.mf .mf-undo { display: flex; gap: 8px; align-items: center; margin: 0; padding: 8px 12px; border-radius: var(--item-radius); background: oklch(var(--h4) / 14%); color: oklch(var(--c1)); font-size: calc(var(--font-size) - 1px); }
+@media (prefers-reduced-motion: reduce) { body.mf .mf-task-item { transition: none; } }
+body[data-bleh--reduced_motion="true"].mf .mf-task-item { transition: none; }
+
+/* "Save as Markdown" under an assignment's description (src/savetext.ts) */
+body.mf .mf-save-text { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 14px; }
+body.mf .mf-save-btn[disabled] { opacity: .7; cursor: progress; }
+body.mf .mf-save-status { font-size: calc(var(--font-size) - 2px); color: oklch(var(--c3)); }

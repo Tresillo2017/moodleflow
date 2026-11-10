@@ -255,6 +255,7 @@ export function openAssignments(): void {
 	header.setAttribute("data-mf-settings", "");
 	container.prepend(header);
 	const cols = buildAssignments();
+	header.querySelector(".main-info")?.append(cols.stats);
 	const mark = (els: HTMLElement[]) => els.map((el) => { el.setAttribute("data-mf-settings", ""); return el; });
 	main.append(...mark(cols.main));
 	side.append(...mark(cols.side));

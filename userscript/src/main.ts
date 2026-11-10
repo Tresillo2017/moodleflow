@@ -25,6 +25,7 @@ import { mountChangelog } from "./changelog";
 import { mountHome } from "./home";
 import { mountPopout, FRAME_NAME } from "./popout";
 import { mountCelebrate } from "./celebrate";
+import { mountSaveText } from "./savetext";
 import { applyLazy } from "./lazy";
 import { loadFonts } from "./fonts";
 import * as settings from "./settings";
@@ -89,9 +90,9 @@ function start(): void {
 	timed("icons", () => { if (on("icons")) { mountIcons(); mountDecorate(); } });
 	if (on("shell")) timed("shell", buildShell);
 	mark("shell");
-	if (FRAME) { mountCelebrate(); mountPreview(); if (on("fix")) timed("fix", mountFix); reveal(); return; } // the popout shows just the page's content
+	if (FRAME) { mountCelebrate(); mountPreview(); mountSaveText(); if (on("fix")) timed("fix", mountFix); reveal(); return; } // the popout shows just the page's content
 	timed("settings-route", installSettingsRoute);
-	timed("extras", () => { if (on("extras")) { mountSeasonal(); mountEffects(); mountRabbit(); mountCourseNav(); mountPreview(); mountUpdater(); mountHome(); mountDeadlines(); mountResume(); mountUnread(); mountCourseTools(); mountKeys(); mountFileTypes(); mountChangelog(); mountPopout(); mountCelebrate(); } });
+	timed("extras", () => { if (on("extras")) { mountSeasonal(); mountEffects(); mountRabbit(); mountCourseNav(); mountPreview(); mountUpdater(); mountHome(); mountDeadlines(); mountResume(); mountUnread(); mountCourseTools(); mountKeys(); mountFileTypes(); mountChangelog(); mountPopout(); mountCelebrate(); mountSaveText(); } });
 	if (on("fix")) timed("fix", mountFix);
 	reveal();
 	mark("mounted");

@@ -10,6 +10,7 @@ type Period = "all" | "Overdue" | "Today" | "Soon" | "Later";
 type RawEvent = DueEvent & { action?: { actionable?: boolean }; course?: { id?: number; fullname?: string } };
 type Loaded = { events: Pending[]; ok: boolean };
 
+const LEAVE_MS = 220, UNDO_MS = 7000;
 const KEY = "assignments", BACK_DAYS = 45, AHEAD_DAYS = 120, PAGE = 50, MAX_PAGES = 4, LIMIT = PAGE * MAX_PAGES, DONE_MAX = 200; // Moodle refuses more than 50 events per request
 const KIND: Record<string, string> = { assign: "Assignment", quiz: "Quiz", forum: "Forum", lesson: "Lesson", workshop: "Workshop", feedback: "Feedback", choice: "Choice", data: "Database" };
 
@@ -56,35 +57,49 @@ async function load(): Promise<Loaded> {
 const toPending = (raw: RawEvent[]): Pending[] => raw.filter((e) => e.action?.actionable !== false)
 	.map(({ id, name, timesort, url, modulename, course }): Pending => ({ id, name, timesort, url, modulename, course: { id: course?.id, fullname: course?.fullname ?? "Other" } }));
 
-type State = { events: Pending[]; loading: boolean; failed: boolean; period: Period; course: string; text: string; showDone: boolean };
+type State = { events: Pending[]; loading: boolean; failed: boolean; period: Period; course: string; text: string; showDone: boolean; undo: { ids: number[]; label: string } | null };
 const doneIds = (): Set<number> => new Set(read<{ ids: number[] }>(DONE, { ids: [] }).ids);
 const saveDone = (ids: Iterable<number>): void => write(DONE, { ids: [...ids].slice(-DONE_MAX) });
 
-function row(e: Pending, now: number, done: boolean, onTick: () => void): HTMLElement {
+function row(e: Pending, now: number, done: boolean, onToggle: (li: HTMLElement) => void): HTMLElement {
 	const b = bucket(e.timesort, now);
 	const d = new Date(e.timesort * 1000);
 	const later = b === "Later";
 	const time = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 	const tick = h("button", { type: "button", class: "mf-due-tick" + (done ? " is-done" : ""), "aria-label": done ? `Put "${e.name}" back on the list` : `Mark "${e.name}" as done`, title: done ? "Put back on the list" : "Mark as done (only on this device)" });
-	tick.onclick = () => { const ids = doneIds(); if (done) ids.delete(e.id); else ids.add(e.id); saveDone(ids); onTick(); };
-	return h("li", { class: "mf-task-item" },
+	const li = h("li", { class: "mf-task-item" },
 		h("a", { class: "mf-row mf-task", href: e.url },
 			h("span", { class: `mf-date ${b === "Overdue" ? "bad" : b === "Today" ? "now" : ""}`.trim() }, h("span", {}, d.toLocaleDateString(undefined, { weekday: "short" })), h("strong", {}, String(d.getDate()))),
 			h("span", { class: "mf-row-main" }, h("span", { class: "mf-row-title" }, e.name), h("span", { class: "mf-row-sub" }, [e.course.fullname, KIND[e.modulename ?? ""]].filter(Boolean).join(" · "))),
 			h("span", { class: `mf-task-when${b === "Overdue" ? " bad" : ""}` }, h("strong", {}, relative(e.timesort, now)), h("span", {}, later ? `${d.toLocaleDateString(undefined, { day: "numeric", month: "short" })} · ${time}` : time))),
 		tick);
+	tick.onclick = () => onToggle(li);
+	return li;
 }
 
 /** The page's two columns. Each filter change repaints them; typing only repaints the list so the input keeps focus. */
-export function buildAssignments(): { main: HTMLElement[]; side: HTMLElement[] } {
-	const st: State = { events: read<{ events: Pending[] }>(KEY, { events: [] }).events, loading: true, failed: false, period: "all", course: "", text: "", showDone: false };
+export function buildAssignments(): { main: HTMLElement[]; side: HTMLElement[]; stats: HTMLElement } {
+	const st: State = { events: read<{ events: Pending[] }>(KEY, { events: [] }).events, loading: true, failed: false, period: "all", course: "", text: "", showDone: false, undo: null };
 	const body = h("section", { class: "mf-block mf-assign" });
 	const side = h("section", { class: "mf-block mf-assign-side" });
 	const groups = h("div", { class: "mf-assign-groups" });
+	const stats = h("dl", { class: "mf-meta" });
 
 	const split = (): { open: Pending[]; done: Pending[] } => {
 		const ids = doneIds();
 		return { open: st.events.filter((e) => !ids.has(e.id)), done: st.events.filter((e) => ids.has(e.id)) };
+	};
+	let undoTimer = 0;
+	const setUndo = (ids: number[], label: string): void => { st.undo = { ids, label }; clearTimeout(undoTimer); undoTimer = window.setTimeout(() => { st.undo = null; paintList(); }, UNDO_MS); };
+	/** Ticking a row folds it away first (unless motion is reduced), then the list repaints and offers Undo. */
+	const toggle = (e: Pending, li: HTMLElement): void => {
+		const ids = doneIds();
+		const finish = (): void => { if (st.showDone) { ids.delete(e.id); st.undo = null; } else { ids.add(e.id); setUndo([e.id], `"${e.name}" marked as done.`); } saveDone(ids); paint(); };
+		if (st.showDone || matchMedia("(prefers-reduced-motion: reduce)").matches) return finish();
+		li.style.height = `${li.offsetHeight}px`;
+		void li.offsetHeight; // commit the start height so the fold animates
+		li.classList.add("is-leaving");
+		setTimeout(finish, LEAVE_MS);
 	};
 	const clearFilters = (): void => { st.period = "all"; st.course = ""; st.text = ""; paint(); };
 	const note = (text: string, action?: HTMLElement): HTMLElement => h("p", { class: "mf-empty" }, text, action ? " " : null, action);
@@ -100,16 +115,17 @@ export function buildAssignments(): { main: HTMLElement[]; side: HTMLElement[] }
 		const list = pool.filter((e) => (!st.course || e.course.fullname === st.course) && (st.showDone || inPeriod(e.timesort, st.period, now)) && (!q || `${e.name} ${e.course.fullname}`.toLowerCase().includes(q)));
 		const filtered = st.course || q || (!st.showDone && st.period !== "all");
 		const tail: HTMLElement[] = [];
+		const undo = st.undo && !st.showDone ? [h("p", { class: "mf-undo", role: "status" }, st.undo.label, " ", button("Undo", () => { const back = new Set(st.undo?.ids); saveDone([...doneIds()].filter((id) => !back.has(id))); st.undo = null; paint(); }))] : [];
 		if (st.failed) tail.push(h("p", { class: "mf-row-sub mf-assign-note" }, "Couldn't reach Moodle just now, so this is the list from your last visit. ", button("Try again", reload)));
 		if (st.events.length >= LIMIT) tail.push(h("p", { class: "mf-row-sub mf-assign-note" }, `Showing the first ${LIMIT} items Moodle returned.`));
 		if (!st.showDone && done.length) tail.push(h("p", { class: "mf-row-sub mf-assign-note" }, `${done.length} marked as done. `, button("Review", () => { st.showDone = true; paint(); })));
 		if (st.showDone) tail.push(h("p", { class: "mf-row-sub mf-assign-note" }, button("← Back to pending", () => { st.showDone = false; paint(); })));
-		if (!list.length) return groups.replaceChildren(
+		if (!list.length) return groups.replaceChildren(...undo,
 			note(st.showDone ? "Nothing marked as done." : filtered ? "Nothing matches these filters." : "All caught up. Nothing is pending.", filtered ? button("Clear filters", clearFilters) : undefined), ...tail);
-		groups.replaceChildren(...group(list, now).map((g) => h("div", { class: "mf-assign-group" },
+		groups.replaceChildren(...undo, ...group(list, now).map((g) => h("div", { class: "mf-assign-group" },
 			h("h3", { class: `mf-assign-heading${g.name === "Overdue" && !st.showDone ? " bad" : ""}` }, g.name, h("span", { class: "mf-count" }, String(g.items.length)),
-				g.name === "Overdue" && !st.showDone ? button("Mark all done", () => { saveDone([...doneIds(), ...g.items.map((e) => e.id)]); paint(); }, "mf-link mf-assign-bulk") : null),
-			h("ul", { class: "mf-rows" }, ...g.items.map((e) => row(e, now, st.showDone, paint))))), ...tail);
+				g.name === "Overdue" && !st.showDone ? button("Mark all done", () => { const ids = g.items.map((e) => e.id); saveDone([...doneIds(), ...ids]); setUndo(ids, `${ids.length} overdue marked as done.`); paint(); }, "mf-link mf-assign-bulk") : null),
+			h("ul", { class: "mf-rows" }, ...g.items.map((e) => row(e, now, st.showDone, (li) => toggle(e, li)))))), ...tail);
 	};
 	const paint = (): void => {
 		const now = Math.floor(Date.now() / 1000);
@@ -134,6 +150,8 @@ export function buildAssignments(): { main: HTMLElement[]; side: HTMLElement[] }
 		paintList();
 
 		const overdue = count("Overdue");
+		const stat = (label: string, value: number) => h("div", { class: "mf-meta-item" }, h("dd", {}, String(value)), h("dt", {}, label));
+		stats.replaceChildren(stat("Pending", open.length), stat("Due this week", count("Today") + count("Soon")), ...(overdue ? [stat("Overdue", overdue)] : []));
 		side.hidden = !courses.length;
 		document.querySelector(".content")?.classList.toggle("single-column", !courses.length);
 		side.replaceChildren(
@@ -152,5 +170,5 @@ export function buildAssignments(): { main: HTMLElement[]; side: HTMLElement[] }
 	};
 	paint();
 	reload();
-	return { main: [body], side: [side] };
+	return { main: [body], side: [side], stats };
 }

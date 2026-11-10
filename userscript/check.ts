@@ -20,6 +20,9 @@ const { greeting, firstName, courseState, inTab } = await import("./src/home");
 const { perDay } = await import("./src/deadlines");
 const { isHomePath } = await import("./src/api");
 const { isFresh, burst } = await import("./src/celebrate");
+const { zip, crc32 } = await import("./src/zipwrite");
+const { slug, imageExt } = await import("./src/savetext");
+const { openZip } = await import("./src/office");
 
 // bleh's accent-from-image maths
 assert.equal(accentFromRgb(128, 128, 128).sat, 0);
@@ -163,3 +166,21 @@ console.log("home ok");
 	const list = [{ id: 1, fullname: "a", viewurl: "", enddate: now - 1 }, { id: 2, fullname: "b", viewurl: "", isfavourite: true }];
 	assert.equal(inTab(list, "all", now).length, 2); assert.equal(inTab(list, "past", now).length, 1); assert.equal(inTab(list, "favourites", now)[0].id, 2); assert.equal(inTab(list, "inprogress", now)[0].id, 2);
 }
+
+// save as markdown: file names, image extensions, and a zip another reader (ours, and `unzip`) can open
+assert.equal(slug("Lab 3: Process Scheduling — Informe"), "lab-3-process-scheduling-informe");
+assert.equal(slug("Práctica Nº 2: Bases de datos"), "practica-no-2-bases-de-datos");
+assert.equal(slug("???"), "assignment");
+assert.ok(slug("x".repeat(200)).length <= 60);
+assert.equal(imageExt("image/jpeg; charset=x", "/a/b"), "jpg");
+assert.equal(imageExt("", "https://s/pluginfile.php/1/a/photo.PNG?forcedownload=1"), "png");
+assert.equal(imageExt("application/octet-stream", "https://s/x"), "img");
+assert.equal(crc32(new TextEncoder().encode("123456789")), 0xcbf43926); // the standard CRC-32 check value
+{
+	const bytes = zip([{ name: "a/a.md", data: new TextEncoder().encode("# Título ñ") }, { name: "a/images/image-1.png", data: new Uint8Array([1, 2, 3]) }]);
+	const z = openZip(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer);
+	assert.deepEqual(z.entries.map((e) => e.name), ["a/a.md", "a/images/image-1.png"]);
+	assert.equal(await z.text("a/a.md"), "# Título ñ");
+	await Bun.write("/tmp/mf-zip-check.zip", bytes);
+}
+console.log("save-text ok");

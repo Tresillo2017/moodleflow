@@ -236,6 +236,7 @@ export const TABS: Tab[] = [
 			switchRow("course_nav", "Section list", "Replace the theme's tile carousel with a compact list of the course's sections"),
 			switchRow("file_preview", "Preview files", "Open PDFs, images, video, audio and text in a dialog (Ctrl/⌘/Shift-click opens normally)"),
 			switchRow("activity_popup", "Open activities in a popout", "Assignments, forums, pages and more open over the course so closing them brings you right back (Ctrl/⌘/Shift-click opens normally)"),
+			switchRow("save_text", "Save assignments as Markdown", "A button under an assignment's description saves it as a .md file, or a .zip with its pictures"),
 			switchRow("confetti", "Celebrate submissions", "A little confetti when an assignment is submitted"),
 			switchRow("file_icons", "File type icons", "Show PDF, PowerPoint, Excel, Word, SQL, ZIP … badges on file activities instead of the generic icon"),
 			switchRow("unread", "New markers", "Flag activities that appeared since you last looked, and count them on course cards (courses you have opened)"),
