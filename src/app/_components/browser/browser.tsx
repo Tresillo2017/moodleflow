@@ -6,8 +6,8 @@ import { ComponentPropsWithoutRef } from "react";
 
 interface BrowserListHelperProps {
 	selectedBrowser: browserKey,
-	setSelectedBrowser: Function,
-	setStep: Function
+	setSelectedBrowser: (browser: browserKey) => void,
+	setStep: (step: number) => void
 }
 
 export function BrowserListHelper({
@@ -103,7 +103,7 @@ export function BrowserListHelper({
 		return safari_browsers.includes(browser);
 	}
 
-	function setBrowser(browser: string) {
+	function setBrowser(browser: browserKey) {
 		setSelectedBrowser(browser);
 		setStep(1);
 	}
@@ -128,8 +128,8 @@ function Browser({
 interface ExtensionListProps {
 	browser: browserKey,
 	selectedExtension: string,
-	setSelectedExtension: Function,
-	setStep: Function
+	setSelectedExtension: (extension: string) => void,
+	setStep: (step: number) => void
 }
 
 export type browserKey = "chrome" | "firefox" | "safari";

@@ -35,6 +35,8 @@ const SKIP_CLOSEST = ".masthead, .toolbar, .navlist, .bleh-modals, [data-mf-sett
 const queue: Element[] = [];
 let scheduled = false;
 
+const iterators = new WeakMap<Element, ReturnType<typeof candidates>>();
+
 /** Candidate elements under `root`, skipping whole subtrees we never touch (cheaper than closest() per element). */
 function* candidates(root: Element): Generator<HTMLElement> {
 	const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
@@ -52,7 +54,7 @@ function work(deadline: { timeRemaining(): number }): void {
 	while (queue.length && (deadline.timeRemaining() > 2 || performance.now() - t0 < 8)) {
 		const found: [HTMLElement, string][] = [];
 		const root = queue[0];
-		const it = (root as any).__mfIt ??= candidates(root);
+		const it = iterators.get(root) ?? iterators.set(root, candidates(root)).get(root)!;
 		let n = 0;
 		for (let r = it.next(); !r.done; r = it.next()) {
 			const el = r.value as HTMLElement;
@@ -65,7 +67,7 @@ function work(deadline: { timeRemaining(): number }): void {
 			if (++n >= 250) break;
 		}
 		for (const [el, tags] of found) el.setAttribute("data-mf-fix", tags);
-		if (n < 250) { delete (root as any).__mfIt; queue.shift(); }
+		if (n < 250) { iterators.delete(root); queue.shift(); }
 		if (performance.now() - t0 > 12) break;
 	}
 	if (queue.length) schedule();
