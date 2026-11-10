@@ -112,6 +112,20 @@ console.log("ok");
 	const now = Date.UTC(2026, 9, 20, 12) / 1000;
 	assert.equal(bucket(now - 60, now), "Overdue");
 	assert.equal(bucket(now + 86400 * 10, now), "Later");
+	// day boundaries follow the calendar: 25-hour and 23-hour days (clocks change in Europe/Madrid)
+	{
+		const was = process.env.TZ;
+		process.env.TZ = "Europe/Madrid";
+		const at = (iso: string) => new Date(iso).getTime() / 1000;
+		const backNow = at("2026-10-25T10:00:00+01:00"); // clocks go back: a 25-hour day
+		assert.equal(bucket(at("2026-10-25T23:30:00+01:00"), backNow), "Today");
+		assert.equal(bucket(at("2026-10-26T00:30:00+01:00"), backNow), "Tomorrow");
+		const fwdNow = at("2026-03-29T10:00:00+02:00"); // clocks go forward: a 23-hour day
+		assert.equal(bucket(at("2026-03-29T23:30:00+02:00"), fwdNow), "Today");
+		assert.equal(bucket(at("2026-03-30T00:30:00+02:00"), fwdNow), "Tomorrow");
+		assert.equal(bucket(at("2026-04-05T00:30:00+02:00"), fwdNow), "Later"); // 7 calendar days on
+		if (was === undefined) delete process.env.TZ; else process.env.TZ = was;
+	}
 	assert.ok(["Today", "Tomorrow"].includes(bucket(now + 600, now)));
 	const v = (url: string) => ({ url, title: url, sub: "", at: 0 });
 	assert.deepEqual(pushVisit([v("a"), v("b")], v("b")).map((x) => x.url), ["b", "a"]);
