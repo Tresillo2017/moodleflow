@@ -23,6 +23,7 @@ const { isFresh, burst } = await import("./src/celebrate");
 const { zip, crc32 } = await import("./src/zipwrite");
 const { slug, imageExt } = await import("./src/savetext");
 const { openZip } = await import("./src/office");
+const { relative, group, inPeriod } = await import("./src/assignments");
 
 // bleh's accent-from-image maths
 assert.equal(accentFromRgb(128, 128, 128).sat, 0);
@@ -184,3 +185,23 @@ assert.equal(crc32(new TextEncoder().encode("123456789")), 0xcbf43926); // the s
 	await Bun.write("/tmp/mf-zip-check.zip", bytes);
 }
 console.log("save-text ok");
+
+// assignments page: relative wording, grouping under due-date headings, period chips (fixed noon-UTC "now", TZ pinned to UTC)
+{
+	const tz = process.env.TZ;
+	process.env.TZ = "UTC";
+	try {
+		const now = Date.UTC(2026, 10, 10, 12) / 1000, DAY = 86400;
+		assert.equal(relative(now + 5 * 3600, now), "in 5 h"); assert.equal(relative(now + 90, now), "in 2 min");
+		assert.equal(relative(now - 2 * DAY, now), "2 days ago"); assert.equal(relative(now - DAY, now), "1 day ago"); assert.equal(relative(now + 20, now), "now");
+		const ev = (id: number, timesort: number) => ({ id, timesort });
+		const groups = group([ev(1, now + DAY * 40), ev(2, now + DAY * 3 + 60), ev(3, now + DAY * 3), ev(4, now + 600), ev(5, now - 100)], now);
+		assert.deepEqual(groups.map((g) => g.name), ["Overdue", "Today", "This week", "Later"]);
+		assert.deepEqual(groups[2].items.map((e) => e.id), [3, 2]);
+		const today = now + 600, tomorrow = now + DAY, soon = now + 3 * DAY, far = now + 10 * DAY, past = now - 5;
+		for (const t of [today, tomorrow, soon, far, past]) assert.ok(inPeriod(t, "all", now));
+		assert.ok(inPeriod(tomorrow, "Soon", now) && inPeriod(soon, "Soon", now)); assert.ok(!inPeriod(today, "Soon", now) && !inPeriod(far, "Soon", now));
+		assert.ok(inPeriod(past, "Overdue", now) && !inPeriod(today, "Overdue", now) && !inPeriod(far, "Overdue", now));
+	} finally { if (tz === undefined) delete process.env.TZ; else process.env.TZ = tz; }
+}
+console.log("assignments ok");
