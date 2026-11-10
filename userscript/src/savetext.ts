@@ -79,11 +79,17 @@ const isPicture = (img: HTMLImageElement): boolean => !img.classList.contains("i
 	&& !!(img.currentSrc || img.src) && ((img.complete && !img.naturalWidth) || (img.naturalWidth || img.width || MIN_ICON_PX) >= MIN_ICON_PX); // a picture that failed to load still counts: its address is kept
 const srcOf = (img: HTMLImageElement): string => new URL(img.currentSrc || img.src, location.href).href;
 
+const MAX_IMAGE_BYTES = 15 * 1024 * 1024, MAX_TOTAL_BYTES = 60 * 1024 * 1024, MAX_IMAGES = 60;
+/** Pure: is this picture ours to download? Only files from the page's own site, so no third party gets a request. */
+export const isSameOrigin = (url: string, origin: string): boolean => { try { return new URL(url).origin === origin; } catch { return false; } };
+
 async function fetchImage(url: string): Promise<{ bytes: Uint8Array; ext: string } | null> {
 	try {
-		const res = await fetch(url, { credentials: "include" });
-		if (!res.ok) return null;
-		return { bytes: new Uint8Array(await res.arrayBuffer()), ext: imageExt(res.headers.get("content-type") ?? "", url) };
+		const res = await fetch(url, { credentials: "same-origin" });
+		if (!res.ok || Number(res.headers.get("content-length") ?? 0) > MAX_IMAGE_BYTES) return null;
+		const buf = await res.arrayBuffer();
+		if (buf.byteLength > MAX_IMAGE_BYTES) return null;
+		return { bytes: new Uint8Array(buf), ext: imageExt(res.headers.get("content-type") ?? "", url) };
 	} catch { return null; }
 }
 
@@ -110,10 +116,13 @@ export async function save(desc: Element): Promise<{ file: string; images: numbe
 	const name = slug(title);
 	const pictures = [...desc.querySelectorAll("img")].filter(isPicture);
 	const unique = [...new Set(pictures.map(srcOf))];
-	const got = await Promise.all(unique.map(async (url) => [url, await fetchImage(url)] as const));
+	const fetchable = unique.filter((u) => isSameOrigin(u, location.origin)).slice(0, MAX_IMAGES);
+	const got = await Promise.all(fetchable.map(async (url) => [url, await fetchImage(url)] as const));
 	const files = new Map<string, string>(), entries: ZipEntry[] = [];
+	let total = 0;
 	got.forEach(([url, img]) => {
-		if (!img) return;
+		if (!img || total + img.bytes.byteLength > MAX_TOTAL_BYTES) return;
+		total += img.bytes.byteLength;
 		const path = `images/image-${files.size + 1}.${img.ext}`;
 		files.set(url, path);
 		entries.push({ name: `${name}/${path}`, data: img.bytes });
